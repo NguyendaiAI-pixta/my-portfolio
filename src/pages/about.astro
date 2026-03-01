@@ -24,6 +24,7 @@ import { SITE_TITLE, SITE_DESCRIPTION, SITE_AUTHOR } from '../consts';
 				height: 200px;
 				border-radius: 50%;
 				object-fit: cover;
+				object-position: 20% 10%;
 				margin-bottom: 1.5rem;
 				border: 4px solid var(--accent);
 			}
@@ -76,98 +77,130 @@ import { SITE_TITLE, SITE_DESCRIPTION, SITE_AUTHOR } from '../consts';
 		<Header />
 		<main class="about-container">
 			<div class="hero-section">
-				<!-- Uncomment and add your photo -->
-				<!-- <img src="/profile.jpg" alt={SITE_AUTHOR} class="profile-img" /> -->
-				<div style="width: 200px; height: 200px; border-radius: 50%; background: var(--accent); margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 4rem;">
-					👤
-				</div>
+				<img src="/profile.jpg" alt={SITE_AUTHOR} class="profile-img" />
 				<h1>About Me</h1>
 				<p style="font-size: 1.2rem; color: var(--gray);">
-					Developer | Writer | Learner
+					AI Engineer | Technical Writer | Lifelong Learner
 				</p>
 			</div>
 
 			<div class="about-section">
 				<h2>Who I Am</h2>
 				<p>
-					Hi! I'm {SITE_AUTHOR}, a passionate developer and technology enthusiast. 
-					I love building things and sharing what I learn along the way.
+					Hi! I'm {SITE_AUTHOR}, an AI Engineer at <strong>PIXTA Vietnam</strong> with 3+ years of experience 
+					implementing state-of-the-art AI models and optimizing them for real-world deployment.
 				</p>
 				<p>
-					This blog is where I document my journey in technology, share insights,
-					and connect with other developers and curious minds. I believe in learning 
-					in public and giving back to the community that has helped me grow.
+					I specialize in Computer Vision and Deep Learning, with expertise in analyzing research papers, 
+					conducting experiments, and building complete ML pipelines from concept to production. 
+					My work focuses on practical AI solutions that solve real business problems.
+				</p>
+				<p>
+					This blog is where I share insights about AI/ML, research findings, and technical tutorials. 
+					I believe in learning in public and contributing to the AI community through knowledge sharing.
 				</p>
 			</div>
 
 			<div class="about-section">
 				<h2>What I Do</h2>
 				<p>
-					I work on various projects ranging from web development to machine learning,
-					always eager to explore new technologies and solve challenging problems.
+					Over the years, I've worked across a wide range of computer vision and AI problems, including:
 				</p>
+				<ul style="line-height: 2; padding-left: 1.5rem;">
+					<li>👁️ <strong>Object Detection & Tracking</strong> — detecting and tracking objects, people, vehicles in real-time video streams</li>
+					<li>🧑 <strong>Face Detection & Verification</strong> — building face pipelines for recognition, attendance, and identity verification</li>
+					<li>🤸 <strong>Pose Estimation & Action Recognition</strong> — keypoint extraction and sequence modeling for human activity understanding</li>
+					<li>📄 <strong>Document Understanding</strong> — extracting structured information from documents using OCR and Transformers</li>
+					<li>🔍 <strong>Image Classification & Segmentation</strong> — multi-scale analysis on high-resolution images</li>
+					<li>🛡️ <strong>Content Moderation</strong> — detecting logos, trademarks, AI-generated content using Vision-Language Models</li>
+					<li>⚡ <strong>Edge Deployment & Optimization</strong> — optimizing models for real-time inference on resource-constrained devices</li>
+					<li>🔧 <strong>MLOps & Production Pipelines</strong> — integrating models into scalable, reliable production systems</li>
+				</ul>
 				<div class="skills-grid">
 					<div class="skill-category">
-						<h3>Languages</h3>
+						<h3>Deep Learning</h3>
 						<ul>
-							<li>Python</li>
-							<li>JavaScript/TypeScript</li>
-							<li>Java</li>
-							<li>SQL</li>
+							<li>TensorFlow & PyTorch</li>
+							<li>CNN, RNN, Transformers</li>
+							<li>YOLO, GroundingDINO</li>
+							<li>Vision-Language Models</li>
 						</ul>
 					</div>
 					<div class="skill-category">
-						<h3>Frontend</h3>
+						<h3>Computer Vision</h3>
 						<ul>
-							<li>React</li>
-							<li>Astro</li>
-							<li>HTML/CSS</li>
-							<li>Tailwind CSS</li>
+							<li>Object Detection</li>
+							<li>Face Recognition</li>
+							<li>Pose Estimation</li>
+							<li>OpenCV & PIL</li>
 						</ul>
 					</div>
 					<div class="skill-category">
-						<h3>Backend</h3>
+						<h3>MLOps & Deployment</h3>
 						<ul>
-							<li>Node.js</li>
-							<li>FastAPI</li>
-							<li>Express</li>
-							<li>PostgreSQL</li>
+							<li>TensorRT & ONNX</li>
+							<li>FastAPI & Docker</li>
+							<li>MLflow & Wandb</li>
+							<li>Edge Deployment</li>
 						</ul>
 					</div>
 					<div class="skill-category">
-						<h3>Tools & Others</h3>
+						<h3>Research & Tools</h3>
 						<ul>
-							<li>Git & GitHub</li>
-							<li>Docker</li>
-							<li>AWS/Cloud</li>
-							<li>CI/CD</li>
+							<li>Paper Implementation</li>
+							<li>Model Optimization</li>
+							<li>Git & JIRA</li>
+							<li>Python (Advanced)</li>
 						</ul>
 					</div>
 				</div>
 			</div>
 
 			<div class="about-section">
-				<h2>Interests</h2>
+				<h2>Beyond the Screen</h2>
+				<p>
+					Outside of work, I'm someone who enjoys staying active and challenging myself physically as much as mentally.
+				</p>
+				<ul style="line-height: 2.2; padding-left: 1.5rem;">
+					<li>⚽ <strong>Football</strong> — A long-time passion. There's nothing better than a good game with friends after a week of debugging.</li>
+					<li>🏃 <strong>Running</strong> — Picked it up seriously and completed my first half marathon under 2 hours after just one month of training.</li>
+				</ul>
+				<p style="margin-top: 0.8rem; color: var(--gray); font-style: italic;">
+					"The discipline I practice on the track reflects how I approach problems at work — one step at a time."
+				</p>
+			</div>
+
+			<div class="about-section">
+				<h2>Research & Achievements</h2>
+				<p>
+					I'm passionate about AI research and have published papers in academic journals. 
+					My recent work on real-time multi-person fall detection achieved state-of-the-art results 
+					and won multiple research awards at university level.
+				</p>
 				<div class="interests">
-					<span class="interest-tag">🚀 Web Development</span>
-					<span class="interest-tag">🤖 Machine Learning</span>
-					<span class="interest-tag">☁️ Cloud Computing</span>
-					<span class="interest-tag">📚 Technical Writing</span>
-					<span class="interest-tag">🎨 UI/UX Design</span>
-					<span class="interest-tag">🔧 DevOps</span>
-					<span class="interest-tag">🌐 Open Source</span>
+					<span class="interest-tag">🤖 Computer Vision</span>
+					<span class="interest-tag">🧠 Deep Learning</span>
+					<span class="interest-tag">🚀 Model Optimization</span>
+					<span class="interest-tag">📊 MLOps</span>
+					<span class="interest-tag">📚 Research Papers</span>
+					<span class="interest-tag">⚡ Edge AI</span>
+					<span class="interest-tag">🌐 Vision-Language Models</span>
 				</div>
 			</div>
 
 			<div class="about-section">
 				<h2>Let's Connect</h2>
 				<p>
-					I'm always interested in hearing about new projects and opportunities.
-					Feel free to reach out if you want to collaborate or just say hi!
+					I'm always open to discussing AI research, collaborating on interesting projects, 
+					or sharing knowledge about computer vision and MLOps. Whether you're working on 
+					similar problems or just curious about AI, feel free to reach out!
 				</p>
 				<p>
 					<a href="/contact" style="color: var(--accent); font-weight: bold;">
 						Get in touch →
+					</a>
+					<a href="/cv" style="color: var(--accent); font-weight: bold; margin-left: 1.5rem;">
+						View My CV →
 					</a>
 				</p>
 			</div>

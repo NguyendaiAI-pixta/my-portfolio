@@ -2,8 +2,333 @@
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { SITE_TITLE, SITE_DESCRIPTION, SOCIAL_LINKS } from '../consts';
 ---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`CV - ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
+		<style>
+			.cv-container {
+				max-width: 860px;
+				margin: 0 auto;
+				padding: 2rem;
+			}
+			.cv-header {
+				text-align: center;
+				margin-bottom: 2.5rem;
+			}
+			.cv-header h1 {
+				font-size: 2.2rem;
+				margin-bottom: 0.3rem;
+			}
+			.cv-header .title {
+				font-size: 1.1rem;
+				color: var(--gray);
+				margin-bottom: 0.8rem;
+			}
+			.cv-header .contacts {
+				display: flex;
+				gap: 1.5rem;
+				justify-content: center;
+				flex-wrap: wrap;
+				font-size: 0.95rem;
+			}
+			.cv-header .contacts a {
+				color: var(--accent);
+			}
+			.cv-section {
+				margin-bottom: 2rem;
+			}
+			.cv-section h2 {
+				color: var(--accent);
+				border-bottom: 2px solid var(--accent);
+				padding-bottom: 0.4rem;
+				margin-bottom: 1.2rem;
+				font-size: 1.1rem;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+			}
+			.item {
+				margin-bottom: 1.2rem;
+			}
+			.item-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: baseline;
+				flex-wrap: wrap;
+				gap: 0.3rem;
+			}
+			.item-title {
+				font-weight: bold;
+				font-size: 1rem;
+			}
+			.item-subtitle {
+				color: var(--gray);
+				font-style: italic;
+				font-size: 0.9rem;
+			}
+			.item-date {
+				color: var(--gray);
+				font-size: 0.85rem;
+				white-space: nowrap;
+			}
+			.item ul {
+				margin: 0.4rem 0 0 1.2rem;
+				padding: 0;
+			}
+			.item ul li {
+				margin-bottom: 0.2rem;
+				font-size: 0.95rem;
+				color: var(--gray-dark);
+			}
+			.skills-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+				gap: 1rem;
+			}
+			.skill-group h3 {
+				font-size: 0.9rem;
+				font-weight: bold;
+				margin-bottom: 0.5rem;
+				color: var(--text);
+			}
+			.skill-tags {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.4rem;
+			}
+			.skill-tag {
+				background: rgba(var(--gray-light), 0.6);
+				border: 1px solid rgba(var(--gray-light), 1);
+				padding: 0.2rem 0.7rem;
+				border-radius: 20px;
+				font-size: 0.82rem;
+			}
+			.achievements ul {
+				list-style: none;
+				padding: 0;
+			}
+			.achievements ul li {
+				padding: 0.3rem 0;
+				padding-left: 1.5rem;
+				position: relative;
+				font-size: 0.95rem;
+			}
+			.achievements ul li::before {
+				content: "🏆";
+				position: absolute;
+				left: 0;
+				font-size: 0.8rem;
+				top: 0.4rem;
+			}
+			.certs-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+				gap: 0.4rem;
+			}
+			.cert-item {
+				font-size: 0.9rem;
+				padding: 0.3rem 0;
+				color: var(--gray-dark);
+			}
+			.cert-item::before {
+				content: "📜 ";
+			}
+			.download-btn {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				background: var(--accent);
+				color: white;
+				padding: 0.8rem 1.8rem;
+				border-radius: 5px;
+				text-decoration: none;
+				font-weight: bold;
+				transition: opacity 0.2s;
+				margin-top: 2rem;
+			}
+			.download-btn:hover { opacity: 0.85; }
+			@media print {
+				header, footer, .download-btn { display: none; }
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main class="cv-container">
+
+			<!-- Header -->
+			<div class="cv-header">
+				<h1>Nguyen Van Dai</h1>
+				<p class="title">AI Engineer</p>
+				<div class="contacts">
+					<span>📧 <a href="mailto:nguyendai53100@gmail.com">nguyendai53100@gmail.com</a></span>
+					<span>📞 0904963014</span>
+					<span>💼 <a href={SOCIAL_LINKS.linkedin} target="_blank">LinkedIn</a></span>
+					<span>🐙 <a href={SOCIAL_LINKS.github} target="_blank">GitHub</a></span>
+				</div>
+			</div>
+
+			<!-- Summary -->
+			<div class="cv-section">
+				<h2>Professional Summary</h2>
+				<p>
+					AI Engineer with 3+ years of experience implementing state-of-the-art Deep Learning models
+					and deploying them to production. Skilled in Computer Vision, model optimization, and building
+					end-to-end MLOps pipelines. Passionate about applying AI research to solve real-world problems.
+				</p>
+			</div>
+
+			<!-- Experience -->
+			<div class="cv-section">
+				<h2>Work Experience</h2>
+
+				<div class="item">
+					<div class="item-header">
+						<div>
+							<span class="item-title">AI Engineer (Data Scientist)</span>
+							<span class="item-subtitle"> · PIXTA Vietnam</span>
+						</div>
+						<span class="item-date">Jun 2025 – Present</span>
+					</div>
+					<ul>
+						<li>Multi-scale face detection on 4K/8K images — boosted recall by 9%</li>
+						<li>Fine-tuned FaceNet on 200K+ images for face verification (F1 = 97%)</li>
+						<li>Prompt engineering with Gemini models for logo/AI-generated image detection</li>
+						<li>Integrated detection modules into MLOps production pipeline</li>
+					</ul>
+				</div>
+
+				<div class="item">
+					<div class="item-header">
+						<div>
+							<span class="item-title">Computer Vision Engineer (Part-time)</span>
+							<span class="item-subtitle"> · Cxview Tech JSC</span>
+						</div>
+						<span class="item-date">Jun 2024 – Jun 2025</span>
+					</div>
+					<ul>
+						<li>Smart Store: fire detection, people counting, seat occupancy, human search via CLIP</li>
+						<li>Fall Detection: GRU+Attention model achieving 99.94% accuracy on Le2i dataset</li>
+						<li>Optimized models with TensorRT/ONNX for real-time inference on Jetson Nano</li>
+					</ul>
+				</div>
+
+				<div class="item">
+					<div class="item-header">
+						<div>
+							<span class="item-title">AI Engineer (Part-time)</span>
+							<span class="item-subtitle"> · Tan Dan JSC</span>
+						</div>
+						<span class="item-date">Jul 2022 – Jun 2024</span>
+					</div>
+					<ul>
+						<li>License plate recognition with YOLOv4-tiny + VietOCR (F1 = 0.98)</li>
+						<li>Document information extraction using Transformer (F1 = 98.6%)</li>
+						<li>Face recognition & attendance system with ArcFace + PyQt5</li>
+					</ul>
+				</div>
+			</div>
+
+			<!-- Education -->
+			<div class="cv-section">
+				<h2>Education</h2>
+				<div class="item">
+					<div class="item-header">
+						<div>
+							<span class="item-title">B.Sc. Mathematics & Computer Science</span>
+							<span class="item-subtitle"> · VNU University of Science</span>
+						</div>
+						<span class="item-date">2021 – 2025</span>
+					</div>
+					<ul>
+						<li>Computer Vision & Deep Learning — Vingroup 2021</li>
+					</ul>
+				</div>
+			</div>
+
+			<!-- Skills -->
+			<div class="cv-section">
+				<h2>Technical Skills</h2>
+				<div class="skills-grid">
+					<div class="skill-group">
+						<h3>Deep Learning & CV</h3>
+						<div class="skill-tags">
+							<span class="skill-tag">PyTorch</span>
+							<span class="skill-tag">TensorFlow</span>
+							<span class="skill-tag">YOLO</span>
+							<span class="skill-tag">Transformers</span>
+							<span class="skill-tag">OpenCV</span>
+						</div>
+					</div>
+					<div class="skill-group">
+						<h3>Deployment & MLOps</h3>
+						<div class="skill-tags">
+							<span class="skill-tag">TensorRT</span>
+							<span class="skill-tag">ONNX</span>
+							<span class="skill-tag">Docker</span>
+							<span class="skill-tag">FastAPI</span>
+							<span class="skill-tag">MLflow</span>
+						</div>
+					</div>
+					<div class="skill-group">
+						<h3>Tools & Others</h3>
+						<div class="skill-tags">
+							<span class="skill-tag">Python</span>
+							<span class="skill-tag">Git</span>
+							<span class="skill-tag">Wandb</span>
+							<span class="skill-tag">JIRA</span>
+							<span class="skill-tag">Jetson</span>
+						</div>
+					</div>
+					<div class="skill-group">
+						<h3>Vision-Language</h3>
+						<div class="skill-tags">
+							<span class="skill-tag">CLIP</span>
+							<span class="skill-tag">Gemini</span>
+							<span class="skill-tag">GroundingDINO</span>
+							<span class="skill-tag">Grad-CAM</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Achievements -->
+			<div class="cv-section achievements">
+				<h2>Achievements</h2>
+				<ul>
+					<li><strong>3rd Prize</strong> – University-Level Research: "Real-Time Multi-Person Fall Detection" (2024–2025)</li>
+					<li><strong>2nd Prize</strong> – Faculty-Level Research: "Real-Time Multi-Person Fall Detection" (2024–2025)</li>
+					<li><strong>3rd Prize</strong> – Faculty-Level Research: "Data Imbalance in Skin Cancer Datasets" (2024–2025)</li>
+					<li><strong>3rd Prize</strong> – Faculty-Level Research: "Deep Learning for Sugar Content Prediction" (2023–2024)</li>
+					<li><strong>Published Paper</strong> – ACI Journal: <a href="https://jst.tnu.edu.vn/jst/article/view/12337" target="_blank">jst.tnu.edu.vn</a></li>
+				</ul>
+			</div>
+
+			<!-- Certifications -->
+			<div class="cv-section">
+				<h2>Certifications</h2>
+				<div class="certs-grid">
+					<span class="cert-item">Convolutional Neural Networks (DeepLearning.AI)</span>
+					<span class="cert-item">Sequence Models (DeepLearning.AI)</span>
+					<span class="cert-item">MLOps for Production (DeepLearning.AI)</span>
+					<span class="cert-item">Optimize TF Models with TensorRT (DeepLearning.AI)</span>
+					<span class="cert-item">Build Basic GANs (DeepLearning.AI)</span>
+					<span class="cert-item">Computer Vision & Image Processing (IBM)</span>
+					<span class="cert-item">Generative AI: Foundation Models (IBM)</span>
+				</div>
+			</div>
+
+			<a href="/cv.pdf" class="download-btn" download>
+				📄 Download Full CV (PDF)
+			</a>
+
+		</main>
+		<Footer />
+	</body>
+</html>
 
 <!doctype html>
 <html lang="en">

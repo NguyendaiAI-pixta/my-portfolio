@@ -27,14 +27,26 @@ const posts = (await getCollection('blog')).sort(
 			}
 			.hero h1 {
 				font-size: 3rem;
-				margin-bottom: 1rem;
+				margin-bottom: 0.5rem;
 				color: white;
 			}
-			.hero p {
-				font-size: 1.3rem;
+			.hero .subtitle {
+				font-size: 1.5rem;
+				font-weight: 600;
+				margin-bottom: 1rem;
 				opacity: 0.95;
+			}
+			.hero .company {
+				font-size: 1.1rem;
+				opacity: 0.85;
+				margin-bottom: 1.5rem;
+			}
+			.hero p {
+				font-size: 1.2rem;
+				opacity: 0.9;
 				max-width: 600px;
-				margin: 0 auto;
+				margin: 0 auto 0.5rem;
+				line-height: 1.6;
 			}
 			.cta-buttons {
 				display: flex;
@@ -126,7 +138,8 @@ const posts = (await getCollection('blog')).sort(
 		<main>
 			<div class="hero">
 				<h1>👋 Hi, I'm {SITE_AUTHOR}</h1>
-				<p>{SITE_DESCRIPTION}</p>
+				<p class="subtitle">AI Engineer @ Pixta Vietnam</p>
+				<p>Building intelligent systems and sharing knowledge about AI, Machine Learning, and Software Engineering</p>
 				<div class="cta-buttons">
 					<a href="/blog" class="cta-btn cta-primary">📚 Read My Blog</a>
 					<a href="/cv" class="cta-btn cta-secondary">📄 View My CV</a>
@@ -138,19 +151,19 @@ const posts = (await getCollection('blog')).sort(
 				<h2>What I Do</h2>
 				<div class="features">
 					<div class="feature-card">
-						<div class="feature-icon">💻</div>
-						<h3>Development</h3>
-						<p>Building modern web applications and tools with cutting-edge technologies.</p>
+						<div class="feature-icon">🤖</div>
+						<h3>AI Engineering</h3>
+						<p>Building and deploying Computer Vision & Deep Learning systems — from research to production-ready MLOps pipelines.</p>
 					</div>
 					<div class="feature-card">
 						<div class="feature-icon">✍️</div>
-						<h3>Writing</h3>
-						<p>Sharing knowledge and insights about technology, programming, and more.</p>
+						<h3>Knowledge Sharing</h3>
+						<p>Writing about AI research, practical ML techniques, and lessons learned from real-world projects.</p>
 					</div>
 					<div class="feature-card">
-						<div class="feature-icon">🎓</div>
-						<h3>Learning</h3>
-						<p>Continuously exploring new technologies and best practices.</p>
+						<div class="feature-icon">🔬</div>
+						<h3>Research</h3>
+						<p>Reading and implementing state-of-the-art papers, running experiments, and pushing the boundaries of what AI can do.</p>
 					</div>
 				</div>
 			</section>
