@@ -1,0 +1,74 @@
+---
+title: 'Part 1: Getting Started with LLMs'
+description: 'Understand how Large Language Models work, learn the key concepts (tokens, temperature, context window), and write your first LLM-powered code with the OpenAI SDK and LangChain.'
+pubDate: 'Mar 01 2026'
+category: 'AI Agents & Applications'
+tags: ['llm', 'langchain', 'openai', 'getting-started', 'python']
+---
+
+import LangToggle from '../../../components/LangToggle.astro';
+import LangEN from '../../../components/LangEN.astro';
+import LangVI from '../../../components/LangVI.astro';
+
+> **Series**: AI Agents & Applications with LangChain, LangGraph and MCP
+> **Part**: 1 — Getting Started with LLMs
+
+<LangToggle />
+
+<LangEN>
+
+This post kicks off the series by building the foundation you need before writing a single line of agent code. We'll cover what LLMs are good at, where they fall short, and why tools like **LangChain**, **LangGraph**, and **LangSmith** matter for building systems that actually work in production.
+
+Along the way you'll get familiar with the main architectural patterns — engines, chatbots, and agents — and two techniques that show up everywhere: **prompt engineering** and **Retrieval-Augmented Generation (RAG)**.
+
+We'll also go hands-on with one of the most important day-to-day skills in AI development: writing good prompts. You'll learn how to structure prompts for different tasks, sharpen them with one-shot and few-shot examples, and automate the whole process with LangChain's prompt templates and the OpenAI API.
+
+By the end of this post, you'll be past the experimentation phase and ready to build LLM-powered applications with real purpose and real reliability.
+
+---
+
+## Introduction to AI Agents and Applications
+
+LLMs like GPT, Gemini, and Claude have gone from a cool demo to something engineers actually ship with. They power applications that answer complex questions, generate tailored content, summarize long documents, and coordinate actions across systems.
+
+More recently, they've unlocked a new class of applications: **AI agents**. An agent takes natural-language input, decides which tools or services to call, coordinates multi-step workflows, and returns results in a clear, human-friendly format — all without you hard-coding the logic for each step.
+
+Building these systems isn't trivial. You need to ingest and manage data, structure prompts carefully, chain model calls reliably, and connect to external APIs and services. That's where **LangChain**, **LangGraph**, and **LangSmith** come in — they give you modular building blocks that cut the boilerplate and let you focus on what actually matters: your application logic.
+
+Throughout this series, you'll learn how to design, build, and scale real LLM-based applications and agents using these tools from the ground up.
+
+---
+*— Nguyen Dai, AI Engineer @ PIXTA Vietnam*
+*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
+
+</LangEN>
+
+<LangVI>
+
+Bài này mở đầu series bằng cách xây dựng nền tảng cần thiết trước khi bạn viết bất kỳ dòng code agent nào. Chúng ta sẽ tìm hiểu LLM giỏi việc gì, yếu ở đâu, và tại sao các công cụ như **LangChain**, **LangGraph**, **LangSmith** lại quan trọng để xây dựng hệ thống hoạt động tốt trong thực tế.
+
+Bên cạnh đó, bạn sẽ làm quen với các mô hình kiến trúc chính — engine, chatbot và agent — cùng hai kỹ thuật xuất hiện ở khắp nơi: **prompt engineering** và **Retrieval-Augmented Generation (RAG)**.
+
+Chúng ta cũng sẽ thực hành một trong những kỹ năng quan trọng nhất trong công việc hằng ngày của một AI developer: viết prompt tốt. Bạn sẽ học cách thiết kế prompt cho từng loại tác vụ, cải thiện chúng với one-shot và few-shot examples, và tự động hóa toàn bộ quy trình bằng prompt templates của LangChain.
+
+Kết thúc bài này, bạn đã vượt qua giai đoạn thử nghiệm và sẵn sàng xây dựng những ứng dụng LLM có mục đích rõ ràng và độ tin cậy thực sự.
+
+---
+
+## Giới Thiệu về AI Agents và Ứng Dụng
+
+Các LLM như GPT, Gemini và Claude đã không còn là thứ để demo nữa — chúng là thứ các kỹ sư thực sự đưa vào production. Chúng cho phép ứng dụng trả lời câu hỏi phức tạp, tạo nội dung theo nhu cầu, tóm tắt tài liệu dài, và phối hợp các hành động xuyên suốt nhiều hệ thống.
+
+Gần đây hơn, LLM đã mở ra một lớp ứng dụng hoàn toàn mới: **AI agents**. Một agent nhận đầu vào bằng ngôn ngữ tự nhiên, tự quyết định cần gọi tool hay service nào, điều phối workflow nhiều bước, rồi trả về kết quả rõ ràng, dễ đọc — mà không cần bạn hard-code từng bước logic.
+
+Xây dựng các hệ thống này không đơn giản. Bạn cần xử lý và quản lý dữ liệu, thiết kế prompt cẩn thận, nối các lần gọi model một cách đáng tin cậy, và tích hợp API cùng dịch vụ bên ngoài. Đó chính là lúc **LangChain**, **LangGraph** và **LangSmith** phát huy tác dụng — chúng cung cấp các building block dạng module giúp loại bỏ boilerplate và để bạn tập trung vào điều thực sự quan trọng: logic của ứng dụng.
+
+Xuyên suốt series này, bạn sẽ học cách thiết kế, xây dựng và mở rộng các ứng dụng và agent dựa trên LLM trong thực tế, sử dụng những công cụ này từ đầu.
+
+| Mô hình | Cách hoạt động | Ứng dụng điển hình |
+|---------|---------------|--------------------|
+---
+*— Nguyễn Đại, AI Engineer @ PIXTA Vietnam*
+*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
+
+</LangVI>

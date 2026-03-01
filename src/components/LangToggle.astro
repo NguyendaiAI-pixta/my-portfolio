@@ -1,0 +1,99 @@
+---
+// Bilingual toggle: English ↔ Tiếng Việt
+// Saves preference to localStorage so it persists across page loads.
+---
+
+<div class="bilingual-bar">
+  <span class="bilingual-label">🌐</span>
+  <div class="bilingual-buttons">
+    <button class="lang-btn" data-target-lang="en">🇬🇧 English</button>
+    <button class="lang-btn" data-target-lang="vi">🇻🇳 Tiếng Việt</button>
+  </div>
+  <span class="bilingual-hint">Switch language / Đổi ngôn ngữ</span>
+</div>
+
+<script>
+  const STORAGE_KEY = 'blog-preferred-lang';
+
+  function applyLang(lang: string) {
+    // Show / hide language sections
+    document.querySelectorAll<HTMLElement>('[data-lang]').forEach((el) => {
+      el.style.display = el.dataset.lang === lang ? '' : 'none';
+    });
+
+    // Update active button state
+    document.querySelectorAll<HTMLButtonElement>('.lang-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.targetLang === lang);
+    });
+
+    localStorage.setItem(STORAGE_KEY, lang);
+  }
+
+  function init() {
+    const saved = localStorage.getItem(STORAGE_KEY) ?? 'en';
+    applyLang(saved);
+
+    document.querySelectorAll<HTMLButtonElement>('.lang-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        applyLang(btn.dataset.targetLang!);
+      });
+    });
+  }
+
+  // Works whether script runs before or after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+</script>
+
+<style>
+  .bilingual-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+    padding: 0.7rem 1.2rem;
+    margin: 0 0 2.2rem;
+    background: rgba(var(--accent), 0.06);
+    border: 1px solid rgba(var(--accent), 0.22);
+    border-radius: 10px;
+  }
+
+  .bilingual-label {
+    font-size: 1.1rem;
+  }
+
+  .bilingual-buttons {
+    display: flex;
+    gap: 0.45rem;
+  }
+
+  .lang-btn {
+    padding: 0.32rem 0.9rem;
+    border: 2px solid rgb(var(--accent));
+    border-radius: 20px;
+    background: transparent;
+    color: rgb(var(--accent));
+    font-size: 0.83rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+    letter-spacing: 0.01em;
+  }
+
+  .lang-btn:hover {
+    background: rgba(var(--accent), 0.12);
+  }
+
+  .lang-btn.active {
+    background: rgb(var(--accent));
+    color: #fff;
+  }
+
+  .bilingual-hint {
+    font-size: 0.8rem;
+    color: rgb(var(--gray));
+  }
+</style>

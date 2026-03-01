@@ -1,0 +1,234 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseHead from '../../../components/BaseHead.astro';
+import Footer from '../../../components/Footer.astro';
+import FormattedDate from '../../../components/FormattedDate.astro';
+import Header from '../../../components/Header.astro';
+
+const slugify = (str: string) =>
+	str
+		.toLowerCase()
+		.replace(/[^a-z0-9\s]/g, '')
+		.trim()
+		.replace(/\s+/g, '-');
+
+export async function getStaticPaths() {
+	const allPosts = await getCollection('blog');
+
+	const slugify = (str: string) =>
+		str
+			.toLowerCase()
+			.replace(/[^a-z0-9\s]/g, '')
+			.trim()
+			.replace(/\s+/g, '-');
+
+	const categories = [
+		...new Set(
+			allPosts
+				.filter((p) => p.data.category)
+				.map((p) => p.data.category as string),
+		),
+	];
+
+	return categories.map((cat) => ({
+		params: { category: slugify(cat) },
+		props: {
+			categoryName: cat,
+			posts: allPosts
+				.filter((p) => p.data.category === cat)
+				.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()),
+		},
+	}));
+}
+
+const { categoryName, posts } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`${categoryName} — Blog`}
+			description={`All posts in the "${categoryName}" category`}
+		/>
+		<style>
+			main {
+				width: 960px;
+				max-width: calc(100% - 2em);
+				margin: 0 auto;
+				padding: 2em 1em;
+			}
+
+			.category-header {
+				margin-bottom: 2.5rem;
+				padding-bottom: 1.5rem;
+				border-bottom: 2px solid rgb(var(--accent));
+			}
+
+			.back-link {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.4rem;
+				color: rgb(var(--gray));
+				text-decoration: none;
+				font-size: 0.9rem;
+				margin-bottom: 1rem;
+				transition: color 0.2s;
+			}
+			.back-link:hover {
+				color: rgb(var(--accent));
+			}
+
+			.category-header h1 {
+				margin: 0 0 0.4rem;
+				font-size: 2rem;
+			}
+
+			.category-header .post-count {
+				color: rgb(var(--gray));
+				font-size: 0.95rem;
+			}
+
+			.posts-grid {
+				display: flex;
+				flex-direction: column;
+				gap: 2rem;
+			}
+
+			.post-card {
+				display: grid;
+				grid-template-columns: 240px 1fr;
+				gap: 1.5rem;
+				background: white;
+				border: 1px solid #e8e8e8;
+				border-radius: 12px;
+				overflow: hidden;
+				transition: box-shadow 0.2s, transform 0.2s;
+				text-decoration: none;
+				color: inherit;
+			}
+			.post-card:hover {
+				box-shadow: var(--box-shadow);
+				transform: translateY(-2px);
+			}
+
+			.post-card img {
+				width: 100%;
+				height: 160px;
+				object-fit: cover;
+			}
+
+			.post-card-no-img {
+				grid-template-columns: 1fr;
+			}
+
+			.post-card-body {
+				padding: 1.2rem 1.2rem 1.2rem 0;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				gap: 0.5rem;
+			}
+
+			.post-card-no-img .post-card-body {
+				padding: 1.5rem;
+			}
+
+			.post-card-body h2 {
+				margin: 0;
+				font-size: 1.3rem;
+				color: rgb(var(--black));
+				line-height: 1.3;
+			}
+
+			.post-card-body .description {
+				margin: 0;
+				color: rgb(var(--gray));
+				font-size: 0.95rem;
+				line-height: 1.5;
+				display: -webkit-box;
+				-webkit-line-clamp: 2;
+				-webkit-box-orient: vertical;
+				overflow: hidden;
+			}
+
+			.post-meta {
+				display: flex;
+				align-items: center;
+				gap: 0.8rem;
+				flex-wrap: wrap;
+			}
+
+			.post-date {
+				color: rgb(var(--gray));
+				font-size: 0.85rem;
+			}
+
+			.tag {
+				display: inline-block;
+				background: rgb(var(--accent-light));
+				color: rgb(var(--accent));
+				font-size: 0.75rem;
+				padding: 0.15rem 0.55rem;
+				border-radius: 999px;
+				font-weight: 500;
+			}
+
+			@media (max-width: 720px) {
+				.post-card {
+					grid-template-columns: 1fr;
+				}
+				.post-card img {
+					height: 200px;
+				}
+				.post-card-body {
+					padding: 1rem;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<div class="category-header">
+				<a href="/blog" class="back-link">← All Posts</a>
+				<h1>📂 {categoryName}</h1>
+				<p class="post-count">{posts.length} post{posts.length !== 1 ? 's' : ''}</p>
+			</div>
+
+			<div class="posts-grid">
+				{
+					posts.map((post) => (
+						<a
+							href={`/blog/${post.id}/`}
+							class={`post-card ${!post.data.heroImage ? 'post-card-no-img' : ''}`}
+						>
+							{post.data.heroImage && (
+								<Image
+									width={240}
+									height={160}
+									src={post.data.heroImage}
+									alt=""
+								/>
+							)}
+							<div class="post-card-body">
+								<h2>{post.data.title}</h2>
+								<p class="description">{post.data.description}</p>
+								<div class="post-meta">
+									<span class="post-date">
+										<FormattedDate date={post.data.pubDate} />
+									</span>
+									{post.data.tags?.slice(0, 3).map((tag) => (
+										<span class="tag">#{tag}</span>
+									))}
+								</div>
+							</div>
+						</a>
+					))
+				}
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>
