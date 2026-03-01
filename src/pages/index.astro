@@ -174,14 +174,14 @@ const posts = (await getCollection('blog')).sort(
 					<div class="latest-posts">
 						{posts.map((post) => (
 							<div class="post-preview">
-								<a href={`/blog/${post.slug}/`}>
+								<a href={`/blog/${post.id}/`}>
 									<h3>{post.data.title}</h3>
 								</a>
 								<p class="post-date">
 									<FormattedDate date={post.data.pubDate} />
 								</p>
 								<p>{post.data.description}</p>
-								<a href={`/blog/${post.slug}/`}>Read more →</a>
+								<a href={`/blog/${post.id}/`}>Read more →</a>
 							</div>
 						))}
 					</div>
