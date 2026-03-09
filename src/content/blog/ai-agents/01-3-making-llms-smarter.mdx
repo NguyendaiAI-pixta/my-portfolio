@@ -1,0 +1,216 @@
+---
+title: 'Part 1.3: Making LLMs Smarter'
+description: 'Master prompt engineering, RAG, fine-tuning, and learn how to choose the right LLM for your application needs.'
+pubDate: 'Mar 01 2026'
+category: 'AI Agents & Applications'
+tags: ['llm', 'prompt-engineering', 'rag', 'fine-tuning']
+---
+
+import LangToggle from '../../../components/LangToggle.astro';
+import LangEN from '../../../components/LangEN.astro';
+import LangVI from '../../../components/LangVI.astro';
+
+> **Series**: AI Agents & Applications with LangChain, LangGraph and MCP  
+> **Part**: 1.3 — Making LLMs Smarter
+
+<LangToggle />
+
+<LangEN>
+
+## How to Adapt an LLM to Your Needs
+
+You can use several techniques to enhance the LLM's ability to respond to user requests, even without prior knowledge or training in a specific domain. These techniques are listed here:
+
+- Prompt engineering
+- Retrieval-Augmented Generation (RAG)
+- Fine-tuning
+
+Let's begin with the most basic approach: prompt engineering.
+
+### Prompt Engineering
+
+Prompts for LLMs can be as simple as a single command or as complex as a block of instructions enriched with examples and context. Prompt engineering is the practice of designing these inputs so that the model understands the task and produces useful, accurate responses. Done well, it allows developers to guide the model's behavior, adapt it to domain-specific needs, and even handle problems the model wasn't explicitly trained on. A common technique here is in-context learning, where the model infers patterns from examples embedded directly in the prompt—no fine-tuning required.
+
+In practice, prompts are often organized as templates: a fixed instruction with variable fields that accept dynamic input. This makes prompts reusable and easier to manage across different parts of an application. A widely used pattern is few-shot prompting, where you include a handful of examples to teach the model how to generalize to similar inputs.
+
+Well-crafted prompts are surprisingly powerful. They can coax high-quality, domain-aware output from an LLM without needing extra training data. For instance, chatbots often embed recent conversation turns into the prompt so the model maintains context and produces coherent, multi-turn replies. Prompt engineering can often take you very far, making it a lightweight yet effective tool for many real-world applications.
+
+LangChain builds on this idea with abstractions for managing and reusing prompts consistently, which we'll explore in the next post. That said, prompt engineering alone has limits—especially when applications need to ground answers in user-specific or enterprise data. In those cases, the natural next step is RAG (mentioned earlier), which augments prompts with knowledge pulled dynamically from external sources.
+
+### RAG
+
+One of the most effective ways to improve LLM responses is to ground them in your own data. Instead of relying only on what the model learned during pretraining, you can implement RAG to retrieve relevant context from a local knowledge base—usually stored in a vector database—and add it to the prompt. RAG has become a core pattern in modern LLM applications.
+
+The workflow begins with building a knowledge base. Documents are ingested, split into smaller chunks, and converted into vector representations using an embedding model. These embeddings capture semantic meaning, making it possible to compare text by similarity rather than exact wording. LangChain provides tools to load documents in many formats, split them efficiently, generate embeddings, and then store everything in a vector database (see figure 1.9).
+
+![A collection of documents is split into text chunks and transformed into vector-based embeddings. Both text chunks and related embeddings are then stored in a vector store.](/src/assets/blog/ai-agents/rag-document-ingestion.png)
+*Figure 1.9: A collection of documents is split into text chunks and transformed into vector-based embeddings. Both text chunks and related embeddings are then stored in a vector store.*
+
+RAG offers multiple benefits:
+
+- **Efficiency**—Instead of passing an entire document to the model, you retrieve only the key chunks—keeping inputs concise, reducing token costs, and working within context limits.
+- **Accuracy**—Responses are grounded on real data, reducing the risk of hallucinations. Later in this series, you'll learn techniques for having the LLM cite its sources, further improving transparency and trust.
+- **Flexibility**—By swapping embedding models, retrievers, or vector stores, you can adapt the same pattern to different domains and requirements.
+
+**DEFINITION:** Grounding an LLM involves crafting prompts that include context pulled from a trusted knowledge source—often stored in a vector store. This ensures that the LLM generates its response based on verified facts rather than relying solely on its pretrained knowledge, which may include outdated or unreliable data.
+
+**DEFINITION:** A hallucination occurs when an LLM generates an incorrect, misleading, or fabricated response. This happens when the model draws from poor-quality data during training or lacks sufficient information to answer accurately. Due to their auto-regressive nature, LLMs will try to generate a response even when relevant content is missing—leading to hallucinations as they fill in the gaps with plausible-sounding but incorrect information.
+
+To make RAG reliable, prompts should explicitly instruct the LLM to rely only on the retrieved context. LangChain also supports guardrails and validators to help enforce safe behavior. In high-stakes cases, human-in-the-loop review remains the best safeguard.
+
+In short, RAG bridges the gap between static pretrained models and dynamic, domain-specific applications. By teaching your app to "speak the same language" as the LLM—vectors—you unlock a practical way to deliver grounded and cost-efficient answers. If prompt engineering and RAG still don't meet your needs, the next step is fine-tuning the model, which we'll cover in the next section. We'll return to RAG in depth and explore advanced patterns and techniques that extend its power for real-world applications.
+
+### Fine-tuning
+
+Fine-tuning is the process of adapting a pretrained LLM to perform better in a specific task or domain. This is done by training the model on a curated dataset of examples that capture the style, terminology, and reasoning patterns you want it to master.
+
+Traditionally, fine-tuning required specialized machine learning frameworks and access to powerful hardware, but many platforms today—including OpenAI's fine-tuning API and several open source toolkits—make it possible with just a dataset upload and minimal configuration.
+
+The main benefit of fine-tuning is efficiency: once a model has absorbed domain-specific knowledge, you don't need to stuff every prompt with long instructions or examples. Instead, the model "knows" how to respond in your context. The tradeoffs, however, are real. Preparing high-quality datasets takes time and expertise, and training runs can be costly because they often require GPUs.
+
+Recent advances such as Low-Rank Adaptation (LoRA) and other parameter-efficient fine-tuning methods have lowered both cost and complexity, making fine-tuning more accessible. Related techniques, such as instruction tuning and Reinforcement Learning from Human Feedback (RLHF), push models to follow directions more reliably, though they typically demand more engineering effort and infrastructure.
+
+Whether fine-tuning is truly necessary is an ongoing debate. General-purpose LLMs are surprisingly strong out of the box, especially when paired with RAG. In fact, the research in "Fine-Tuning vs. RAG for Less Popular Knowledge" (by Heydar Soudani, Evangelos Kanoulas, and Faegheh Hasibi; https://arxiv.org/abs/2403.01432) shows that RAG often outperforms fine-tuning by letting you provide context dynamically at runtime, reducing both costs and retraining needs.
+
+That said, in highly specialized domains—such as medicine, law, or finance—fine-tuning remains invaluable. It allows models to capture domain-specific jargon and workflows in ways generic models struggle to match. Well-known examples include the following:
+
+- BioMistral (biology and life sciences)
+- LexiGPT (LexisNexis's legal-domain LLM)
+- BloombergGPT (finance)
+- Anthropic's Claude Code and similar code-focused models
+
+In summary, fine-tuning customizes an LLM for domain expertise and specialized accuracy, but it comes at a cost in time, money, and complexity. As a developer, you'll need to weigh when it's truly worth it versus when RAG or prompt engineering will get you there faster. That said, we won't cover LLM fine-tuning in this series, as our focus is on building AI agents and applications—not on creating or modifying the models themselves.
+
+### Which LLMs to Choose
+
+When developing LLM-based applications, you'll find a wide range of models to choose from. Some are proprietary, accessible via subscription or pay-as-you-go APIs, while others are open source and can be self-hosted. Most modern LLMs offer REST APIs for easy integration and user-friendly chat interfaces. Many also come in different size variants, letting you choose the right balance of performance, speed, and cost.
+
+LangChain makes it simple to integrate with different LLMs. Thanks to its standardized interface, you can switch models with minimal code changes—an essential feature in today's fast-evolving LLM landscape.
+
+Following are the three major factors to weigh when selecting a model:
+
+- **Accuracy**—Generally, larger models are more accurate because they've been trained on larger datasets. However, they're also slower and more expensive at inference time, as vendors charge a premium per million tokens.
+- **Speed (latency)**—Smaller models respond faster. This makes them attractive for interactive applications such as chatbots where responsiveness is critical—but the tradeoff is lower accuracy.
+- **Cost**—Inference cost is directly tied to model size. Bigger, more accurate models carry higher per-token charges, while smaller models are cheaper to use at scale.
+
+In practice, you'll need to strike a balance across these three dimensions. The "best" model is rarely the largest or the cheapest; it's the one that matches your application's requirements. A customer support chatbot, for example, might favor speed and cost, while a legal document analysis tool would prioritize accuracy even at higher expense.
+
+Beyond these core tradeoffs, there are additional considerations that can make one model family more suitable than another:
+
+- **Model purpose**—For general tasks such as summarization, translation, or classification, most mainstream models (GPT, Gemini, Claude, Llama, Mistral) work well. For specialized needs such as code generation, choose models fine-tuned for that domain—for instance, Meta's Code Llama or Claude Code.
+- **Context window size**—A larger context window allows processing of longer prompts and documents. Some models support millions of tokens, while many standard APIs cap at 128K to 256K. Larger windows expand possibilities but can also increase both cost and processing overhead.
+- **Multilingual support**—If your application must handle multiple languages, look for models with strong multilingual training. Qwen and Llama are noted for broad coverage, while certain Gemma releases specialize in Asian languages.
+- **Instruction versus reasoning models**—Instruction models (e.g., GPT-5-mini, Gemini Pro) excel when you know exactly what steps to follow; reasoning models (e.g., GPT-5 Thinking, Gemini Thinking) are designed to figure out how to solve a problem. The tradeoffs here are similar to accuracy/speed/cost: reasoning models are more powerful but slower and more expensive.
+- **Open source versus proprietary**—Open source models (Llama, Mistral, Qwen, Falcon) give you privacy, control, and deployment flexibility. Proprietary APIs, on the other hand, are easier to set up and often provide best-in-class results with less effort, but can become costly in the long run.
+
+By weighing these factors, you can select an LLM that fits your project's goals and constraints. In many applications, the most effective strategy is to use different models for different tasks. For example, one workflow might use GPT-5-nano for fast summarization, GPT-5-mini for answer synthesis, and full GPT-5 for routing complex queries—balancing accuracy, speed, and cost across the system.
+
+---
+
+**Previous**: [← Part 1.2: LangChain Framework](/blog/ai-agents/01-2-langchain-framework)  
+**Next**: [Part 1.4: Executing Prompts Programmatically →](/blog/ai-agents/01-4-executing-prompts-programmatically)
+
+*— Nguyen Dai, AI Engineer @ PIXTA Vietnam*  
+*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
+
+</LangEN>
+
+<LangVI>
+
+## Cách Điều Chỉnh LLM Theo Nhu Cầu Của Bạn
+
+Bạn có thể sử dụng nhiều kỹ thuật để tăng cường khả năng phản hồi yêu cầu của người dùng cho LLM, ngay cả khi không có kiến thức hoặc huấn luyện trước trong một lĩnh vực cụ thể. Các kỹ thuật này bao gồm:
+
+- Prompt engineering (kỹ thuật thiết kế prompt)
+- Retrieval-Augmented Generation (RAG)
+- Fine-tuning (tinh chỉnh mô hình)
+
+Hãy bắt đầu với phương pháp cơ bản nhất: prompt engineering.
+
+### Prompt Engineering
+
+Prompt cho LLM có thể đơn giản như một lệnh duy nhất hoặc phức tạp như một khối hướng dẫn được làm phong phú với các ví dụ và ngữ cảnh. Prompt engineering là thực hành thiết kế các đầu vào này sao cho mô hình hiểu nhiệm vụ và tạo ra các phản hồi hữu ích, chính xác. Khi làm tốt, nó cho phép developer hướng dẫn hành vi của mô hình, điều chỉnh nó theo nhu cầu cụ thể của lĩnh vực, và thậm chí xử lý các vấn đề mà mô hình không được huấn luyện rõ ràng. Một kỹ thuật phổ biến ở đây là in-context learning (học trong ngữ cảnh), trong đó mô hình suy ra các pattern từ các ví dụ được nhúng trực tiếp trong prompt—không cần fine-tuning.
+
+Trong thực tế, prompt thường được tổ chức dưới dạng template: một hướng dẫn cố định với các trường biến chấp nhận đầu vào động. Điều này làm cho prompt có thể tái sử dụng và dễ quản lý hơn trên các phần khác nhau của ứng dụng. Một pattern được sử dụng rộng rãi là few-shot prompting, trong đó bạn bao gồm một số ví dụ để dạy mô hình cách tổng quát hóa sang các đầu vào tương tự.
+
+Prompt được thiết kế tốt có sức mạnh đáng ngạc nhiên. Chúng có thể tạo ra đầu ra chất lượng cao, nhận biết lĩnh vực từ LLM mà không cần dữ liệu huấn luyện bổ sung. Ví dụ, chatbot thường nhúng các lượt hội thoại gần đây vào prompt để mô hình duy trì ngữ cảnh và tạo ra các câu trả lời mạch lạc, nhiều lượt. Prompt engineering thường có thể đưa bạn đi rất xa, khiến nó trở thành một công cụ nhẹ nhưng hiệu quả cho nhiều ứng dụng thực tế.
+
+LangChain xây dựng dựa trên ý tưởng này với các abstraction để quản lý và tái sử dụng prompt một cách nhất quán, điều mà chúng ta sẽ khám phá trong bài viết tiếp theo. Điều đó nói rằng, prompt engineering một mình có giới hạn—đặc biệt khi ứng dụng cần dựa câu trả lời trên dữ liệu cụ thể của người dùng hoặc doanh nghiệp. Trong những trường hợp đó, bước tiếp theo tự nhiên là RAG (đã đề cập trước đó), tăng cường prompt với kiến thức được thu thập từ các nguồn bên ngoài.
+
+### RAG
+
+Một trong những cách hiệu quả nhất để cải thiện phản hồi của LLM là dựa chúng vào dữ liệu của riêng bạn. Thay vì chỉ dựa vào những gì mô hình đã học trong quá trình pretraining, bạn có thể triển khai RAG để truy xuất ngữ cảnh liên quan từ knowledge base cục bộ—thường được lưu trong vector database—và thêm nó vào prompt. RAG đã trở thành một pattern cốt lõi trong các ứng dụng LLM hiện đại.
+
+Quy trình bắt đầu với việc xây dựng knowledge base. Tài liệu được nhập vào, chia thành các chunk nhỏ hơn, và chuyển đổi thành biểu diễn vector bằng embedding model. Các embedding này nắm bắt ý nghĩa ngữ nghĩa, giúp có thể so sánh văn bản theo độ tương đồng thay vì cách diễn đạt chính xác. LangChain cung cấp các công cụ để load tài liệu ở nhiều định dạng, chia chúng hiệu quả, tạo embedding, rồi lưu trữ mọi thứ trong vector database (xem hình 1.9).
+
+![Một tập hợp tài liệu được chia thành các text chunk và chuyển đổi thành embedding dựa trên vector. Cả text chunk và embedding liên quan sau đó được lưu trong vector store.](/src/assets/blog/ai-agents/rag-document-ingestion.png)
+*Hình 1.9: Một tập hợp tài liệu được chia thành các text chunk và chuyển đổi thành embedding dựa trên vector. Cả text chunk và embedding liên quan sau đó được lưu trong vector store.*
+
+RAG mang lại nhiều lợi ích:
+
+- **Hiệu quả**—Thay vì truyền toàn bộ tài liệu cho mô hình, bạn chỉ truy xuất các chunk chính—giữ đầu vào ngắn gọn, giảm chi phí token, và làm việc trong giới hạn ngữ cảnh.
+- **Chính xác**—Phản hồi được dựa trên dữ liệu thực, giảm rủi ro hallucination. Sau này trong series này, bạn sẽ học các kỹ thuật để LLM trích dẫn nguồn của nó, cải thiện thêm tính minh bạch và độ tin cậy.
+- **Linh hoạt**—Bằng cách thay đổi embedding model, retriever, hoặc vector store, bạn có thể điều chỉnh cùng một pattern cho các lĩnh vực và yêu cầu khác nhau.
+
+**ĐỊNH NGHĨA:** Grounding một LLM liên quan đến việc tạo prompt bao gồm ngữ cảnh được lấy từ nguồn kiến thức đáng tin cậy—thường được lưu trong vector store. Điều này đảm bảo rằng LLM tạo ra phản hồi dựa trên các sự kiện đã được xác minh thay vì chỉ dựa vào kiến thức pretrained của nó, có thể bao gồm dữ liệu lỗi thời hoặc không đáng tin cậy.
+
+**ĐỊNH NGHĨA:** Hallucination xảy ra khi LLM tạo ra phản hồi không chính xác, gây hiểu lầm, hoặc bịa đặt. Điều này xảy ra khi mô hình rút ra từ dữ liệu chất lượng kém trong quá trình huấn luyện hoặc thiếu thông tin đầy đủ để trả lời chính xác. Do bản chất tự hồi quy của chúng, LLM sẽ cố gắng tạo ra phản hồi ngay cả khi nội dung liên quan bị thiếu—dẫn đến hallucination khi chúng lấp đầy khoảng trống bằng thông tin nghe có vẻ hợp lý nhưng không chính xác.
+
+Để làm cho RAG đáng tin cậy, prompt nên hướng dẫn rõ ràng LLM chỉ dựa vào ngữ cảnh đã truy xuất. LangChain cũng hỗ trợ guardrail và validator để giúp thực thi hành vi an toàn. Trong các trường hợp quan trọng, human-in-the-loop review vẫn là biện pháp bảo vệ tốt nhất.
+
+Tóm lại, RAG thu hẹp khoảng cách giữa các mô hình pretrained tĩnh và các ứng dụng động, cụ thể theo lĩnh vực. Bằng cách dạy ứng dụng của bạn "nói cùng ngôn ngữ" với LLM—vector—bạn mở khóa một cách thực tế để cung cấp câu trả lời có căn cứ và tiết kiệm chi phí. Nếu prompt engineering và RAG vẫn không đáp ứng nhu cầu của bạn, bước tiếp theo là fine-tuning mô hình, mà chúng ta sẽ đề cập trong phần tiếp theo. Chúng ta sẽ quay lại RAG một cách sâu sắc và khám phá các pattern và kỹ thuật nâng cao mở rộng sức mạnh của nó cho các ứng dụng thực tế.
+
+### Fine-tuning
+
+Fine-tuning là quá trình điều chỉnh một LLM đã được pretrained để hoạt động tốt hơn trong một tác vụ hoặc lĩnh vực cụ thể. Điều này được thực hiện bằng cách huấn luyện mô hình trên một tập dữ liệu được tuyển chọn các ví dụ nắm bắt phong cách, thuật ngữ và các pattern suy luận mà bạn muốn nó thành thạo.
+
+Theo truyền thống, fine-tuning đòi hỏi các framework machine learning chuyên biệt và truy cập vào phần cứng mạnh mẽ, nhưng nhiều nền tảng ngày nay—bao gồm fine-tuning API của OpenAI và một số toolkit mã nguồn mở—cho phép thực hiện chỉ với việc tải lên dataset và cấu hình tối thiểu.
+
+Lợi ích chính của fine-tuning là hiệu quả: một khi mô hình đã tiếp thu kiến thức cụ thể theo lĩnh vực, bạn không cần nhồi nhét mỗi prompt với các hướng dẫn hoặc ví dụ dài. Thay vào đó, mô hình "biết" cách phản hồi trong ngữ cảnh của bạn. Tuy nhiên, sự đánh đổi là có thật. Chuẩn bị các dataset chất lượng cao tốn thời gian và chuyên môn, và các lần chạy huấn luyện có thể tốn kém vì chúng thường yêu cầu GPU.
+
+Những tiến bộ gần đây như Low-Rank Adaptation (LoRA) và các phương pháp fine-tuning tiết kiệm tham số khác đã giảm cả chi phí và độ phức tạp, làm cho fine-tuning dễ tiếp cận hơn. Các kỹ thuật liên quan, như instruction tuning và Reinforcement Learning from Human Feedback (RLHF), thúc đẩy các mô hình tuân theo hướng dẫn một cách đáng tin cậy hơn, mặc dù chúng thường đòi hỏi nhiều nỗ lực kỹ thuật và cơ sở hạ tầng hơn.
+
+Liệu fine-tuning có thực sự cần thiết hay không là một cuộc tranh luận đang diễn ra. Các LLM đa năng ngạc nhiên là mạnh mẽ ngay từ đầu, đặc biệt khi kết hợp với RAG. Trên thực tế, nghiên cứu trong "Fine-Tuning vs. RAG for Less Popular Knowledge" (của Heydar Soudani, Evangelos Kanoulas và Faegheh Hasibi; https://arxiv.org/abs/2403.01432) cho thấy RAG thường vượt trội hơn fine-tuning bằng cách cho phép bạn cung cấp ngữ cảnh động tại thời điểm chạy, giảm cả chi phí và nhu cầu huấn luyện lại.
+
+Điều đó nói rằng, trong các lĩnh vực chuyên môn cao—như y học, luật pháp hoặc tài chính—fine-tuning vẫn vô giá. Nó cho phép các mô hình nắm bắt thuật ngữ và quy trình làm việc cụ thể theo lĩnh vực theo cách mà các mô hình chung khó có thể sánh kịp. Các ví dụ nổi tiếng bao gồm:
+
+- BioMistral (sinh học và khoa học sự sống)
+- LexiGPT (LLM lĩnh vực pháp lý của LexisNexis)
+- BloombergGPT (tài chính)
+- Claude Code của Anthropic và các mô hình tập trung vào code tương tự
+
+Tóm lại, fine-tuning tùy chỉnh một LLM cho chuyên môn lĩnh vực và độ chính xác chuyên biệt, nhưng nó đi kèm với chi phí về thời gian, tiền bạc và độ phức tạp. Là một developer, bạn sẽ cần cân nhắc khi nào nó thực sự đáng giá so với khi nào RAG hoặc prompt engineering sẽ đưa bạn đến đó nhanh hơn. Điều đó nói rằng, chúng ta sẽ không đề cập đến LLM fine-tuning trong series này, vì trọng tâm của chúng ta là xây dựng AI agent và ứng dụng—không phải tạo hoặc sửa đổi bản thân các mô hình.
+
+### Chọn LLM Nào
+
+Khi phát triển các ứng dụng dựa trên LLM, bạn sẽ tìm thấy một loạt các mô hình để lựa chọn. Một số là độc quyền, có thể truy cập qua subscription hoặc API trả phí theo mức sử dụng, trong khi những mô hình khác là mã nguồn mở và có thể tự host. Hầu hết các LLM hiện đại cung cấp REST API để tích hợp dễ dàng và giao diện chat thân thiện với người dùng. Nhiều mô hình cũng có các biến thể kích thước khác nhau, cho phép bạn chọn sự cân bằng phù hợp về hiệu suất, tốc độ và chi phí.
+
+LangChain giúp việc tích hợp với các LLM khác nhau trở nên đơn giản. Nhờ interface chuẩn hóa của nó, bạn có thể chuyển đổi mô hình với những thay đổi code tối thiểu—một tính năng thiết yếu trong bối cảnh LLM phát triển nhanh chóng ngày nay.
+
+Sau đây là ba yếu tố chính cần cân nhắc khi chọn mô hình:
+
+- **Độ chính xác**—Nhìn chung, các mô hình lớn hơn chính xác hơn vì chúng được huấn luyện trên các dataset lớn hơn. Tuy nhiên, chúng cũng chậm hơn và đắt hơn tại thời điểm inference, vì các nhà cung cấp tính phí cao hơn cho mỗi triệu token.
+- **Tốc độ (độ trễ)**—Các mô hình nhỏ hơn phản hồi nhanh hơn. Điều này khiến chúng hấp dẫn cho các ứng dụng tương tác như chatbot nơi khả năng phản hồi là quan trọng—nhưng sự đánh đổi là độ chính xác thấp hơn.
+- **Chi phí**—Chi phí inference liên quan trực tiếp đến kích thước mô hình. Các mô hình lớn hơn, chính xác hơn mang phí cao hơn cho mỗi token, trong khi các mô hình nhỏ hơn rẻ hơn để sử dụng ở quy mô lớn.
+
+Trong thực tế, bạn sẽ cần đạt được sự cân bằng trên ba khía cạnh này. Mô hình "tốt nhất" hiếm khi là mô hình lớn nhất hoặc rẻ nhất; đó là mô hình phù hợp với yêu cầu của ứng dụng của bạn. Ví dụ, một chatbot hỗ trợ khách hàng có thể ưu tiên tốc độ và chi phí, trong khi một công cụ phân tích tài liệu pháp lý sẽ ưu tiên độ chính xác ngay cả với chi phí cao hơn.
+
+Ngoài những đánh đổi cốt lõi này, còn có các cân nhắc bổ sung có thể làm cho một nhóm mô hình phù hợp hơn nhóm khác:
+
+- **Mục đích mô hình**—Đối với các tác vụ chung như tóm tắt, dịch thuật hoặc phân loại, hầu hết các mô hình chính thống (GPT, Gemini, Claude, Llama, Mistral) hoạt động tốt. Đối với các nhu cầu chuyên biệt như sinh code, hãy chọn các mô hình được fine-tuned cho lĩnh vực đó—ví dụ: Code Llama của Meta hoặc Claude Code.
+- **Kích thước context window**—Context window lớn hơn cho phép xử lý các prompt và tài liệu dài hơn. Một số mô hình hỗ trợ hàng triệu token, trong khi nhiều API tiêu chuẩn giới hạn ở 128K đến 256K. Các window lớn hơn mở rộng khả năng nhưng cũng có thể tăng cả chi phí và chi phí xử lý.
+- **Hỗ trợ đa ngôn ngữ**—Nếu ứng dụng của bạn phải xử lý nhiều ngôn ngữ, hãy tìm các mô hình có khả năng huấn luyện đa ngôn ngữ mạnh mẽ. Qwen và Llama được chú ý vì độ bao phủ rộng, trong khi một số phiên bản Gemma chuyên về các ngôn ngữ châu Á.
+- **Mô hình instruction so với reasoning**—Các mô hình instruction (ví dụ: GPT-5-mini, Gemini Pro) xuất sắc khi bạn biết chính xác các bước cần làm; các mô hình reasoning (ví dụ: GPT-5 Thinking, Gemini Thinking) được thiết kế để tìm ra cách giải quyết vấn đề. Sự đánh đổi ở đây tương tự như độ chính xác/tốc độ/chi phí: các mô hình reasoning mạnh mẽ hơn nhưng chậm hơn và đắt hơn.
+- **Mã nguồn mở so với độc quyền**—Các mô hình mã nguồn mở (Llama, Mistral, Qwen, Falcon) mang lại cho bạn quyền riêng tư, kiểm soát và tính linh hoạt triển khai. Mặt khác, các API độc quyền dễ thiết lập hơn và thường cung cấp kết quả tốt nhất với ít nỗ lực hơn, nhưng có thể trở nên tốn kém trong dài hạn.
+
+Bằng cách cân nhắc các yếu tố này, bạn có thể chọn một LLM phù hợp với mục tiêu và ràng buộc của dự án. Trong nhiều ứng dụng, chiến lược hiệu quả nhất là sử dụng các mô hình khác nhau cho các tác vụ khác nhau. Ví dụ, một workflow có thể sử dụng GPT-5-nano cho tóm tắt nhanh, GPT-5-mini cho tổng hợp câu trả lời, và GPT-5 đầy đủ cho định tuyến các truy vấn phức tạp—cân bằng độ chính xác, tốc độ và chi phí trên toàn hệ thống.
+
+---
+
+**Trước**: [← Phần 1.2: Framework LangChain](/blog/ai-agents/01-2-langchain-framework)  
+**Tiếp theo**: [Phần 1.4: Thực Thi Prompt Tự Động →](/blog/ai-agents/01-4-executing-prompts-programmatically)
+
+*— Nguyễn Đài, AI Engineer @ PIXTA Vietnam*  
+*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
+
+</LangVI>

@@ -1,0 +1,267 @@
+---
+// Premium Content Component with Paywall
+// Free users see preview, Premium users see full content
+interface Props {
+  isPremium?: boolean; // Set to true for premium-only posts
+  previewLength?: number; // Number of paragraphs to show for free
+}
+
+const { isPremium = false, previewLength = 3 } = Astro.props;
+
+// TODO: Integrate with authentication system
+const USER_IS_PREMIUM = false; // Check user subscription status
+const showPaywall = isPremium && !USER_IS_PREMIUM;
+---
+
+<div class="premium-content-wrapper">
+  {showPaywall ? (
+    <div class="paywall-container">
+      <div class="preview-section">
+        <slot name="preview" />
+      </div>
+      
+      <div class="paywall-overlay">
+        <div class="paywall-blur"></div>
+        <div class="paywall-cta">
+          <div class="paywall-icon">🔒</div>
+          <h3>Premium Content</h3>
+          <p>Unlock this article and access our entire knowledge base</p>
+          
+          <div class="pricing-options">
+            <div class="price-card">
+              <h4>Monthly</h4>
+              <div class="price">$9.99<span>/month</span></div>
+              <ul>
+                <li>✓ Unlimited access to all articles</li>
+                <li>✓ New content every week</li>
+                <li>✓ Download PDF versions</li>
+                <li>✓ Cancel anytime</li>
+              </ul>
+            </div>
+            
+            <div class="price-card featured">
+              <div class="badge">Best Value</div>
+              <h4>Yearly</h4>
+              <div class="price">$79.99<span>/year</span></div>
+              <div class="savings">Save 33%</div>
+              <ul>
+                <li>✓ Everything in Monthly</li>
+                <li>✓ Priority email support</li>
+                <li>✓ Exclusive tutorials</li>
+                <li>✓ Community access</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="cta-buttons">
+            <a href="/subscribe" class="btn-premium">🚀 Get Premium Access</a>
+            <a href="/login" class="btn-login">Already a member? Login</a>
+          </div>
+          
+          <p class="guarantee">💯 7-day money-back guarantee</p>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div class="full-content">
+      <slot />
+    </div>
+  )}
+</div>
+
+<style>
+  .premium-content-wrapper {
+    position: relative;
+  }
+
+  .paywall-container {
+    position: relative;
+    margin: 2rem 0;
+  }
+
+  .preview-section {
+    position: relative;
+    max-height: 400px;
+    overflow: hidden;
+  }
+
+  .paywall-overlay {
+    position: relative;
+    margin-top: -100px;
+    padding-top: 100px;
+  }
+
+  .paywall-blur {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+    background: linear-gradient(to bottom, 
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.9) 50%,
+      rgba(255, 255, 255, 1) 100%
+    );
+    pointer-events: none;
+  }
+
+  .paywall-cta {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3rem 2rem;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+  }
+
+  .paywall-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .paywall-cta h3 {
+    margin: 0 0 1rem 0;
+    font-size: 2rem;
+    color: white;
+  }
+
+  .paywall-cta > p {
+    margin: 0 0 2rem 0;
+    font-size: 1.1rem;
+    opacity: 0.95;
+  }
+
+  .pricing-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .price-card {
+    background: rgba(255, 255, 255, 0.95);
+    color: #333;
+    padding: 2rem;
+    border-radius: 12px;
+    position: relative;
+    transition: transform 0.3s ease;
+  }
+
+  .price-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .price-card.featured {
+    background: white;
+    border: 3px solid #ffd700;
+    transform: scale(1.05);
+  }
+
+  .badge {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: #ffd700;
+    color: #333;
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+
+  .price-card h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1.3rem;
+    color: #667eea;
+  }
+
+  .price {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+
+  .price span {
+    font-size: 1rem;
+    opacity: 0.7;
+  }
+
+  .savings {
+    color: #22c55e;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+
+  .price-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+    text-align: left;
+  }
+
+  .price-card li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .price-card li:last-child {
+    border-bottom: none;
+  }
+
+  .cta-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 2rem 0 1rem 0;
+  }
+
+  .btn-premium {
+    background: #ffd700;
+    color: #333;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    display: inline-block;
+  }
+
+  .btn-premium:hover {
+    background: #ffed4e;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+  }
+
+  .btn-login {
+    color: white;
+    text-decoration: underline;
+    font-size: 0.95rem;
+    opacity: 0.9;
+  }
+
+  .btn-login:hover {
+    opacity: 1;
+  }
+
+  .guarantee {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .pricing-options {
+      grid-template-columns: 1fr;
+    }
+
+    .price-card.featured {
+      transform: scale(1);
+    }
+
+    .paywall-cta {
+      padding: 2rem 1rem;
+    }
+  }
+</style>

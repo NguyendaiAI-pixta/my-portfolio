@@ -115,3 +115,5 @@ Edit the respective files in `src/pages/` to customize your content.
 ## 📄 License
 
 MIT License - Feel free to use this template for your own portfolio!
+
+npm run dev -- --port 4333

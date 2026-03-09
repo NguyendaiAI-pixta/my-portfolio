@@ -2,13 +2,13 @@
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { SITE_TITLE, SITE_DESCRIPTION, SITE_AUTHOR } from '../consts';
+import { SITE_TITLE, SITE_DESCRIPTION, SITE_EMAIL } from '../consts';
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 	<head>
-		<BaseHead title={`About - ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
+		<BaseHead title={`Về Blog - ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
 		<style>
 			.about-container {
 				max-width: 800px;
@@ -18,58 +18,87 @@ import { SITE_TITLE, SITE_DESCRIPTION, SITE_AUTHOR } from '../consts';
 			.hero-section {
 				text-align: center;
 				margin-bottom: 3rem;
+				padding: 2rem;
+				background: linear-gradient(135deg, rgba(var(--accent-light), 0.1) 0%, rgba(var(--accent), 0.05) 100%);
+				border-radius: 12px;
 			}
-			.profile-img {
-				width: 200px;
-				height: 200px;
-				border-radius: 50%;
-				object-fit: cover;
-				object-position: 20% 10%;
-				margin-bottom: 1.5rem;
-				border: 4px solid var(--accent);
+			.hero-icon {
+				font-size: 4rem;
+				margin-bottom: 1rem;
 			}
 			.about-section {
 				margin-bottom: 3rem;
+				line-height: 1.8;
 			}
 			.about-section h2 {
 				color: var(--accent);
 				margin-bottom: 1rem;
+				font-size: 1.8rem;
 			}
-			.skills-grid {
+			.about-section p {
+				margin-bottom: 1rem;
+				color: var(--gray-dark);
+			}
+			.topics-grid {
 				display: grid;
-				grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+				grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 				gap: 1.5rem;
 				margin-top: 1.5rem;
 			}
-			.skill-category h3 {
-				color: var(--accent);
-				margin-bottom: 0.5rem;
-				font-size: 1.1rem;
+			.topic-card {
+				background: var(--bg-secondary, #f5f5f5);
+				padding: 1.5rem;
+				border-radius: 8px;
+				border-left: 4px solid var(--accent);
 			}
-			.skill-category ul {
+			.topic-card h3 {
+				color: var(--accent);
+				margin-bottom: 0.8rem;
+				font-size: 1.2rem;
+			}
+			.topic-card p {
+				font-size: 0.95rem;
+				color: var(--gray);
+				margin: 0;
+			}
+			.audience-list {
 				list-style: none;
 				padding: 0;
-			}
-			.skill-category li {
-				padding: 0.3rem 0;
-				color: var(--gray-dark);
-			}
-			.skill-category li:before {
-				content: "▹ ";
-				color: var(--accent);
-				font-weight: bold;
-			}
-			.interests {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 1rem;
 				margin-top: 1rem;
 			}
-			.interest-tag {
-				background: var(--bg-secondary, #f5f5f5);
-				padding: 0.5rem 1rem;
-				border-radius: 20px;
-				font-size: 0.9rem;
+			.audience-list li {
+				padding: 0.8rem 0;
+				border-bottom: 1px solid rgba(var(--accent), 0.1);
+			}
+			.audience-list li:last-child {
+				border-bottom: none;
+			}
+			.audience-list li:before {
+				content: "✓ ";
+				color: var(--accent);
+				font-weight: bold;
+				margin-right: 0.5rem;
+			}
+			.cta-box {
+				background: linear-gradient(135deg, rgba(var(--accent), 0.1) 0%, rgba(var(--accent-light), 0.05) 100%);
+				padding: 2rem;
+				border-radius: 12px;
+				text-align: center;
+				margin-top: 2rem;
+			}
+			.cta-box a {
+				display: inline-block;
+				background: var(--accent);
+				color: white;
+				padding: 0.8rem 2rem;
+				border-radius: 6px;
+				text-decoration: none;
+				font-weight: bold;
+				margin-top: 1rem;
+				transition: transform 0.2s;
+			}
+			.cta-box a:hover {
+				transform: translateY(-2px);
 			}
 		</style>
 	</head>
@@ -77,131 +106,105 @@ import { SITE_TITLE, SITE_DESCRIPTION, SITE_AUTHOR } from '../consts';
 		<Header />
 		<main class="about-container">
 			<div class="hero-section">
-				<img src="/profile.jpg" alt={SITE_AUTHOR} class="profile-img" />
-				<h1>About Me</h1>
-				<p style="font-size: 1.2rem; color: var(--gray);">
-					AI Engineer | Technical Writer | Lifelong Learner
+				<div class="hero-icon">🤖</div>
+				<h1>Về AI Knowledge Hub</h1>
+				<p style="font-size: 1.2rem; color: var(--gray); margin-top: 1rem;">
+					Hệ thống kiến thức AI từ cơ bản đến chuyên sâu
 				</p>
 			</div>
 
 			<div class="about-section">
-				<h2>Who I Am</h2>
+				<h2>Tại sao có blog này?</h2>
 				<p>
-					Hi! I'm {SITE_AUTHOR}, an AI Engineer at <strong>PIXTA Vietnam</strong> with 3+ years of experience 
-					implementing state-of-the-art AI models and optimizing them for real-world deployment.
+					<strong>AI Knowledge Hub</strong> được tạo ra bởi một AI Engineer với niềm đam mê chia sẻ kiến thức. 
+					Sau nhiều năm làm việc với AI/ML trong thực tế, tôi nhận ra rằng khoảng cách giữa lý thuyết và thực hành 
+					vẫn còn rất lớn, đặc biệt với những người mới bắt đầu.
 				</p>
 				<p>
-					I specialize in Computer Vision and Deep Learning, with expertise in analyzing research papers, 
-					conducting experiments, and building complete ML pipelines from concept to production. 
-					My work focuses on practical AI solutions that solve real business problems.
-				</p>
-				<p>
-					This blog is where I share insights about AI/ML, research findings, and technical tutorials. 
-					I believe in learning in public and contributing to the AI community through knowledge sharing.
+					Blog này sinh ra với mục đích thu hẹp khoảng cách đó - cung cấp kiến thức có hệ thống, 
+					từ những khái niệm cơ bản nhất cho đến các kỹ thuật tiên tiến nhất, tất cả đều được 
+					viết bằng ngôn ngữ dễ hiểu và kèm theo ví dụ thực tế.
 				</p>
 			</div>
 
 			<div class="about-section">
-				<h2>What I Do</h2>
-				<p>
-					Over the years, I've worked across a wide range of computer vision and AI problems, including:
-				</p>
-				<ul style="line-height: 2; padding-left: 1.5rem;">
-					<li>👁️ <strong>Object Detection & Tracking</strong> — detecting and tracking objects, people, vehicles in real-time video streams</li>
-					<li>🧑 <strong>Face Detection & Verification</strong> — building face pipelines for recognition, attendance, and identity verification</li>
-					<li>🤸 <strong>Pose Estimation & Action Recognition</strong> — keypoint extraction and sequence modeling for human activity understanding</li>
-					<li>📄 <strong>Document Understanding</strong> — extracting structured information from documents using OCR and Transformers</li>
-					<li>🔍 <strong>Image Classification & Segmentation</strong> — multi-scale analysis on high-resolution images</li>
-					<li>🛡️ <strong>Content Moderation</strong> — detecting logos, trademarks, AI-generated content using Vision-Language Models</li>
-					<li>⚡ <strong>Edge Deployment & Optimization</strong> — optimizing models for real-time inference on resource-constrained devices</li>
-					<li>🔧 <strong>MLOps & Production Pipelines</strong> — integrating models into scalable, reliable production systems</li>
-				</ul>
-				<div class="skills-grid">
-					<div class="skill-category">
-						<h3>Deep Learning</h3>
-						<ul>
-							<li>TensorFlow & PyTorch</li>
-							<li>CNN, RNN, Transformers</li>
-							<li>YOLO, GroundingDINO</li>
-							<li>Vision-Language Models</li>
-						</ul>
+				<h2>Nội dung blog bao gồm</h2>
+				<div class="topics-grid">
+					<div class="topic-card">
+						<h3>👁️ Computer Vision</h3>
+						<p>Object Detection, Face Recognition, Pose Estimation, Image Segmentation, và các ứng dụng CV</p>
 					</div>
-					<div class="skill-category">
-						<h3>Computer Vision</h3>
-						<ul>
-							<li>Object Detection</li>
-							<li>Face Recognition</li>
-							<li>Pose Estimation</li>
-							<li>OpenCV & PIL</li>
-						</ul>
+					<div class="topic-card">
+						<h3>🤖 LLM & Agents</h3>
+						<p>Large Language Models, Prompt Engineering, RAG, AI Agents, LangChain, LangGraph</p>
 					</div>
-					<div class="skill-category">
-						<h3>MLOps & Deployment</h3>
-						<ul>
-							<li>TensorRT & ONNX</li>
-							<li>FastAPI & Docker</li>
-							<li>MLflow & Wandb</li>
-							<li>Edge Deployment</li>
-						</ul>
+					<div class="topic-card">
+						<h3>⚙️ MLOps</h3>
+						<p>Model Deployment, Monitoring, CI/CD cho ML, Model Optimization, Production Best Practices</p>
 					</div>
-					<div class="skill-category">
-						<h3>Research & Tools</h3>
-						<ul>
-							<li>Paper Implementation</li>
-							<li>Model Optimization</li>
-							<li>Git & JIRA</li>
-							<li>Python (Advanced)</li>
-						</ul>
+					<div class="topic-card">
+						<h3>🔧 LLMOps</h3>
+						<p>LLM Deployment, Evaluation, Fine-tuning, Serving, Cost Optimization cho LLM applications</p>
+					</div>
+					<div class="topic-card">
+						<h3>🧠 Deep Learning</h3>
+						<p>Neural Networks, CNN, RNN, Transformers, Training Techniques, Model Architecture Design</p>
+					</div>
+					<div class="topic-card">
+						<h3>🚀 Production AI</h3>
+						<p>Edge Deployment, Model Serving, API Design, Scalability, Performance Optimization</p>
 					</div>
 				</div>
 			</div>
 
 			<div class="about-section">
-				<h2>Beyond the Screen</h2>
-				<p>
-					Outside of work, I'm someone who enjoys staying active and challenging myself physically as much as mentally.
-				</p>
-				<ul style="line-height: 2.2; padding-left: 1.5rem;">
-					<li>⚽ <strong>Football</strong> — A long-time passion. There's nothing better than a good game with friends after a week of debugging.</li>
-					<li>🏃 <strong>Running</strong> — Picked it up seriously and completed my first half marathon under 2 hours after just one month of training.</li>
+				<h2>Blog này dành cho ai?</h2>
+				<ul class="audience-list">
+					<li><strong>Sinh viên IT</strong> đang muốn tìm hiểu về AI và Machine Learning</li>
+					<li><strong>Người định hướng làm AI Engineer</strong> cần lộ trình học tập rõ ràng</li>
+					<li><strong>Fresher & Junior AI Engineer</strong> muốn nâng cao kỹ năng thực chiến</li>
+					<li><strong>Người từ ngành khác</strong> muốn chuyển sang làm AI</li>
+				
 				</ul>
-				<p style="margin-top: 0.8rem; color: var(--gray); font-style: italic;">
-					"The discipline I practice on the track reflects how I approach problems at work — one step at a time."
-				</p>
 			</div>
 
 			<div class="about-section">
-				<h2>Research & Achievements</h2>
+				<h2>Phương pháp tiếp cận</h2>
 				<p>
-					I'm passionate about AI research and have published papers in academic journals. 
-					My recent work on real-time multi-person fall detection achieved state-of-the-art results 
-					and won multiple research awards at university level.
+					Mỗi chủ đề được viết theo phương pháp <strong>từ cơ bản đến chuyên sâu</strong>:
 				</p>
-				<div class="interests">
-					<span class="interest-tag">🤖 Computer Vision</span>
-					<span class="interest-tag">🧠 Deep Learning</span>
-					<span class="interest-tag">🚀 Model Optimization</span>
-					<span class="interest-tag">📊 MLOps</span>
-					<span class="interest-tag">📚 Research Papers</span>
-					<span class="interest-tag">⚡ Edge AI</span>
-					<span class="interest-tag">🌐 Vision-Language Models</span>
-				</div>
+				<ul style="line-height: 2; padding-left: 2rem; margin-top: 1rem;">
+					<li><strong>Khái niệm cơ bản</strong> — Giải thích rõ ràng, dễ hiểu cho người mới</li>
+					<li><strong>Lý thuyết nền tảng</strong> — Hiểu sâu về cách thức hoạt động</li>
+					<li><strong>Thực hành</strong> — Code examples, hands-on tutorials</li>
+					<li><strong>Best practices</strong> — Kinh nghiệm từ production</li>
+					<li><strong>Advanced topics</strong> — Kỹ thuật chuyên sâu cho những ai muốn đi xa hơn</li>
+				</ul>
 			</div>
 
 			<div class="about-section">
-				<h2>Let's Connect</h2>
+				<h2>Ngôn ngữ</h2>
 				<p>
-					I'm always open to discussing AI research, collaborating on interesting projects, 
-					or sharing knowledge about computer vision and MLOps. Whether you're working on 
-					similar problems or just curious about AI, feel free to reach out!
+					Nội dung được viết song ngữ <strong>Tiếng Việt</strong> và <strong>Tiếng Anh</strong>, 
+					giúp bạn dễ dàng tiếp cận kiến thức bằng ngôn ngữ mà bạn cảm thấy thoải mái nhất.
 				</p>
+			</div>
+
+			<div class="cta-box">
+				<h2 style="margin-top: 0;">Bắt đầu học ngay</h2>
+				<p style="color: var(--gray); margin-bottom: 0;">
+					Khám phá các bài viết về AI, từ cơ bản đến chuyên sâu
+				</p>
+				<a href="/blog">
+					Xem tất cả bài viết →
+				</a>
+			</div>
+
+			<div class="about-section" style="margin-top: 3rem; text-align: center;">
+				<h2>Liên hệ</h2>
 				<p>
-					<a href="/contact" style="color: var(--accent); font-weight: bold;">
-						Get in touch →
-					</a>
-					<a href="/cv" style="color: var(--accent); font-weight: bold; margin-left: 1.5rem;">
-						View My CV →
-					</a>
+					Có câu hỏi, góp ý, hoặc muốn thảo luận về AI?<br/>
+					Hãy liên hệ qua email: <a href={`mailto:${SITE_EMAIL}`} style="color: var(--accent); font-weight: bold;">{SITE_EMAIL}</a>
 				</p>
 			</div>
 		</main>

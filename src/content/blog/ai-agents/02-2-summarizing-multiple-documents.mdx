@@ -1,0 +1,506 @@
+---
+title: 'Part 2.2: Summarizing Across Documents'
+description: 'Learn how to summarize information from multiple data sources using MapReduce and Refine techniques with LangChain document loaders.'
+pubDate: 'Mar 08 2026'
+category: 'AI Agents & Applications'
+tags: ['llm', 'langchain', 'summarization', 'document-loaders', 'mapreduce']
+---
+
+import LangToggle from '../../../components/LangToggle.astro';
+import LangEN from '../../../components/LangEN.astro';
+import LangVI from '../../../components/LangVI.astro';
+
+> **Series**: AI Agents & Applications with LangChain, LangGraph and MCP  
+> **Part**: 2.2 — Summarizing Across Documents
+
+<LangToggle />
+
+<LangEN>
+
+In the previous part, we learned how to handle documents that exceed an LLM's context window. Now, we'll tackle a different but equally important challenge: summarizing information from multiple data sources. Think of scenarios where you need to synthesize insights from Wikipedia articles, Word documents, PDFs, and plain text files all at once.
+
+This process, as shown in Figure 2.2, builds on the MapReduce technique we covered earlier. But here's the twist: instead of splitting one large document, we're working with multiple complete documents from different sources.
+
+![Summarizing across documents using MapReduce](/src/assets/blog/ai-agents/summarization-across-documents-mapreduce.png)
+*Figure 2.2: Summarizing across documents using the MapReduce technique. Each document undergoes a map operation to generate a summary. These individual summaries are then condensed into a single final summary through the reduce operation.*
+
+In this approach, content from each raw text source is loaded into a corresponding Document instance. During the map operation, these Document objects are converted into individual summaries, which are then combined into a single summary during the reduce operation.
+
+---
+
+## The Refine Technique: An Alternative Approach
+
+Next, I'll introduce you to an alternative technique called **refine**, as illustrated in Figure 2.3. With this approach, we build the final summary incrementally by iteratively summarizing the combination of the current final summary and one of the document chunks. This process continues until all document chunks have been processed.
+
+![Summarizing across documents using the refine technique](/src/assets/blog/ai-agents/summarization-across-documents-refine.png)
+*Figure 2.3: Summarizing across documents using the refine technique. The final summary is built progressively by refining it with each document.*
+
+Here's how it works: each document is sent to the LLM for summarization, along with the current draft of the summary. This continues until all documents are processed, leading to the final summary.
+
+**When to use which technique?**
+- **MapReduce**: Works well for summarizing large volumes of text, where some content loss is acceptable to manage the processing load. It's also faster because chunks can be processed in parallel.
+- **Refine**: Better when you want to ensure that the essence of each part is fully captured in the final summary. It maintains more context but is slower because it processes documents sequentially.
+
+---
+
+## Creating Document Objects from Multiple Sources
+
+When summarizing a large document, you typically start by breaking it into smaller chunks, treating each chunk as a separate document. But in this case, we're beginning with a set of existing documents from different sources, so there's no need to split anything.
+
+How you create each Document object will depend on the source of the text. I'll show you how to summarize content from four different sources:
+- A Wikipedia page
+- A Microsoft Word file (DOCX)
+- A PDF document
+- A plain text file (TXT)
+
+All the content will be related to Paestum, a Greek colony on the Cilento coast in southern Italy around 500 BC. We'll use the appropriate DocumentLoader for each data source.
+
+### Loading Wikipedia Content
+
+Let's begin with Wikipedia content. While you can create a document from web-based data using the WebBaseLoader, specific loaders are customized to retrieve content from particular websites. For Wikipedia, we have the `WikipediaLoader`.
+
+```python
+from langchain_community.document_loaders import WikipediaLoader
+
+wikipedia_loader = WikipediaLoader(query="Paestum", load_max_docs=2)
+wikipedia_docs = wikipedia_loader.load()
+```
+
+**NOTE:** The WikipediaLoader may load content from other Wikipedia hyperlinks referenced in the requested article. For example, the Paestum article references the National Archaeological Museum of Paestum, the Lucania region, Lucanians, and the temples of Hera and Athena, resulting in additional content loaded. Thus, it returns a Document list rather than a single Document object. I've set the maximum number of documents returned to 2 to save on summarization costs, but you can adjust it as needed.
+
+### Loading File-Based Content
+
+To get started, you'll need three files related to Paestum:
+- `Paestum-Britannica.docx` — Content sourced from the Encyclopedia Britannica website
+- `PaestumRevisited.pdf` — An excerpt from "Paestum Revisited," a master thesis submitted at Stockholm University
+- `Paestum-Encyclopedia.txt` — Content taken from Encyclopedia.com
+
+Here's how to load these files into corresponding documents:
+
+```python
+from langchain_community.document_loaders import Docx2txtLoader
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import TextLoader
+
+word_loader = Docx2txtLoader("Paestum/Paestum-Britannica.docx")
+word_docs = word_loader.load()
+
+pdf_loader = PyPDFLoader("Paestum/PaestumRevisited.pdf")
+pdf_docs = pdf_loader.load()
+
+txt_loader = TextLoader("Paestum/Paestum-Encyclopedia.txt")
+txt_docs = txt_loader.load()
+```
+
+The document variables (`word_docs`, `pdf_docs`, `txt_docs`) are in plural form because a loader always returns a list of documents, even if the list contains only one item.
+
+**NOTE:** You may have noticed the direct creation of an array of Document objects from `Paestum-Encyclopedia.txt` using a TextLoader and wonder why the Moby-Dick.txt file was read with the Python file reader in the previous part. In that case, the intention was to split the content into a specific number of tokens to fit the LLM prompt, requiring manual creation of a Document object for each chunk. Here, we're loading complete documents without splitting.
+
+### Combining All Documents
+
+Now that we have documents from all sources, let's combine them into a single list:
+
+```python
+all_docs = wikipedia_docs + word_docs + pdf_docs + txt_docs
+print(f"Total documents loaded: {{len(all_docs)}}")
+```
+
+---
+
+## Summarizing with MapReduce
+
+Now we'll use the MapReduce approach to summarize all these documents. First, let's set up the LLM and necessary imports:
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+import getpass
+
+OPENAI_API_KEY = getpass.getpass('Enter your OPENAI_API_KEY')
+llm = ChatOpenAI(openai_api_key=OPENAI_API_KEY, model_name="gpt-4o-mini")
+```
+
+### Creating the Document Summary Chain
+
+For each document, we'll create a concise summary:
+
+```python
+doc_summary_template = """Write a concise summary of the following text:
+{{text}}
+DOC SUMMARY:"""
+
+doc_summary_prompt = PromptTemplate.from_template(doc_summary_template)
+doc_summary_chain = doc_summary_prompt | llm | StrOutputParser()
+```
+
+### Running MapReduce on All Documents
+
+We can now process all documents:
+
+```python
+# Map: Summarize each document
+doc_summaries = []
+for doc in all_docs:
+    summary = doc_summary_chain.invoke({{"text": doc.page_content}})
+    doc_summaries.append(summary)
+    
+# Reduce: Combine all summaries
+combine_template = """Write a final comprehensive summary based on these individual summaries:
+
+{{summaries}}
+
+FINAL SUMMARY:"""
+
+combine_prompt = PromptTemplate.from_template(combine_template)
+combine_chain = combine_prompt | llm | StrOutputParser()
+
+final_summary = combine_chain.invoke({{"summaries": "\n\n".join(doc_summaries)}})
+print(final_summary)
+```
+
+---
+
+## Summarizing with the Refine Technique
+
+Now let's implement the refine technique, which builds the summary progressively:
+
+```python
+refine_summary_template = """
+Your must produce a final summary from the current refined summary
+which has been generated so far and from the content of an additional document.
+This is the current refined summary generated so far: {{current_refined_summary}}
+This is the content of the additional document: {{text}}
+Only use the content of the additional document if it is useful, 
+otherwise return the current full summary as it is."""
+
+refine_summary_prompt = PromptTemplate.from_template(refine_summary_template)
+refine_chain = refine_summary_prompt | llm | StrOutputParser()
+```
+
+### Implementing the Refine Loop
+
+Here's the complete refine implementation:
+
+```python
+def refine_summary(docs):
+    intermediate_steps = []
+    current_refined_summary = ''
+    
+    for doc in docs:
+        intermediate_step = {{
+            "current_refined_summary": current_refined_summary, 
+            "text": doc.page_content
+        }}
+        intermediate_steps.append(intermediate_step)
+        
+        current_refined_summary = refine_chain.invoke(intermediate_step)
+        
+    return {{
+        "final_summary": current_refined_summary,
+        "intermediate_steps": intermediate_steps
+    }}
+
+full_summary = refine_summary(all_docs)
+print(full_summary["final_summary"])
+```
+
+This function processes each document one by one, refining the summary at each step. The `intermediate_steps` list can be useful for debugging or understanding how the summary evolved.
+
+---
+
+## Choosing the Right Summarization Technique
+
+To wrap up this part, I've included a flowchart to help you choose the most appropriate summarization technique for your specific needs, as shown in Figure 2.4.
+
+![Summarization technique decision flowchart](/src/assets/blog/ai-agents/summarization-flowchart.png)
+*Figure 2.4: Decision flowchart for choosing the appropriate summarization technique based on document count and size.*
+
+Here, the first key decision is whether we're summarizing one or multiple documents:
+
+**Single Document:**
+- **Fits within context window**: You can "stuff" the entire document into a single prompt for summarization. This is the simplest and fastest approach.
+- **Exceeds context window**: Use the MapReduce method to split the document into chunks, summarize each chunk, and then combine the summaries.
+
+**Multiple Documents:**
+- **All fit within context window**: You can stuff them all into a single prompt for summarization.
+- **Don't fit within context window**: 
+  - Use **MapReduce** for a large number of documents where speed and scalability are important
+  - Use **Refine** if you want to ensure that the core content of each document is fully captured in the final summary
+
+The choice ultimately depends on your specific requirements around speed, context preservation, and the volume of content you're processing.
+
+---
+
+## Part 2 Summary: Key Concepts in Summarization
+
+*This summary covers all key concepts from Part 2.1 and Part 2.2 of the Summarization series.*
+
+- **Text summarization** condenses documents into shorter versions while preserving key information. Use it for executive reports, article abstracts, and content previews. The approach varies by document count and size. Direct prompting works for single short documents, chaining handles medium-length texts, and MapReduce or Refine strategies tackle large corpora exceeding context windows.
+
+- **LangChain Document objects** wrap raw text with metadata (source, page numbers, timestamps) to preserve provenance through processing pipelines.
+
+- **MapReduce summarization** processes chunks independently and in parallel during the map stage. The reduce stage combines partial summaries into a final output. This approach handles documents exceeding context window limits, such as 100-page reports. Use MapReduce when parallel processing speed matters more than preserving all contextual connections.
+
+- **The refine summarization technique** iteratively updates a running summary by incorporating each new document sequentially. Each step sees both the current summary and the next chunk.
+
+- **MapReduce sacrifices summary completeness** for parallel processing speed and lower token costs. The refine technique preserves more context but processes sequentially, increasing latency and total tokens.
+
+- **Create prompt templates** with `PromptTemplate.from_template(template_string)`. Chaining components using the pipe operator—`summarize_chunk_chain = summarize_chunk_prompt | llm`—passes the prompt output directly to the model.
+
+- **To build map chains for parallel processing**, you define `summarize_map_chain` that processes each chunk and then use `.map()` to apply it across all chunks simultaneously with `RunnableParallel`.
+
+---
+
+**Previous**: [← Part 2.1: Summarizing Text with LangChain](/blog/ai-agents/02-1-summarizing-text-langchain)  
+**Next**: [Part 2.3: Agentic Summarization Systems →](/blog/ai-agents/02-3-agentic-summarization-systems)
+
+*— Nguyen Dai, AI Engineer @ PIXTA Vietnam*  
+*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
+
+</LangEN>
+
+<LangVI>
+
+Trong phần trước, chúng ta đã học cách xử lý các tài liệu vượt quá context window của LLM. Bây giờ, chúng ta sẽ giải quyết một thử thách khác nhưng cũng quan trọng không kém: tóm tắt thông tin từ nhiều nguồn dữ liệu. Hãy nghĩ về các tình huống mà bạn cần tổng hợp insights từ các bài viết Wikipedia, tài liệu Word, PDFs và text files cùng một lúc.
+
+Quá trình này, như được hiển thị trong Hình 2.2, xây dựng dựa trên kỹ thuật MapReduce mà chúng ta đã đề cập trước đó. Nhưng điểm khác biệt là: thay vì chia một tài liệu lớn, chúng ta đang làm việc với nhiều tài liệu hoàn chỉnh từ các nguồn khác nhau.
+
+![Tóm tắt trên nhiều tài liệu sử dụng MapReduce](/src/assets/blog/ai-agents/summarization-across-documents-mapreduce.png)
+*Hình 2.2: Tóm tắt trên nhiều tài liệu sử dụng kỹ thuật MapReduce. Mỗi tài liệu trải qua map operation để tạo bản tóm tắt. Các bản tóm tắt riêng lẻ này sau đó được kết hợp thành một bản tóm tắt cuối cùng thông qua reduce operation.*
+
+Trong phương pháp này, nội dung từ mỗi nguồn văn bản được load vào một Document instance tương ứng. Trong map operation, các Document objects này được chuyển đổi thành các bản tóm tắt riêng lẻ, sau đó được kết hợp thành một bản tóm tắt duy nhất trong reduce operation.
+
+---
+
+## Kỹ Thuật Refine: Phương Pháp Thay Thế
+
+Tiếp theo, tôi sẽ giới thiệu cho bạn một kỹ thuật thay thế gọi là **refine**, như được minh họa trong Hình 2.3. Với phương pháp này, chúng ta xây dựng bản tóm tắt cuối cùng theo cách tăng dần bằng cách lặp đi lặp lại việc tóm tắt sự kết hợp của bản tóm tắt cuối cùng hiện tại và một trong các document chunks. Quá trình này tiếp tục cho đến khi tất cả các document chunks được xử lý.
+
+![Tóm tắt trên nhiều tài liệu sử dụng kỹ thuật refine](/src/assets/blog/ai-agents/summarization-across-documents-refine.png)
+*Hình 2.3: Tóm tắt trên nhiều tài liệu sử dụng kỹ thuật refine. Bản tóm tắt cuối cùng được xây dựng dần dần bằng cách tinh chỉnh nó với mỗi tài liệu.*
+
+Đây là cách nó hoạt động: mỗi tài liệu được gửi đến LLM để tóm tắt, cùng với bản nháp hiện tại của bản tóm tắt. Điều này tiếp tục cho đến khi tất cả các tài liệu được xử lý, dẫn đến bản tóm tắt cuối cùng.
+
+**Khi nào nên sử dụng kỹ thuật nào?**
+- **MapReduce**: Hoạt động tốt cho việc tóm tắt khối lượng lớn văn bản, nơi một số mất mát nội dung có thể chấp nhận được để quản lý khối lượng xử lý. Nó cũng nhanh hơn vì các chunks có thể được xử lý song song.
+- **Refine**: Tốt hơn khi bạn muốn đảm bảo rằng bản chất của mỗi phần được nắm bắt đầy đủ trong bản tóm tắt cuối cùng. Nó duy trì nhiều ngữ cảnh hơn nhưng chậm hơn vì xử lý các tài liệu tuần tự.
+
+---
+
+## Tạo Document Objects từ Nhiều Nguồn
+
+Khi tóm tắt một tài liệu lớn, bạn thường bắt đầu bằng cách chia nó thành các chunks nhỏ hơn, coi mỗi chunk như một tài liệu riêng biệt. Nhưng trong trường hợp này, chúng ta bắt đầu với một tập hợp các tài liệu hiện có từ các nguồn khác nhau, vì vậy không cần chia gì cả.
+
+Cách bạn tạo mỗi Document object sẽ phụ thuộc vào nguồn của văn bản. Tôi sẽ chỉ cho bạn cách tóm tắt nội dung từ bốn nguồn khác nhau:
+- Một trang Wikipedia
+- Một file Microsoft Word (DOCX)
+- Một tài liệu PDF
+- Một file văn bản thuần (TXT)
+
+Tất cả nội dung sẽ liên quan đến Paestum, một thuộc địa Hy Lạp trên bờ biển Cilento ở miền nam Ý khoảng năm 500 TCN. Chúng ta sẽ sử dụng DocumentLoader phù hợp cho mỗi nguồn dữ liệu.
+
+### Load Nội Dung Wikipedia
+
+Hãy bắt đầu với nội dung Wikipedia. Trong khi bạn có thể tạo một document từ dữ liệu web sử dụng WebBaseLoader, các loaders cụ thể được tùy chỉnh để lấy nội dung từ các trang web cụ thể. Đối với Wikipedia, chúng ta có `WikipediaLoader`.
+
+```python
+from langchain_community.document_loaders import WikipediaLoader
+
+wikipedia_loader = WikipediaLoader(query="Paestum", load_max_docs=2)
+wikipedia_docs = wikipedia_loader.load()
+```
+
+**LƯU Ý:** WikipediaLoader có thể load nội dung từ các hyperlinks Wikipedia khác được tham chiếu trong bài viết được yêu cầu. Ví dụ, bài viết Paestum tham chiếu đến Bảo tàng Khảo cổ học Quốc gia Paestum, khu vực Lucania, người Lucanian và các đền thờ Hera và Athena, dẫn đến nội dung bổ sung được load. Do đó, nó trả về một Document list thay vì một Document object duy nhất. Tôi đã đặt số lượng tài liệu tối đa được trả về là 2 để tiết kiệm chi phí tóm tắt, nhưng bạn có thể điều chỉnh nó khi cần.
+
+### Load Nội Dung từ Files
+
+Để bắt đầu, bạn sẽ cần ba files liên quan đến Paestum:
+- `Paestum-Britannica.docx` — Nội dung lấy từ trang web Encyclopedia Britannica
+- `PaestumRevisited.pdf` — Đoạn trích từ "Paestum Revisited," luận văn thạc sĩ nộp tại Đại học Stockholm
+- `Paestum-Encyclopedia.txt` — Nội dung lấy từ Encyclopedia.com
+
+Đây là cách load các files này vào các documents tương ứng:
+
+```python
+from langchain_community.document_loaders import Docx2txtLoader
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import TextLoader
+
+word_loader = Docx2txtLoader("Paestum/Paestum-Britannica.docx")
+word_docs = word_loader.load()
+
+pdf_loader = PyPDFLoader("Paestum/PaestumRevisited.pdf")
+pdf_docs = pdf_loader.load()
+
+txt_loader = TextLoader("Paestum/Paestum-Encyclopedia.txt")
+txt_docs = txt_loader.load()
+```
+
+Các biến document (`word_docs`, `pdf_docs`, `txt_docs`) ở dạng số nhiều vì một loader luôn trả về một list các documents, ngay cả khi list chỉ chứa một item.
+
+**LƯU Ý:** Bạn có thể nhận thấy việc tạo trực tiếp một array của Document objects từ `Paestum-Encyclopedia.txt` sử dụng TextLoader và tự hỏi tại sao file Moby-Dick.txt lại được đọc bằng Python file reader trong phần trước. Trong trường hợp đó, mục đích là chia nội dung thành một số lượng tokens cụ thể để vừa với LLM prompt, yêu cầu tạo thủ công một Document object cho mỗi chunk. Ở đây, chúng ta đang load các tài liệu hoàn chỉnh mà không cần chia.
+
+### Kết Hợp Tất Cả Documents
+
+Bây giờ chúng ta đã có documents từ tất cả các nguồn, hãy kết hợp chúng thành một list duy nhất:
+
+```python
+all_docs = wikipedia_docs + word_docs + pdf_docs + txt_docs
+print(f"Tổng số documents đã load: {{len(all_docs)}}")
+```
+
+---
+
+## Tóm Tắt với MapReduce
+
+Bây giờ chúng ta sẽ sử dụng phương pháp MapReduce để tóm tắt tất cả các documents này. Đầu tiên, hãy thiết lập LLM và các imports cần thiết:
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+import getpass
+
+OPENAI_API_KEY = getpass.getpass('Enter your OPENAI_API_KEY')
+llm = ChatOpenAI(openai_api_key=OPENAI_API_KEY, model_name="gpt-4o-mini")
+```
+
+### Tạo Document Summary Chain
+
+Cho mỗi document, chúng ta sẽ tạo một bản tóm tắt ngắn gọn:
+
+```python
+doc_summary_template = """Viết bản tóm tắt ngắn gọn của văn bản sau:
+{{text}}
+BẢN TÓM TẮT:"""
+
+doc_summary_prompt = PromptTemplate.from_template(doc_summary_template)
+doc_summary_chain = doc_summary_prompt | llm | StrOutputParser()
+```
+
+### Chạy MapReduce trên Tất Cả Documents
+
+Bây giờ chúng ta có thể xử lý tất cả các documents:
+
+```python
+# Map: Tóm tắt mỗi document
+doc_summaries = []
+for doc in all_docs:
+    summary = doc_summary_chain.invoke({{"text": doc.page_content}})
+    doc_summaries.append(summary)
+    
+# Reduce: Kết hợp tất cả summaries
+combine_template = """Viết bản tóm tắt toàn diện cuối cùng dựa trên các bản tóm tắt riêng lẻ sau:
+
+{{summaries}}
+
+BẢN TÓM TẮT CUỐI CÙNG:"""
+
+combine_prompt = PromptTemplate.from_template(combine_template)
+combine_chain = combine_prompt | llm | StrOutputParser()
+
+final_summary = combine_chain.invoke({{"summaries": "\n\n".join(doc_summaries)}})
+print(final_summary)
+```
+
+---
+
+## Tóm Tắt với Kỹ Thuật Refine
+
+Bây giờ hãy implement kỹ thuật refine, xây dựng bản tóm tắt dần dần:
+
+```python
+refine_summary_template = """
+Bạn phải tạo ra bản tóm tắt cuối cùng từ bản tóm tắt refined hiện tại
+đã được tạo cho đến nay và từ nội dung của một tài liệu bổ sung.
+Đây là bản tóm tắt refined hiện tại đã được tạo: {{current_refined_summary}}
+Đây là nội dung của tài liệu bổ sung: {{text}}
+Chỉ sử dụng nội dung của tài liệu bổ sung nếu nó hữu ích, 
+nếu không thì trả về bản tóm tắt đầy đủ hiện tại như cũ."""
+
+refine_summary_prompt = PromptTemplate.from_template(refine_summary_template)
+refine_chain = refine_summary_prompt | llm | StrOutputParser()
+```
+
+### Implement Refine Loop
+
+Đây là implementation refine hoàn chỉnh:
+
+```python
+def refine_summary(docs):
+    intermediate_steps = []
+    current_refined_summary = ''
+    
+    for doc in docs:
+        intermediate_step = {{
+            "current_refined_summary": current_refined_summary, 
+            "text": doc.page_content
+        }}
+        intermediate_steps.append(intermediate_step)
+        
+        current_refined_summary = refine_chain.invoke(intermediate_step)
+        
+    return {{
+        "final_summary": current_refined_summary,
+        "intermediate_steps": intermediate_steps
+    }}
+
+full_summary = refine_summary(all_docs)
+print(full_summary["final_summary"])
+```
+
+Function này xử lý từng document một, tinh chỉnh bản tóm tắt ở mỗi bước. List `intermediate_steps` có thể hữu ích cho debugging hoặc hiểu cách bản tóm tắt phát triển.
+
+---
+
+## Chọn Kỹ Thuật Tóm Tắt Phù Hợp
+
+Để kết thúc phần này, tôi đã đưa vào một flowchart để giúp bạn chọn kỹ thuật tóm tắt phù hợp nhất cho nhu cầu cụ thể của mình, như được hiển thị trong Hình 2.4.
+
+![Flowchart quyết định kỹ thuật tóm tắt](/src/assets/blog/ai-agents/summarization-flowchart.png)
+*Hình 2.4: Flowchart quyết định để chọn kỹ thuật tóm tắt phù hợp dựa trên số lượng và kích thước tài liệu.*
+
+Ở đây, quyết định chính đầu tiên là liệu chúng ta đang tóm tắt một hay nhiều tài liệu:
+
+**Tài Liệu Đơn:**
+- **Vừa với context window**: Bạn có thể "stuff" toàn bộ tài liệu vào một prompt duy nhất để tóm tắt. Đây là cách đơn giản và nhanh nhất.
+- **Vượt quá context window**: Sử dụng phương pháp MapReduce để chia tài liệu thành các chunks, tóm tắt từng chunk, sau đó kết hợp các bản tóm tắt.
+
+**Nhiều Tài Liệu:**
+- **Tất cả vừa với context window**: Bạn có thể stuff tất cả chúng vào một prompt duy nhất để tóm tắt.
+- **Không vừa với context window**: 
+  - Sử dụng **MapReduce** cho số lượng lớn tài liệu khi tốc độ và khả năng mở rộng quan trọng
+  - Sử dụng **Refine** nếu bạn muốn đảm bảo rằng nội dung cốt lõi của mỗi tài liệu được nắm bắt đầy đủ trong bản tóm tắt cuối cùng
+
+Lựa chọn cuối cùng phụ thuộc vào yêu cầu cụ thể của bạn về tốc độ, bảo tồn ngữ cảnh và khối lượng nội dung bạn đang xử lý.
+
+---
+
+## Tóm Tắt Part 2: Các Khái Niệm Chính về Summarization
+
+*Phần tóm tắt này bao gồm tất cả các khái niệm chính từ Part 2.1 và Part 2.2 của series Summarization.*
+
+- **Text summarization** làm ngắn gọn tài liệu trong khi vẫn bảo toàn thông tin chính. Sử dụng cho báo cáo điều hành, tóm tắt bài viết và xem trước nội dung. Phương pháp thay đổi theo số lượng và kích thước tài liệu. Direct prompting hoạt động cho tài liệu đơn ngắn, chaining xử lý văn bản độ dài trung bình, và các chiến lược MapReduce hoặc Refine giải quyết các tập lớn vượt quá context windows.
+
+- **LangChain Document objects** bọc raw text với metadata (nguồn, số trang, timestamps) để bảo toàn nguồn gốc qua các processing pipelines.
+
+- **MapReduce summarization** xử lý các chunks độc lập và song song trong map stage. Reduce stage kết hợp các partial summaries thành output cuối cùng. Phương pháp này xử lý các tài liệu vượt quá giới hạn context window, như báo cáo 100 trang. Sử dụng MapReduce khi tốc độ xử lý song song quan trọng hơn việc bảo toàn tất cả các kết nối ngữ cảnh.
+
+- **Kỹ thuật refine summarization** lặp đi lặp lại cập nhật một running summary bằng cách kết hợp từng tài liệu mới tuần tự. Mỗi bước thấy cả summary hiện tại và chunk tiếp theo.
+
+- **MapReduce hy sinh tính hoàn chỉnh của summary** để có tốc độ xử lý song song và chi phí token thấp hơn. Kỹ thuật refine bảo toàn nhiều ngữ cảnh hơn nhưng xử lý tuần tự, tăng độ trễ và tổng số tokens.
+
+- **Tạo prompt templates** với `PromptTemplate.from_template(template_string)`. Chaining các components sử dụng pipe operator—`summarize_chunk_chain = summarize_chunk_prompt | llm`—truyền prompt output trực tiếp đến model.
+
+- **Để xây dựng map chains cho parallel processing**, bạn định nghĩa `summarize_map_chain` xử lý từng chunk sau đó sử dụng `.map()` để áp dụng nó trên tất cả các chunks đồng thời với `RunnableParallel`.
+
+---
+
+**Trước đó**: [← Part 2.1: Tóm Tắt Văn Bản với LangChain](/blog/ai-agents/02-1-summarizing-text-langchain)  
+**Tiếp theo**: [Part 2.3: Hệ Thống Tóm Tắt Agentic →](/blog/ai-agents/02-3-agentic-summarization-systems)
+
+*— Nguyễn Đài, AI Engineer @ PIXTA Vietnam*  
+*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
+
+</LangVI>

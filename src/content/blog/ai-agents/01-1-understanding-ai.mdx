@@ -1,0 +1,240 @@
+---
+title: 'Part 1.1: Understanding AI Applications'
+description: 'Learn about LLM-based applications, chatbots, and AI agents—understand their differences and when to use each pattern.'
+pubDate: 'Mar 01 2026'
+category: 'AI Agents & Applications'
+tags: ['llm', 'ai-agents', 'chatbots', 'getting-started']
+---
+
+import LangToggle from '../../../components/LangToggle.astro';
+import LangEN from '../../../components/LangEN.astro';
+import LangVI from '../../../components/LangVI.astro';
+
+> **Series**: AI Agents & Applications with LangChain, LangGraph and MCP  
+> **Part**: 1.1 — Understanding AI Applications
+
+<LangToggle />
+
+<LangEN>
+
+This post kicks off the series by building the foundation you need before writing a single line of agent code. We'll cover what LLMs are good at, where they fall short, and why tools like **LangChain**, **LangGraph**, and **LangSmith** matter for building systems that actually work in production.
+
+Along the way you'll get familiar with the main architectural patterns — engines, chatbots, and agents — and two techniques that show up everywhere: **prompt engineering** and **Retrieval-Augmented Generation (RAG)**.
+
+---
+
+## Introduction to AI Agents and Applications
+
+LLMs like GPT, Gemini, and Claude have gone from a cool demo to something engineers actually ship with. They power applications that answer complex questions, generate tailored content, summarize long documents, and coordinate actions across systems.
+
+More recently, they've unlocked a new class of applications: **AI agents**. An agent takes natural-language input, decides which tools or services to call, coordinates multi-step workflows, and returns results in a clear, human-friendly format — all without you hard-coding the logic for each step.
+
+Building these systems isn't trivial. You need to ingest and manage data, structure prompts carefully, chain model calls reliably, and connect to external APIs and services. That's where **LangChain**, **LangGraph**, and **LangSmith** come in — they give you modular building blocks that cut the boilerplate and let you focus on what actually matters: your application logic.
+
+Throughout this series, you'll learn how to design, build, and scale real LLM-based applications and agents using these tools from the ground up.
+
+### Building LLM-based Applications and Agents
+
+LLMs are great at handling natural language—they can understand text, generate it, and pull out information when you need it. That makes them useful for all kinds of applications: summarization, translation, sentiment analysis, semantic search, chatbots, and code generation. Because of this range, you'll now see LLMs showing up in fields as varied as education, healthcare, law, and finance.
+
+Even with all of these different use cases, most LLM apps end up looking pretty similar under the hood. They take in natural language input, work with unstructured data, pull in extra context from one or more sources, and then package everything into a prompt for the model to process. At a high level, these systems generally fall into three main categories:
+
+- **LLM-based applications or engines** are systems that deliver a specific, bounded capability (for example, summarization, search, or content generation). An engine is typically invoked to produce output and then it stops; it does not decide what to do next or carry work forward beyond the request.
+- **Chatbots** are conversational interfaces that maintain context over multiple exchanges. They are primarily focused on dialogue and interactive Q&A rather than independently taking action.
+- **AI agents** are autonomous or semi-autonomous systems that use LLMs to choose actions, plan, and execute multi-step work to reach a goal. Unlike engines, agents can loop (observe → decide → act → observe), coordinate multiple tools/APIs, and adapt their next step based on intermediate results, errors, or new information.
+
+We'll examine each of these categories in turn before exploring how LangChain supports their development. Let's start with LLM-based applications and engines.
+
+#### LLM-based Applications and Engines
+
+An LLM-based application acts as a backend tool that handles specific natural language requests for other systems. For example, a summarization engine condenses lengthy text passages into concise summaries. These summaries can be returned immediately to the client or stored in a database for later use by other applications, as shown in figure 1.1.
+
+![Summarization engine efficiently summarizes and stores content from large volumes of text and can be invoked by other systems through the REST API](/src/assets/blog/ai-agents/summarization-engine.png)
+*Figure 1.1: A summarization engine efficiently summarizes and stores content from large volumes of text and can be invoked by other systems through the REST API.*
+
+Summarization engines are often deployed as shared services, which are typically exposed through a REST API so multiple systems can call them on demand. Another common type is the Question & Answer (Q&A) engine, which answers user queries against a knowledge base. A Q&A engine works in two phases: ingestion and query.
+
+In the content ingestion phase, the engine builds its knowledge base by pulling in text, splitting it into chunks, and converting those chunks into embeddings—mathematical vectors that capture meaning. Both the embeddings and the original chunks are stored in a vector store for efficient retrieval. Don't worry if embedding model or vector store sound unfamiliar; we'll cover them in detail later. For now, just think of this step as transforming raw text into a searchable representation.
+
+**DEFINITION:** Embeddings are vector representations of words, tokens, or larger text units—such as sentences, paragraphs, or document chunks—mapped into a continuous, high-dimensional space (typically with hundreds or thousands of dimensions). These vectors capture semantic and syntactic relationships, allowing language models to understand meaning, context, and similarity. Embeddings are typically learned during the pretraining phase, where models are trained on large-scale text corpora to predict tokens based on surrounding context. By encoding both individual words and broader semantic meaning, embeddings enable more effective reasoning, retrieval, and language understanding.
+
+In the query phase, the engine takes a user's question, turns it into an embedding using the same model, and performs a semantic search over the vector store. It retrieves the most relevant chunks and combines them with the original question to form a prompt, which is then sent to the LLM. The model then uses the question and the retrieved context to generate an answer that is intended to be accurate and grounded in the provided sources—though the quality of the result ultimately depends on factors like retrieval relevance, chunking strategy, and the model's behavior.
+
+This workflow is known as Retrieval-Augmented Generation (RAG), as shown in figure 1.2. RAG has quickly become a cornerstone of modern LLM applications. It's a foundational technique for making LLM outputs more useful, up to date, and grounded in relevant external information.
+
+**DEFINITION:** Retrieval-Augmented Generation (RAG) is a design pattern in which the LLM's text generation is augmented by incorporating additional context and then retrieved from a local knowledge base—often stored in a vector store—at query time.
+
+![A Q&A engine implemented with RAG design. An LLM query engine stores domain-specific document information in a vector store](/src/assets/blog/ai-agents/rag-qa-engine.png)
+*Figure 1.2: A Q&A engine implemented with RAG design. An LLM query engine stores domain-specific document information in a vector store. When an external system sends a query, it converts the natural language question into its embeddings (or vector) representation, retrieves the related documents from the vector store, and then gives the LLM the information it needs to craft a natural language response.*
+
+Engines aren't limited to Q&A. They can also call external tools by running predefined sequences of steps, often called chains. For example, an engine handling a user request might convert natural language instructions into API calls, pull data from outside systems, and then use an LLM to interpret and present the results in a clean, human-readable format.
+
+At their core, these engines are designed for system-level work: automating processes, processing data intelligently, and stitching together different platforms. They simplify workflows that involve natural language by handling the messy parts—retrieval, transformation, orchestration—so you don't have to.
+
+Later we'll see that AI agents build on these capabilities but differ in where the "decision-making" lives. An engine typically executes a predefined chain: the steps and branching logic are largely designed ahead of time, and the system runs that workflow to completion for a given request. An agent, by contrast, uses the LLM to plan and adapt its approach at runtime—choosing which tools to call, revising its plan based on intermediate results, and potentially looping through multiple actions until it reaches a stopping condition. Put simply: engines run workflows while agents manage workflows, trading some predictability for greater flexibility on open-ended, multi-step tasks.
+
+#### LLM-Based Chatbots
+
+LLM chatbot hoạt động như trợ lý thông minh với khả năng trò chuyện liên tục và tự nhiên. Khác với chương trình hỏi-đáp đơn giản, các hệ thống này cố gắng giữ cuộc trò chuyện vừa hữu ích vừa an toàn. Chất lượng phụ thuộc nhiều vào cách viết instruction: instruction rõ ràng giúp định hình hành vi model và ngăn chặn câu trả lời sai, mơ hồ hoặc nguy hiểm. Các công cụ chat hiện đại như OpenAI hỗ trợ nhiều loại message (system, user, assistant), giúp thiết lập tính cách và duy trì hành vi nhất quán.
+
+To make answers more accurate, chatbots often bring in real facts from local knowledge sources like vector stores. This lets them mix smooth conversation skills with specific knowledge, so the answers aren't just well-written but also useful and trustworthy.
+
+A key feature of chatbots is conversation memory. By remembering earlier messages, they can keep responses connected and personal. This memory has limits based on the model's context window. Bigger windows help, but many systems still shorten or summarize past conversations to stay within limits—and to save money.
+
+LLM chatbots are usually built for specific tasks like making summaries, answering questions, or translating. They can either respond directly to what you say or mix it with stored knowledge. For example, a summary chatbot (figure 1.3) is built on a basic summary tool but adds conversation management and awareness of context.
+
+![A summary chatbot is similar to a summary tool, but it offers an interactive experience where the LLM and the user can work together to improve the results](/src/assets/blog/ai-agents/summarization-chatbot.png.png)
+*Figure 1.3: A summary chatbot is similar to a summary tool, but it offers an interactive experience where the LLM and the user can work together to improve the results.*
+
+The main difference between a summary tool and a summary chatbot is interaction. A chatbot lets you improve responses in real time: if you want a shorter or more casual summary, you can just ask, as shown in the sequence diagram in figure 1.4.
+
+This back-and-forth makes the process feel like teamwork—creating answers that feel more customized and aware of context. In the next chapter, we'll explore role instructions, few-shot examples, and better prompt writing to give you more control over how chatbots behave and what they produce.
+
+#### AI Agents
+
+An AI agent is a system that works with an LLM to complete tasks with multiple steps—often using different data sources, branching logic, and smart decision-making. Unlike simple programs that follow fixed steps, agents can work with some independence: they follow the rules you set, but they decide what to do next on their own.
+
+Ở mỗi bước, agent yêu cầu LLM quyết định công cụ nào cần dùng, thực thi công cụ đó, và xem xét kết quả trước khi tiếp tục. Vòng lặp này tiếp diễn cho đến khi hoàn thành nhiệm vụ. Trong thực tế, điều này có nghĩa là lấy thông tin từ cả nguồn có cấu trúc (database, API) và phi cấu trúc (tài liệu, website), tổng hợp kết quả và trình bày dưới dạng rõ ràng.
+
+Here's an example: a travel company uses an AI agent to create holiday packages based on what customers ask for on their booking website. As shown in figure 1.5, the process works like this:
+
+1. The agent sends a prompt to the LLM asking it to pick the most useful tools for the request—for example, flight booking, hotel search, car rental services, weather forecasts, and the company's special deals database.
+2. Using a prompt written by developers that lists all available tools and what they do, the LLM chooses the right ones and creates the needed queries—such as database searches for holiday deals or API calls to external services.
+3. The agent runs the queries, collects the results, and sends another prompt to the LLM with both the original holiday request and all the collected information.
+4. The LLM responds with a complete holiday plan that includes all bookings, which the agent then sends back to the booking website.
+
+![Workflow of an AI agent tasked with assembling holiday packages](/src/assets/blog/ai-agents/ai-agent-workflow.png)
+*Figure 1.5: Workflow of an AI agent tasked with assembling holiday packages.*
+
+The workflow can go through multiple rounds between the agent and the LLM before creating a final result, such as a complete holiday plan. Also, the design shown in figure 1.5 is just one option. Another design could use several smaller agents managed by a Supervisor agent at the top.
+
+In important areas like finance or healthcare, it's common to include a human-in-the-loop step. This means a person can review and approve critical actions—such as confirming a money transfer or checking a complex medical recommendation—before finalizing them. In the holiday planning example, the agent could pause and ask for human approval of the suggested trip plan before sending it to the customer, adding extra safety and trust.
+
+There has been huge interest in AI agents, with major companies like OpenAI, Google, and Amazon, as well as independent developers like LangChain, LlamaIndex, and Pydantic, all releasing agent tools to help more people use this approach.
+
+In this series, we'll focus on LangGraph, LangChain's special agent framework. LangGraph provides ready-made agent and coordinator classes, along with tool integrations you can use right away, so you don't have to build everything from scratch. You'll also get hands-on experience building advanced agents with LangGraph, learning how to design, coordinate, and improve them in practice.
+
+In many ways, an AI agent represents the most advanced type of LLM application. It uses the full range of LLM abilities—understanding, creating, and reasoning about text—to power complex, automated workflows. Agents can choose and use multiple tools on the fly, guided by prompts you design, making them valuable in fields like finance, healthcare, and logistics, where multi-step thinking and data combination are essential.
+
+Interest in agents has grown even more with the introduction of the Model Context Protocol (MCP) by Anthropic. MCP sets a standard for services to share tools through MCP servers, which agents can access through MCP clients as easily as local tools. This shifts the integration work to the service itself, letting developers focus on building capable agents rather than maintaining custom connections. After its release in late 2024, MCP quickly became a standard—adopted by major LLM providers like OpenAI and Google—and thousands of tools are now available through public MCP portals. In this series, you'll learn how the protocol works, see the ecosystem in action, and build your own MCP server that works directly with an agent application.
+
+---
+
+**Next**: [Part 1.2: LangChain Framework →](/blog/ai-agents/01-2-langchain-framework)
+
+*— Nguyen Dai, AI Engineer @ PIXTA Vietnam*  
+*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
+
+</LangEN>
+
+<LangVI>
+
+Bài này mở đầu series bằng cách xây dựng nền tảng cần thiết trước khi bạn viết bất kỳ dòng code agent nào. Chúng ta sẽ tìm hiểu LLM giỏi việc gì, yếu ở đâu, và tại sao các công cụ như **LangChain**, **LangGraph**, **LangSmith** lại quan trọng để xây dựng hệ thống hoạt động tốt trong thực tế.
+
+Bên cạnh đó, bạn sẽ làm quen với các mô hình kiến trúc chính — engine, chatbot và agent — cùng hai kỹ thuật xuất hiện ở khắp nơi: **prompt engineering** và **Retrieval-Augmented Generation (RAG)**.
+
+---
+
+## Giới Thiệu về AI Agents và Ứng Dụng
+
+Các LLM như GPT, Gemini và Claude đã không còn là thứ để demo nữa — chúng là thứ các kỹ sư thực sự đưa vào production. Chúng cho phép ứng dụng trả lời câu hỏi phức tạp, tạo nội dung theo nhu cầu, tóm tắt tài liệu dài, và phối hợp các hành động xuyên suốt nhiều hệ thống.
+
+Gần đây hơn, LLM đã mở ra một lớp ứng dụng hoàn toàn mới: **AI agents**. Một agent nhận đầu vào bằng ngôn ngữ tự nhiên, tự quyết định cần gọi tool hay service nào, điều phối workflow nhiều bước, rồi trả về kết quả rõ ràng, dễ đọc — mà không cần bạn hard-code từng bước logic.
+
+Xây dựng các hệ thống này không đơn giản. Bạn cần xử lý và quản lý dữ liệu, thiết kế prompt cẩn thận, nối các lần gọi model một cách đáng tin cậy, và tích hợp API cùng dịch vụ bên ngoài. Đó chính là lúc **LangChain**, **LangGraph** và **LangSmith** phát huy tác dụng — chúng cung cấp các building block dạng module giúp loại bỏ boilerplate và để bạn tập trung vào điều thực sự quan trọng: logic của ứng dụng.
+
+Xuyên suốt series này, bạn sẽ học cách thiết kế, xây dựng và mở rộng các ứng dụng và agent dựa trên LLM trong thực tế, sử dụng những công cụ này từ đầu.
+
+### Xây Dựng Ứng Dụng và Agent Dựa Trên LLM
+
+LLM rất giỏi trong việc xử lý ngôn ngữ tự nhiên—chúng có thể hiểu văn bản, sinh ra văn bản, và trích xuất thông tin khi bạn cần. Điều này khiến chúng hữu ích cho đủ loại ứng dụng: tóm tắt, dịch thuật, phân tích cảm xúc, tìm kiếm ngữ nghĩa, chatbot, và sinh code. Nhờ phạm vi rộng này, giờ đây bạn sẽ thấy LLM xuất hiện trong nhiều lĩnh vực khác nhau như giáo dục, y tế, luật pháp và tài chính.
+
+Dù có nhiều use case khác nhau, hầu hết các ứng dụng LLM cuối cùng đều trông khá giống nhau bên trong. Chúng nhận đầu vào bằng ngôn ngữ tự nhiên, làm việc với dữ liệu phi cấu trúc, lấy thêm ngữ cảnh từ một hoặc nhiều nguồn, rồi đóng gói mọi thứ vào một prompt để model xử lý. Ở mức độ cao, các hệ thống này thường rơi vào ba loại chính:
+
+- **Ứng dụng LLM hoặc engine** là các hệ thống cung cấp một khả năng cụ thể, có giới hạn (ví dụ: tóm tắt, tìm kiếm, hoặc sinh nội dung). Một engine thường được gọi để tạo ra đầu ra rồi dừng lại; nó không quyết định bước tiếp theo hoặc tiếp tục công việc ngoài yêu cầu ban đầu.
+- **Chatbot** là giao diện hội thoại duy trì ngữ cảnh qua nhiều lượt trao đổi. Chúng chủ yếu tập trung vào đối thoại và hỏi đáp tương tác thay vì tự thực hiện hành động.
+- **AI agent** là các hệ thống tự động hoặc bán tự động sử dụng LLM để chọn hành động, lập kế hoạch và thực thi công việc nhiều bước để đạt mục tiêu. Khác với engine, agent có thể lặp (quan sát → quyết định → hành động → quan sát), điều phối nhiều tool/API, và điều chỉnh bước tiếp theo dựa trên kết quả trung gian, lỗi hoặc thông tin mới.
+
+Chúng ta sẽ xem xét từng loại này trước khi khám phá cách LangChain hỗ trợ phát triển chúng. Hãy bắt đầu với ứng dụng LLM và engine.
+
+#### Ứng Dụng LLM và Engine
+
+Một ứng dụng dựa trên LLM hoạt động như một công cụ backend xử lý các yêu cầu ngôn ngữ tự nhiên cụ thể cho các hệ thống khác. Ví dụ, một summarization engine (bộ máy tóm tắt) ngưng tụ các đoạn văn bản dài thành bản tóm tắt ngắn gọn. Các bản tóm tắt này có thể được trả về ngay cho client hoặc lưu vào database để các ứng dụng khác sử dụng sau, như thể hiện trong hình 1.1.
+
+![Summarization engine tóm tắt và lưu trữ nội dung từ khối lượng văn bản lớn và có thể được các hệ thống khác gọi thông qua REST API](/src/assets/blog/ai-agents/summarization-engine.png)
+*Hình 1.1: Một summarization engine tóm tắt và lưu trữ nội dung từ khối lượng văn bản lớn và có thể được các hệ thống khác gọi thông qua REST API.*
+
+Cac summarization engine thường được triển khai như các dịch vụ dùng chung, thường được expose thông qua REST API để nhiều hệ thống có thể gọi chúng theo yêu cầu. Một loại phổ biến khác là Question & Answer (Q&A) engine, trả lời câu hỏi của người dùng dựa trên một knowledge base. Một Q&A engine hoạt động qua hai giai đoạn: ingestion (nhập liệu) và query (truy vấn).
+
+Trong giai đoạn content ingestion, engine xây dựng knowledge base bằng cách lấy văn bản, chia thành các chunk nhỏ hơn, và chuyển đổi các chunk đó thành embedding—các vector toán học nắm bắt ý nghĩa. Cả embedding và các chunk gốc đều được lưu trong vector store để truy xuất hiệu quả. Đừng lo lắng nếu embedding model hay vector store nghe không quen thuộc; chúng ta sẽ đi sâu vào chi tiết sau. Bây giờ, chỉ cần hiểu bước này là chuyển đổi văn bản thô thành dạng có thể tìm kiếm được.
+
+**Định nghĩa:** Embedding là biểu diễn dưới dạng vector của các từ, token, hoặc các đơn vị văn bản lớn hơn—như câu, đoạn văn, hoặc chunk tài liệu—được ánh xạ vào một không gian liên tục, nhiều chiều (thường có hàng trăm hoặc hàng nghìn chiều). Các vector này nắm bắt mối quan hệ ngữ nghĩa và cú pháp, cho phép các model ngôn ngữ hiểu ý nghĩa, ngữ cảnh và sự tương đồng. Embedding thường được học trong giai đoạn pretraining, khi model được huấn luyện trên các tập dữ liệu văn bản quy mô lớn để dự đoán token dựa trên ngữ cảnh xung quanh. Bằng cách mã hóa cả các từ riêng lẻ và ý nghĩa ngữ nghĩa rộng hơn, embedding cho phép suy luận, truy xuất và hiểu ngôn ngữ hiệu quả hơn.
+
+Trong giai đoạn query, engine nhận câu hỏi của người dùng, chuyển nó thành embedding bằng cùng model, và thực hiện tìm kiếm ngữ nghĩa (semantic search) trên vector store. Nó truy xuất các chunk liên quan nhất và kết hợp chúng với câu hỏi gốc để tạo thành một prompt, sau đó được gửi tới LLM. Model sau đó sử dụng câu hỏi và ngữ cảnh đã truy xuất để tạo ra câu trả lời chính xác và dựa trên các nguồn được cung cấp—tuy nhiên chất lượng của kết quả cuối cùng phụ thuộc vào các yếu tố như độ liên quan của retrieval, chiến lược chunking và hành vi của model.
+
+Quy trình này được gọi là Retrieval-Augmented Generation (RAG), như thể hiện trong hình 1.2. RAG nhanh chóng trở thành nền tảng cốt lõi của các ứng dụng LLM hiện đại. Đây là kỹ thuật nền tảng để làm cho đầu ra của LLM hữu ích hơn, cập nhật hơn và dựa trên thông tin bên ngoài liên quan.
+
+**Định nghĩa:** Retrieval-Augmented Generation (RAG) là một mẫu thiết kế trong đó việc sinh văn bản của LLM được tăng cường bằng cách kết hợp ngữ cảnh bổ sung và sau đó truy xuất từ knowledge base cục bộ—thường được lưu trong vector store—tại thời điểm truy vấn.
+
+![Một Q&A engine được triển khai với thiết kế RAG. Một LLM query engine lưu thông tin tài liệu cụ thể theo lĩnh vực trong vector store](/src/assets/blog/ai-agents/rag-qa-engine.png)
+*Hình 1.2: Một Q&A engine được triển khai với thiết kế RAG. Một LLM query engine lưu thông tin tài liệu cụ thể theo lĩnh vực trong vector store. Khi một hệ thống bên ngoài gửi truy vấn, nó chuyển đổi câu hỏi ngôn ngữ tự nhiên thành biểu diễn embedding (hoặc vector), truy xuất các tài liệu liên quan từ vector store, rồi cung cấp cho LLM thông tin cần thiết để tạo ra câu trả lời bằng ngôn ngữ tự nhiên.*
+
+Engine không chỉ giới hạn ở Q&A. Chúng cũng có thể gọi các tool bên ngoài bằng cách chạy các chuỗi bước đã được định nghĩa trước, thường gọi là chain. Ví dụ, một engine xử lý yêu cầu của người dùng có thể chuyển đổi các hướng dẫn ngôn ngữ tự nhiên thành các lời gọi API, lấy dữ liệu từ các hệ thống bên ngoài, rồi sử dụng LLM để giải thích và trình bày kết quả dưới dạng sạch sẽ, dễ đọc.
+
+Về bản chất, các engine này được thiết kế cho công việc cấp hệ thống: tự động hóa quy trình, xử lý dữ liệu thông minh, và kết nối các nền tảng khác nhau. Chúng đơn giản hóa các workflow liên quan đến ngôn ngữ tự nhiên bằng cách xử lý các phần rối rắm—retrieval, transformation, orchestration—để bạn không phải làm.
+
+Sau này chúng ta sẽ thấy rằng AI agent xây dựng dựa trên các khả năng này nhưng khác biệt ở chỗ "ra quyết định" nằm ở đâu. Một engine thường thực thi một chain đã định sẵn: các bước và logic phân nhánh chủ yếu được thiết kế trước, và hệ thống chạy workflow đó đến khi hoàn tất cho một yêu cầu cụ thể. Ngược lại, một agent sử dụng LLM để lên kế hoạch và điều chỉnh cách tiếp cận tại thời điểm chạy (runtime)—chọn tool nào cần gọi, điều chỉnh kế hoạch dựa trên kết quả trung gian, và có thể lặp qua nhiều hành động cho đến khi đạt điều kiện dừng. Nói đơn giản: engine chạy workflow còn agent quản lý workflow, đổi một phần tính dự đoán được lấy sự linh hoạt lớn hơn cho các tác vụ nhiều bước, mở.
+
+#### Chatbot Dựa Trên LLM
+
+Chatbot LLM hoạt động như một trợ lý thông minh, giúp bạn trò chuyện liên tục một cách tự nhiên. Khác với các chương trình hỏi-đáp đơn giản, hệ thống này cố gắng giữ cuộc trò chuyện vừa hữu ích vừa an toàn. Chúng phụ thuộc rất nhiều vào cách viết hướng dẫn: hướng dẫn rõ ràng sẽ định hình cách mô hình phản hồi và giúp tránh những câu trả lời sai, mơ hồ hoặc không an toàn. Các công cụ chat hiện đại—như của OpenAI—hỗ trợ các loại tin nhắn theo vai trò (hệ thống, người dùng, trợ lý), giúp bạn thiết lập tính cách cho trợ lý và giữ hành vi nhất quán trong suốt cuộc trò chuyện.
+
+Để câu trả lời chính xác hơn, chatbot thường lấy thông tin thực tế từ các nguồn kiến thức nội bộ như vector store. Điều này giúp chúng kết hợp khả năng trò chuyện tự nhiên với kiến thức chuyên môn cụ thể, khiến câu trả lời không chỉ mượt mà mà còn hữu ích và đáng tin cậy.
+
+Một điểm mạnh quan trọng của chatbot là khả năng nhớ cuộc trò chuyện. Bằng cách theo dõi các tin nhắn trước đó, chúng có thể giữ câu trả lời mạch lạc và cá nhân hóa. Bộ nhớ này bị giới hạn bởi context window của mô hình. Context window lớn hơn giúp ích nhiều, nhưng nhiều hệ thống vẫn phải tóm tắt hoặc nén lịch sử trò chuyện để không vượt quá giới hạn—và để tiết kiệm chi phí.
+
+Chatbot LLM thường được thiết kế cho các nhiệm vụ cụ thể như tóm tắt, trả lời câu hỏi, hoặc dịch thuật. Chúng có thể trả lời trực tiếp câu hỏi của bạn hoặc kết hợp với kiến thức đã lưu trữ. Ví dụ, một chatbot tóm tắt (hình 1.3) được xây dựng dựa trên công cụ tóm tắt cơ bản, nhưng có thêm khả năng quản lý cuộc trò chuyện và hiểu ngữ cảnh.
+
+![Chatbot tóm tắt tương tự như công cụ tóm tắt, nhưng mang lại trải nghiệm tương tác, nơi LLM và người dùng cùng hợp tác để cải thiện kết quả](/src/assets/blog/ai-agents/summarization-chatbot.png.png)
+*Hình 1.3: Chatbot tóm tắt tương tự như công cụ tóm tắt, nhưng mang lại trải nghiệm tương tác, nơi LLM và người dùng cùng hợp tác để cải thiện kết quả.*
+
+Sự khác biệt chính giữa công cụ tóm tắt và chatbot tóm tắt là tính tương tác. Chatbot cho phép bạn cải thiện câu trả lời ngay lập tức: nếu bạn muốn bản tóm tắt ngắn hơn hoặc dễ hiểu hơn, bạn chỉ cần yêu cầu, như minh họa trong sơ đồ trình tự ở hình 1.4.
+
+Sự tương tác qua lại này khiến quá trình giống như làm việc nhóm—tạo ra những câu trả lời phù hợp hơn và hiểu rõ ngữ cảnh hơn. Trong chương tiếp theo, chúng ta sẽ khám phá hướng dẫn vai trò, ví dụ few-shot, và cách viết prompt nâng cao để bạn kiểm soát tốt hơn hành vi và kết quả của chatbot.
+
+#### AI Agents
+
+AI agent là một hệ thống làm việc cùng LLM để hoàn thành các nhiệm vụ có nhiều bước—thường sử dụng nhiều nguồn dữ liệu khác nhau, logic phân nhánh, và ra quyết định thông minh. Khác với các chương trình đơn giản chạy theo các bước cố định, agent có thể làm việc với một mức độ độc lập: chúng tuân theo các quy tắc bạn đặt ra, nhưng tự quyết định bước tiếp theo.
+
+Ở mỗi bước, agent hỏi LLM để quyết định nên dùng công cụ nào, chạy các công cụ đó, và xem xét kết quả trước khi tiếp tục. Vòng lặp này tiếp diễn cho đến khi agent hoàn thành nhiệm vụ hoàn toàn. Trong thực tế, điều này có nghĩa là lấy thông tin từ cả nguồn có cấu trúc (như database hoặc API) và nguồn phi cấu trúc (như tài liệu hoặc trang web), ghép các kết quả lại, và trình bày chúng dưới dạng rõ ràng.
+
+Hãy xem ví dụ này: một công ty du lịch sử dụng AI agent để tạo gói nghỉ dưỡng dựa trên yêu cầu của khách hàng trên website đặt phòng. Như minh họa trong hình 1.5, quy trình hoạt động như sau:
+
+1. Agent gửi một prompt tới LLM yêu cầu chọn các công cụ hữu ích nhất cho yêu cầu—ví dụ: đặt vé máy bay, tìm khách sạn, thuê xe, dự báo thời tiết, và database các gói ưu đãi của công ty.
+2. Sử dụng prompt do developer viết, liệt kê tất cả công cụ có sẵn và chức năng của chúng, LLM chọn công cụ phù hợp và tạo các truy vấn cần thiết—như tìm kiếm database cho gói ưu đãi hoặc gọi API tới các dịch vụ bên ngoài.
+3. Agent thực thi các truy vấn, thu thập kết quả, và gửi một prompt khác tới LLM với cả yêu cầu nghỉ dưỡng ban đầu và tất cả thông tin đã thu thập.
+4. LLM phản hồi với một kế hoạch nghỉ dưỡng hoàn chỉnh bao gồm tất cả đặt chỗ, và agent sau đó gửi lại cho website đặt phòng.
+
+![Quy trình của một AI agent được giao nhiệm vụ lắp ráp các gói nghỉ dưỡng](/src/assets/blog/ai-agents/ai-agent-workflow.png)
+*Hình 1.5: Quy trình của một AI agent được giao nhiệm vụ lắp ráp các gói nghỉ dưỡng.*
+
+Quy trình có thể trải qua nhiều vòng giữa agent và LLM trước khi tạo ra kết quả cuối cùng, như một kế hoạch nghỉ dưỡng hoàn chỉnh. Ngoài ra, thiết kế được thể hiện trong hình 1.5 chỉ là một lựa chọn. Một thiết kế khác có thể sử dụng nhiều agent nhỏ hơn được quản lý bởi một Supervisor agent ở cấp cao nhất.
+
+Trong các lĩnh vực quan trọng như tài chính hoặc y tế, người ta thường thêm bước human-in-the-loop (có người tham gia vào quy trình). Điều này có nghĩa là một người có thể xem xét và phê duyệt các hành động quan trọng—như xác nhận chuyển tiền hoặc kiểm tra khuyến nghị y tế phức tạp—trước khi hoàn tất. Trong ví dụ lập kế hoạch nghỉ dưỡng, agent có thể tạm dừng và yêu cầu sự chấp thuận của con người đối với kế hoạch chuyến đi được đề xuất trước khi gửi cho khách hàng, tăng thêm sự an toàn và tin cậy.
+
+Đã có sự quan tâm rất lớn đối với AI agent, với các công ty lớn như OpenAI, Google và Amazon, cũng như các nhà phát triển độc lập như LangChain, LlamaIndex và Pydantic, đều phát hành các công cụ agent để giúp nhiều người sử dụng cách tiếp cận này.
+
+Trong series này, chúng ta sẽ tập trung vào LangGraph, framework agent chuyên dụng của LangChain. LangGraph cung cấp các class agent và coordinator có sẵn, cùng với các tích hợp công cụ bạn có thể sử dụng ngay, vì vậy bạn không phải xây dựng mọi thứ từ đầu. Bạn cũng sẽ có trải nghiệm thực hành xây dựng các agent nâng cao với LangGraph, học cách thiết kế, điều phối và cải thiện chúng trong thực tế.
+
+Về nhiều mặt, AI agent đại diện cho loại ứng dụng LLM tiên tiến nhất. Nó sử dụng toàn bộ khả năng của LLM—hiểu, tạo và suy luận về văn bản—để vận hành các quy trình tự động phức tạp. Agent có thể chọn và sử dụng nhiều công cụ một cách linh hoạt, được hướng dẫn bởi các prompt bạn thiết kế, khiến chúng có giá trị trong các lĩnh vực như tài chính, y tế và logistics, nơi cần tư duy nhiều bước và kết hợp dữ liệu.
+
+Sự quan tâm đến agent càng tăng mạnh với việc giới thiệu Model Context Protocol (MCP) của Anthropic. MCP thiết lập một tiêu chuẩn cho các dịch vụ chia sẻ công cụ thông qua MCP server, mà agent có thể truy cập thông qua MCP client dễ dàng như các công cụ nội bộ. Điều này chuyển công việc tích hợp sang chính dịch vụ, cho phép developer tập trung vào xây dựng agent có năng lực thay vì duy trì các kết nối tùy chỉnh. Sau khi phát hành vào cuối năm 2024, MCP nhanh chóng trở thành tiêu chuẩn—được các nhà cung cấp LLM lớn như OpenAI và Google áp dụng—và hàng nghìn công cụ hiện có sẵn thông qua các cổng MCP công khai. Trong series này, bạn sẽ học cách giao thức hoạt động, xem hệ sinh thái trong thực tế, và xây dựng MCP server của riêng bạn hoạt động trực tiếp với ứng dụng agent.
+
+---
+
+**Tiếp theo**: [Phần 1.2: Framework LangChain →](/blog/ai-agents/01-2-langchain-framework)
+
+*— Nguyễn Đài, AI Engineer @ PIXTA Vietnam*  
+*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
+
+</LangVI>

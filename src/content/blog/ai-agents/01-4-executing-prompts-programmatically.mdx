@@ -1,0 +1,1244 @@
+---
+title: 'Part 1.4: Executing Prompts Programmatically'
+description: 'Master prompt engineering techniques for text classification, sentiment analysis, summarization, composing text, question answering, and reasoning with practical examples.'
+pubDate: 'Mar 06 2026'
+category: 'AI Agents & Applications'
+tags: ['llm', 'prompt-engineering', 'chatgpt', 'langchain', 'python']
+---
+
+import LangToggle from '../../../components/LangToggle.astro';
+import LangEN from '../../../components/LangEN.astro';
+import LangVI from '../../../components/LangVI.astro';
+
+> **Series**: AI Agents & Applications with LangChain, LangGraph and MCP
+> **Part**: 1.4 — Executing Prompts Programmatically
+
+<LangToggle />
+
+<LangEN>
+
+AI applications interact with large language models (LLMs) mainly through **prompts**—structured inputs that guide the model's behavior. It's a bit like giving directions to a talented but inexperienced colleague: the clearer and more specific you are, the better the results. To get accurate and relevant outputs, prompts need to be carefully crafted and tailored to the task. In practice, prompt design is one of the biggest factors in how well your application performs.
+
+**Prompt engineering**—the practice of designing and refining prompts to guide an LLM's output—is a core skill in building LLM applications. You'll spend much of your time creating, testing, and iterating on prompts to make sure your system delivers reliable, high-quality results.
+
+---
+
+## Prompt Types
+
+Creating effective prompts is crucial for getting the best results in LLM applications. Whether your app is focused on text classification, sentiment analysis, summarization, text generation, or question answering, each task requires a carefully designed prompt. In the following sections, we'll dive into how to craft prompts tailored to these specific tasks, ensuring your application functions as intended.
+
+We'll use ChatGPT for these examples to keep things simple and explain prompt engineering concepts more clearly. The patterns you learn here will directly apply to the LLM apps we build in the upcoming posts.
+
+### Text Classification
+
+In classification, the goal is to assign an input text to one of several predefined categories. The following prompt demonstrates this concept—try entering it into ChatGPT:
+
+```
+INSTRUCTION: Classify the following text into one of these categories: history, tech, gardening.
+TEXT: Headphones provide immersive audio experiences for music lovers and gamers alike.
+```
+
+**Output:**
+```
+The text "Headphones provide immersive audio experiences for music lovers and gamers alike." 
+should be classified as "tech" because it discusses technology-related products and their functionality.
+```
+
+The output is overly detailed. Let's revise the prompt and specify to display the category only:
+
+```
+INSTRUCTION: Classify the following text into one of these categories: history, tech, gardening.
+TEXT: Headphones provide immersive audio experiences for music lovers and gamers alike.
+OUTPUT: only the category
+```
+
+**Output:**
+```
+Tech
+```
+
+Now categorize another sentence by applying the same prompt and only altering the text:
+
+```
+INSTRUCTION: Classify the following text into one of these categories: history, tech, gardening.
+TEXT: Julius Caesar was a Roman general and statesman who played a pivotal role in the 
+demise of the Roman Republic and the rise of the Roman Empire.
+OUTPUT: only the category
+```
+
+**Output:**
+```
+History
+```
+
+In summary, in a standard text classification prompt, you find three components: an **Instruction**, the input **Text**, and an **Output specification**. Next, let's delve into a slightly specialized text classification: sentiment analysis.
+
+### Sentiment Analysis
+
+Sentiment analysis is a specific type of text classification that aims to determine whether a given text is perceived as positive, neutral, or negative. Following are three sample prompts (and expected responses) that you can experiment with independently:
+
+**Example 1: Positive sentiment**
+```
+INSTRUCTION: Classify the following text as positive, neutral or negative
+TEXT: Apple has announced stellar quarterly results
+```
+**Output:** `Positive`
+
+**Example 2: Negative sentiment**
+```
+INSTRUCTION: Classify the following text as positive, neutral or negative
+TEXT: this is the worst movie I have watched this month
+```
+**Output:** `Negative`
+
+**Example 3: Neutral sentiment**
+```
+INSTRUCTION: Classify the following text as positive, neutral or negative
+TEXT: The customer bought a green dress
+```
+**Output:** `Neutral`
+
+If you have a list of texts and want to analyze their sentiments collectively, you can input them all into a single prompt:
+
+```
+INSTRUCTION: classify the sentiment of following stock reports as positive, neutral or negative
+
+Stock 1: Apple: the launch of the new iPhone has been a success
+Stock 2: Nvidia: sales are being propelled by consumer demand on LLMs
+Stock 3: GX oil: demand of carbon based energy is dropping thanks to the increase 
+of renewable energy
+
+OUTPUT: output a table with the columns "stock name", "sentiment"
+```
+
+**Output:**
+```
+| Stock Name | Sentiment |
+|------------|-----------|
+| Apple      | positive  |
+| Nvidia     | positive  |
+| GX oil     | negative  |
+```
+
+As you can see, in this scenario, the output is formatted in a table and can be readily processed programmatically. Next, let's create a prompt for one of the most common LLM use cases: text summarization.
+
+### Text Summarization
+
+Creating a text summarization prompt is simple: you only need to ask for a summary of an input text with your preferred length.
+
+```
+INSTRUCTION: write a 30 word summary for the following text
+
+TEXT: Home PCs from the 1980s were iconic pioneers of personal computing. Computers 
+like the Apple II, IBM PC, and Commodore 64 revolutionized how we lived and worked. 
+They introduced us to word processing, gaming, and the possibilities of home computing. 
+The graphical user interface, as seen in the Apple Macintosh, changed the way we 
+interacted with machines. These PCs, though less powerful by today's standards, ignited 
+a digital revolution, shaping the technology landscape we know today. They hold a special 
+place in history, symbolizing the dawn of a new era in computing that laid the foundation 
+for the modern digital age.
+```
+
+**Output:**
+```
+1980s home PCs like Apple II, IBM PC, Commodore 64 pioneered personal computing, 
+introducing word processing, gaming, and GUIs. They shaped today's tech, symbolizing 
+a digital era's dawn.
+```
+
+You can also ask the LLM to provide a summary for a text it's already familiar with:
+
+```
+INSTRUCTION: Write a one sentence summary of the Lord of the Rings
+```
+
+**Output:**
+```
+"The Lord of the Rings" follows the epic journey of a diverse group of characters as 
+they seek to destroy a powerful ring and save Middle-earth from the dark lord Sauron.
+```
+
+### Composing Text
+
+LLMs are part of the AI category called **generative AI**. While LLMs can handle audio and video, when prompted with text, they can generate new content, like a paragraph or sentence, based on a list of facts, for example:
+
+```
+Write a piece on the diver watches, mentioning the following facts:
+ • the Rolex Oyster Perpetual was among the first to be water resistant
+ • Omega produced the Seamaster in 1948 as the first purpose designed diver watch
+ • the Seamaster set a world record of immersion of 62.5m in 1955
+ • Rolex produced the first Submariner in 1953
+ • the Submariner became popular also because of the association with James Bond until 1995
+ • James Bond started to wear the Seamaster in 1995
+```
+
+**Output:** _(3 long paragraphs about diver watch history, covering Rolex Oyster Perpetual, Omega Seamaster's 1955 record, and James Bond association...)_
+
+You may notice that ChatGPT has used the limited information to create a quite lengthy article. On the other hand, you might have expected a shorter piece and may not be a fan of the complex vocabulary or somewhat formal tone it used. In such a situation, try restructuring the prompt more systematically to get the generated text to match your preferred length, vocabulary, and tone:
+
+```
+PERSONA: you're a watch enthusiast, experienced in writing high quality articles for 
+watch magazines for a general audience
+
+INSTRUCTION: Write a piece on the diver watches
+
+Facts to mention:
+ • the Rolex Oyster Perpetual was among the first to be water resistant
+ • Omega produced the Seamaster in 1948 as the first purpose designed diver watch
+ • the Seamaster set a world record of immersion of 62.5m in 1955
+ • Rolex produced the first Submariner in 1953
+ • the Submariner became popular also because of the association with James Bond until 1995
+ • James Bond started to wear the Seamaster in 1995
+
+TONE: use a sober, knowledgeable but not too formal tone and use everyday vocabulary
+
+OUTPUT: the length of the article should be 150 words at most
+```
+
+**Output:**
+```
+**Diver Watches: Timepieces of Exploration and Style**
+
+Diver watches have long been cherished for their blend of functionality and aesthetics, 
+a perfect companion for both the adventurous spirit and the style-conscious.
+
+Rolex deserves recognition for pioneering water resistance with the Oyster Perpetual, 
+setting the stage for a new era in watchmaking.
+
+Omega, however, made a significant splash in 1948 with the Seamaster, the world's first 
+purpose-designed diver watch. Its 1955 record dive of 62.5 meters underlines its prowess 
+in the deep.
+
+Rolex didn't lag behind, introducing the Submariner in 1953, a watch that became synonymous 
+with exploration, partly due to its affiliation with James Bond on-screen.
+
+Speaking of James Bond, it's worth noting that in 1995, the iconic secret agent started 
+sporting the Omega Seamaster, a move that reinforced the Seamaster's reputation as a 
+sophisticated yet rugged timepiece for those who dare to explore both land and sea. These 
+diver watches are more than instruments; they're symbols of adventure and style.
+```
+
+By adding more details to the prompt, the article has been generated exactly as you wanted it.
+
+> **💡 TIP:** Creating a well-structured prompt with defined sections (Persona, Instruction, Facts, Tone, Output Format) helps the LLM understand your requirements better and generate the expected text.
+
+### Question Answering
+
+The ability of LLMs to "understand" text makes them suitable not only for summarizing but also for retrieving specific information, known as the **question answering** use case. Now let's go back to the same text we used in the summarization example and ask focused questions about its content.
+
+```
+INSTRUCTION: read the following text, and tell me which home computers were popular in the 80s.
+
+TEXT: Home PCs from the 1980s were iconic pioneers of personal computing. Computers like 
+the Apple II, IBM PC, and Commodore 64 revolutionized how we lived and worked. They introduced 
+us to word processing, gaming, and the possibilities of home computing. The graphical user 
+interface, as seen in the Apple Macintosh, changed the way we interacted with machines. These 
+PCs, though less powerful by today's standards, ignited a digital revolution, shaping the 
+technology landscape we know today. They hold a special place in history, symbolizing the dawn 
+of a new era in computing that laid the foundation for the modern digital age.
+
+OUTPUT: just output the names of the computers in a list
+```
+
+**Output:**
+```
+The popular home computers in the 1980s were:
+1. Apple II
+2. IBM PC
+3. Commodore 64
+4. Apple Macintosh
+```
+
+Question answering is such a common use case that most LLMs understand **Q** and **A** as shorthand for Question and Answer. For example:
+
+```
+Text: Java is a popular programming language that compiles code into bytecode, which is 
+executed by the Java Virtual Machine (JVM) for platform-independent application development.
+
+Q: Where is Java code executed?
+A:
+```
+
+**Output:**
+```
+Java code is executed by the Java Virtual Machine (JVM).
+```
+
+LLMs are skilled not just at finding requested information in a text but also at making logical deductions. This will become apparent in the next section.
+
+### Reasoning
+
+While reasoning is a powerful capability, it's an area where LLMs are still improving. Therefore, you might need more advanced prompt engineering techniques to get the results you want. Here's a simple example involving mathematical reasoning:
+
+```
+INSTRUCTION: Add the square numbers in this sequence: 19, 13, 1, 17, 4, 64, 900
+```
+
+**Output:**
+```
+The square numbers in the sequence 19, 13, 1, 17, 4, 64, and 900 are 1, 4, 64, and 900. 
+To find their sum:
+
+1 + 4 + 64 + 900 = 969
+
+So, the sum of the square numbers in this sequence is 969.
+```
+
+ChatGPT identified the square numbers, picked them out, and then calculated their total. The next example is more challenging, involving **palindromes**—numbers that read the same forward and backward, such as 1661 or 27872:
+
+```
+INSTRUCTION: Sum the palindromes in this sequence: 13, 1331, 121, 73, 99, 56, 232, 7
+```
+
+**Early output (incorrect):**
+```
+The palindromes in the sequence 13, 1331, 121, 73, 99, 56, 232, and 7 are 1331, 121, 232, 
+and 7. To find their sum:
+
+1331 + 121 + 232 + 7 = 1691
+
+So, the sum of the palindromes in this sequence is 1691.
+```
+
+This is **incorrect**! A palindrome is a number that reads the same forward and backward. Therefore, **99** should have been considered a palindrome, but it wasn't.
+
+This output is what was encountered in early stages. However, you should now see a different and, more importantly, **accurate output**. It's still valuable to understand how the mistake was corrected: because the earlier LLM version didn't fully grasp the concept of a palindrome, the model was "taught" to correctly identify all relevant cases, which we'll explore next.
+
+---
+
+## Reasoning in Detail
+
+When developing LLM applications, particularly those requiring complex reasoning, it's important to understand the limitations of different prompt techniques. For instance, **zero-shot learning** is a method in which you provide no examples, expecting the LLM to grasp and perform the task based purely on the instructions given. While this approach can work well in some scenarios, it doesn't always yield accurate results for more intricate tasks, such as teaching an LLM to identify palindromes. In the following sections, we'll demonstrate how to go beyond zero-shot learning to refine LLM prompts for more reliable performance in reasoning tasks.
+
+### One-shot Learning
+
+When you provide just one example in the prompt, it's called **one-shot learning**. Here's how we can attempt to address the palindrome problem by giving a single example:
+
+```
+INSTRUCTION: Sum the palindromes in this sequence: 13, 1331, 121, 73, 99, 56, 232, 7
+EXAMPLE: 33 is a palindrome
+```
+
+**Output:**
+```
+I apologize for the previous oversight. Let's correctly identify and sum the palindromes 
+in this sequence: 13, 1331, 121, 73, 99, 56, 232, and 7.
+
+The palindromes in the sequence are 1331, 121, 232, and 7. To find their sum:
+
+1331 + 121 + 232 + 7 = 1691
+
+So, the sum of the palindromes in this sequence is indeed 1691.
+```
+
+Unfortunately, even after using one-shot learning, the issue persisted—**99 was still missed**. Even with two examples, the problem continued. The solution? **Breaking down the problem into steps**—similar to guiding a colleague through a procedure step-by-step.
+
+### Providing Steps
+
+This is the amended prompt with explicit steps:
+
+```
+INSTRUCTION: Sum the palindromes in this sequence: 13, 1331, 121, 73, 99, 56, 232, 7
+
+Examples:
+33 is a palindrome
+44 is a palindrome
+
+Steps: 1) identify the palindromes; 2) add them up
+```
+
+**Output:**
+```
+Certainly, let's follow your instructions step by step:
+
+Step 1: Identify the palindromes in the sequence.
+Palindromes in the sequence:
+ • 1331
+ • 121
+ • 99
+ • 232
+ • 7
+
+Step 2: Add them up.
+1331 + 121 + 99 + 232 + 7 = 1790
+
+So, the sum of the palindromes in the sequence is 1790.
+```
+
+**Finally, we got it right!** Interestingly, it appears that ChatGPT has undergone a similar training process (on a much larger scale, of course) to fix this issue. To demonstrate this, if you now enter the original prompt as:
+
+```
+INSTRUCTION: Sum the palindromes in this sequence: 13, 1331, 121, 73, 99, 56, 232, 7
+```
+
+You'll see the following output:
+
+```
+Let's identify the palindromes in the given sequence:
+ • 1331 is a palindrome
+ • 121 is a palindrome
+ • 99 is a palindrome
+ • 232 is a palindrome
+ • 7 is a palindrome
+
+Now, let's add these palindromes together:
+1331 + 121 + 99 + 232 + 7 = 1790
+
+Therefore, the sum of the palindromes in the sequence is 1790.
+```
+
+It appears that ChatGPT is now tackling the problem step-by-step automatically. **Reasoning models** such as OpenAI's o1 or o3 often decompose problems on their own, without being told what steps to follow. However, in more complex cases—especially when the steps are deterministic—it's still useful to spell them out explicitly in the prompt. This ensures the LLM follows the intended sequence rather than inventing its own, which could lead to errors.
+
+This example illustrates something you might experience while working with LLMs: you could invest time in teaching the LLM certain tasks using advanced prompt engineering techniques, only to find that a newer model version can handle the task without any additional training. These tasks previously required more complex prompts such as the **few-shot techniques** we'll explore next.
+
+### Few-shot Learning
+
+In some cases, providing only two examples may not be enough to teach the LLM a new concept. In such instances, you need to provide several examples, known as **few-shot learning**. To demonstrate this, let's create a classification game where a number can be classified as **Abra**, **Kadabra**, or **Abra Kadabra**. Let's see what happens when no information about the classification rules is provided.
+
+**Attempt 1: Zero-shot (no examples)**
+```
+Classify the following numbers as Abra, Kadabra or Abra Kadabra:
+3, 5, 8, 2, 7, 12, 13
+```
+
+**Output:**
+```
+The classification of numbers into "Abra," "Kadabra," or "Abra Kadabra" doesn't follow 
+a conventional mathematical pattern. These are just words, not related to numbers. 
+Therefore, it's not possible to classify the numbers you provided as "Abra," "Kadabra," 
+or "Abra Kadabra" based on any mathematical or logical criteria.
+```
+
+ChatGPT hasn't experienced any hallucinations but rightfully pointed out that you haven't clarified the classification rules. Now let's provide a prompt that, instead of directly explaining the rules, offers an interpretation based on a specific list of examples:
+
+**Attempt 2: Few-shot learning**
+```
+Classify the following numbers as Abra, Kadabra or Abra Kadabra:
+3, 4, 5, 7, 8, 10, 11, 13, 35
+
+Examples:
+6 // not divisible by 5, not divisible by 7 // None
+15 // divisible by 5, not divisible by 7 // Abra
+12 // not divisible by 5, not divisible by 7 // None
+21 // not divisible by 5, divisible by 7 // Kadabra
+70 // divisible by 5, divisible by 7 // Abra Kadabra
+```
+
+Observe the format employed for every example: each field is delineated with a double forward slash (`//`), although the meaning of each field hasn't been explicitly outlined. We're trusting the LLM to decipher it. Here's the output:
+
+**Output:**
+```
+Let's classify the numbers as Abra, Kadabra, or Abra Kadabra based on whether they 
+are divisible by 5 and/or 7:
+
+3: Not divisible by 5, not divisible by 7 - None
+4: Not divisible by 5, not divisible by 7 - None
+5: Divisible by 5, not divisible by 7 - Abra
+7: Not divisible by 5, divisible by 7 - Kadabra
+8: Not divisible by 5, not divisible by 7 - None
+10: Divisible by 5, not divisible by 7 - Abra
+11: Not divisible by 5, not divisible by 7 - None
+13: Not divisible by 5, not divisible by 7 - None
+35: Divisible by 5, divisible by 7 - Abra Kadabra
+
+So, here's the classification:
+Abra: 5, 10
+Kadabra: 7
+Abra Kadabra: 35
+None: 3, 4, 8, 11, 13
+```
+
+ChatGPT not only provided accurate results but also explained the reasoning behind them. It successfully deduced the general rules from the given examples and articulated them well. Quite impressive, isn't it?
+
+> **💡 NOTE:** You may be familiar with a similar number classification game called "FizzBuzz," where a number divisible by 3 is labeled "Fizz," a number divisible by 5 is labeled "Buzz," and a number divisible by both 3 and 5 is labeled "FizzBuzz." We haven't used this as an example because ChatGPT already knows it and can correctly classify numbers without examples, using zero-shot learning.
+
+### Implementing Few-shot Learning Programmatically
+
+While testing prompts in ChatGPT's interface is useful for exploration, in production applications you'll need to execute these prompts programmatically. Here's a **structured approach** that separates training examples from the prompt template:
+
+```python
+from openai import OpenAI
+
+client = OpenAI(api_key="your-api-key")
+
+# Define training examples as structured data
+examples = [
+    {"number": 6, "reasoning": "not divisible by 5 nor by 7", "result": "None"},
+    {"number": 15, "reasoning": "divisible by 5 but not by 7", "result": "Abra"},
+    {"number": 12, "reasoning": "not divisible by 5 nor by 7", "result": "None"},
+    {"number": 21, "reasoning": "divisible by 7 but not by 5", "result": "Kadabra"},
+    {"number": 70, "reasoning": "divisible by 5 and by 7", "result": "Abra Kadabra"}
+]
+
+# Format examples into a string
+formatted_examples = "\n".join([
+    f"{ex['number']} \\\\ {ex['reasoning']} \\\\ {ex['result']}" 
+    for ex in examples
+])
+
+# Create the full prompt
+def create_classification_prompt(numbers_to_classify):
+    return f"""Classify the following numbers as Abra, Kadabra or Abra Kadabra:
+{numbers_to_classify}
+
+Examples:
+{formatted_examples}
+"""
+
+# Use the prompt
+input_numbers = "3, 4, 5, 7, 8, 10, 11, 13, 35"
+prompt = create_classification_prompt(input_numbers)
+
+response = client.chat.completions.create(
+    model="gpt-4",
+    messages=[{"role": "user", "content": prompt}]
+)
+
+print(response.choices[0].message.content)
+```
+
+**Output:** _(Correctly classifies: 5,10 as Abra; 7 as Kadabra; 35 as Abra Kadabra; others as None)_
+
+**Benefits of this structured approach:**
+
+1. **Reusability**: The `examples` list can be easily modified or extended without touching the prompt logic
+2. **Maintainability**: Training data is separated from prompt construction
+3. **Flexibility**: You can dynamically add or remove examples based on the task
+4. **Testing**: Easier to test with different example sets
+5. **Scalability**: Can load examples from a database or file instead of hardcoding
+
+This pattern is particularly useful when you need to:
+- Switch between different example sets for different use cases
+- A/B test different training examples
+- Store examples in a database or configuration file
+
+### Chain of Thought (CoT)
+
+Finally, let's explore the **Chain of Thought (CoT)** technique, which combines providing logical steps with few-shot learning. Here, we'll create a new mathematical definition: a sequence of numbers is called **"strange"** if it contains at least two odd numbers AND the sum of all odd numbers is divisible by 3.
+
+First, let's check whether the LLM understands the rules of strange sequences without any explanation:
+
+```
+Is the following sequence "strange"?
+3, 4, 5, 7, 10, 18, 22, 24
+```
+
+**Output:**
+```
+The sequence you provided appears to be increasing, but it doesn't follow a common 
+mathematical pattern like arithmetic or geometric progressions. Whether it's considered 
+"strange" depends on the context or criteria you're using to define "strange." In a 
+mathematical sense, it might be considered an unusual or nonstandard sequence.
+
+If you have specific criteria or rules that define what a "strange" sequence is, please 
+provide more details for a more precise classification.
+```
+
+As expected, ChatGPT doesn't understand the concept of a "strange" sequence—it hasn't developed psychic abilities yet!
+
+Now let's create a prompt using the **CoT technique** (introduced by [Wei et al., 2022](https://arxiv.org/abs/2201.11903)). This prompt extends few-shot learning by including:
+- Several sample sequences for few-shot learning
+- An explanation for each sample showing the logical steps to determine if a sequence is strange
+
+```
+Q: Is the following sequence "strange"?
+3, 4, 5, 7, 10, 18, 22, 24
+
+Examples:
+
+Q: is the following sequence strange: 1, 4, 6, 8, 20
+A: 1 is an odd number; I need at least two odd numbers // Not Strange
+
+Q: is the following sequence strange: 5, 6, 7, 8, 20
+A: 5 and 7 are odd numbers; the sum of 5 and 7 is 12; 12 is divisible by 3 // Strange
+
+Q: is the following sequence strange: 1, 5, 6, 7, 8, 20
+A: 1, 5 and 7 are odd numbers; the sum of 1, 5 and 7 is 13; 13 is not divisible by 3 // Not Strange
+
+Q: is the following sequence strange: 5, 6, 7, 8, 9, 20
+A: 5, 7, 9 are odd numbers; the sum of 5, 7 and 9 is 21; 21 is divisible by 3 // Strange
+```
+
+**Output:**
+```
+Thank you for providing the examples and clarifications. Based on the criteria you've presented:
+
+The sequence "3, 4, 5, 7, 10, 18, 22, 24" has 3 odd numbers: 3, 5, and 7. 
+The sum of these odd numbers is 15. 
+15 is divisible by 3. 
+
+So, according to the criteria, this sequence is **Strange**.
+```
+
+ChatGPT gave the correct answer and explained its thought process! Try using a similar prompt with different numbers to reinforce your understanding. Also, observe how ChatGPT responds when the sequence contains just one odd number.
+
+**In-context Learning Summary**
+
+In this section, you've discovered how to introduce an LLM to a new task by offering various examples or outlining the necessary steps. This approach is known as **in-context learning**—instructing the LLM using information provided within the prompt context.
+
+> **📖 DEFINITION:** **In-context learning** refers to any method that instructs an LLM on an unfamiliar task using examples within the prompt context. Common techniques include one-shot, two-shot, or few-shot learning, as well as providing step-by-step guidance (chain of thought). Compared to **fine-tuning**—which involves training a specialized LLM on domain-specific text—in-context learning is more cost-effective and less resource-intensive. It doesn't require high-end GPUs or deep knowledge of transformer architectures.
+
+Here's a summary of the in-context learning techniques we've covered:
+
+| Technique | Description |
+|-----------|-------------|
+| **Zero-shot learning** | No examples are provided in the prompt |
+| **One-shot learning** | One example is provided in the prompt |
+| **Two-shot learning** | Two examples are provided in the prompt |
+| **Few-shot learning** | Multiple examples are provided in the prompt |
+| **Chain of Thought (CoT)** | Multiple examples with logical steps clearly explained for each |
+
+> **🚀 Advanced Techniques:** Beyond CoT, research has introduced **Tree of Thought (ToT)** for exploring multiple reasoning paths simultaneously ([Yao et al., 2023](https://arxiv.org/abs/2305.10601))—boosting GPT-4's Game of 24 success from 4% to 74%—and **Thread of Thought (ThoT)** ([Zhou et al., 2023](https://arxiv.org/abs/2311.08734)) for handling chaotic contexts by filtering noise. These advanced techniques are worth exploring for complex applications.
+
+---
+
+## Prompt Structure
+
+Combining all the prompt elements from earlier sections results in the following **generalized prompt structure**:
+
+1. **Persona**: Specify the role you want the LLM to embody. Whether a skilled marketing manager, an award-winning sci-fi author, or a proficient copy editor for a computing magazine, set the expectations high.
+
+2. **Context**: Provide detailed background information to help the LLM comprehend the context surrounding your request. Precision enhances the likelihood of aligning with your expectations.
+
+3. **Instruction**: Clearly define the action you want the LLM to take with your input text. Whether it's translation, writing, rewriting, improving, classifying, ordering, or finding—be explicit.
+
+4. **Input**: This refers to specific context details, which could take the form of a paragraph, a query, or a list of key points. You may choose to label it accordingly, such as "Text," "Question," and so on.
+
+5. **Steps**: Outline the processing steps the LLM should follow to generate the output.
+
+6. **Tone**: Specify the desired tone of the LLM's answer—formal, informal, witty, enthusiastic, sober, friendly, and so on. Combinations are possible as well.
+
+7. **Output Format**: Optionally specify the desired output format. If not specified, the LLM assumes a text answer. However, you can request formats such as a table, CSV file (with column names), JSON (with attribute names), or other structured formats.
+
+8. **Examples**: In cases where the LLM may lack sufficient training for certain tasks, especially in text classification and reasoning, provide mini-inline training through examples. Even a few examples can significantly enhance answer quality.
+
+### Structured Prompts with XML Tags
+
+A more reliable way to enforce prompt structure—recommended in both [OpenAI's](https://platform.openai.com/docs/guides/prompt-engineering) and [Anthropic's](https://docs.anthropic.com/claude/docs/prompt-engineering) prompt engineering guidelines—is to **mark different sections with XML-style tags**.
+
+For example, here's a prompt to write keynote speech punchlines:
+
+```xml
+<Persona>
+You're an experienced Large Language Model (LLM) developer and renowned speaker.
+</Persona>
+
+<Context>
+You've been invited to give a keynote speech for a LLM event.
+</Context>
+
+<Instruction>
+Write the punch lines for the speech.
+</Instruction>
+
+<Input>
+Include the following facts:
+ • LLMs have become mainstream with the launch of ChatGPT in November 2022
+ • many popular LLMs and LLM based chatbots have been launched since then, 
+   such as LLAMA-2, Falcon180B, Bard
+ • LLMs becoming as popular as search engines
+ • many companies want to integrate LLMs in their applications
+</Input>
+
+<Tone>
+Use a witty but entertaining tone.
+</Tone>
+
+<OutputFormat>
+Present the text in two paragraphs of 5 lines each.
+</OutputFormat>
+```
+
+**Output:**
+```
+Ladies and gentlemen, as we embark on this linguistic odyssey, remember this: In 
+November 2022, ChatGPT didn't just enter the scene; it was the linguistic equivalent 
+of a rockstar's encore, setting the stage for an epic word-tastic journey! Today, with 
+LLAMA-2, Falcon180B, and Bard, it's safe to say that LLMs have become the Beatles 
+of the digital era, making search engines feel like yesterday's news.
+
+But here's the kicker – companies are now falling over themselves, desperately trying 
+to get these LLMs into their applications. It's like the gold rush, but instead of panning 
+for precious metal, we're sifting through bytes of brilliant language. So, my friends, 
+in this age where words wield the power, and LLMs are the mighty pens, we're not just 
+scripting the future; we're penning a linguistic saga that's bound to be a best-seller! 
+Welcome to the age of LLMs, where we're rewriting the rules, one sentence at a time, 
+and words are the currency of change!
+```
+
+> **💡 NOTE:** Studies (e.g., ["The Prompt Report: A Systematic Survey of Prompting Techniques"](https://arxiv.org/abs/2406.06608)) have found that **explicitly naming different parts of a prompt tends to improve results**. However, you don't have to name every section. Most LLMs can figure out the purpose of the text in the prompt on their own. So you can mix things up by naming some parts (e.g., Question or Examples) and leaving out names for others (e.g., Context or Tone). Experiment and see what works best for your case.
+
+### Further Resources
+
+If you want to delve deeper into prompt engineering, here are highly recommended resources:
+
+- [OpenAI Prompt Engineering Guide](https://platform.openai.com/docs/guides/prompt-engineering)
+- [Anthropic Prompt Engineering Guide](https://docs.anthropic.com/claude/docs/prompt-engineering)
+- [Prompt Engineering Guide by DAIR.AI](https://www.promptingguide.ai/techniques)
+- [Prompt Engineering Guide (GitHub)](https://github.com/dair-ai/Prompt-Engineering-Guide)
+- [Google's Prompting Guide](https://ai.google.dev/gemini-api/docs/prompting-strategies)
+
+---
+
+## Summary
+
+**Key Takeaways:**
+
+- **Clear prompts are essential**: A prompt guides the LLM by giving it instructions and context (background information, e.g., domain knowledge or constraints). Clear, specific prompts produce better results than vague ones.
+
+- **Different tasks need different patterns**: Classification prompts request category labels or sentiment scores; generation prompts ask for original creative content; and extraction prompts pull specific facts from input text.
+
+- **Few-shot learning improves results**: When prompts fail to produce expected outputs, the LLM may lack training examples for that task format. Adding few-shot examples or adjusting instruction clarity usually fixes this. One-shot uses a single example, two-shot uses two—more examples generally improve consistency but increase token costs.
+
+- **Standard prompt structure**: Prompts typically include persona (role), context (background), instructions (task), input (data), tone (style/format), and examples (patterns). Not all sections are required for every task—you can omit, rearrange, or extend prompt sections with custom elements.
+
+- **Chain-of-Thought (CoT) for reasoning**: CoT prompting asks the LLM to show step-by-step reasoning before providing the final answer. Include instructions such as "Let's think step-by-step" or explicitly list the reasoning steps required.
+
+- **Structure with XML tags**: Use XML-style tags to enforce sections: `<Persona>`, `<Context>`, `<Instruction>`, `<Input>`, `<Examples>`. This follows OpenAI and Anthropic prompt engineering guidelines for clarity.
+
+- **Programmatic execution**: API-based prompt automation injects variables into prompt templates and executes requests programmatically. This scales prompting from single requests to thousands of variations using placeholders like `{variable_name}`.
+
+- **Advanced techniques exist**: Beyond basic prompting, techniques like Tree of Thought (ToT) and Thread of Thought (ThoT) address complex reasoning scenarios, though they're beyond the scope of this introduction.
+
+</LangEN>
+
+<LangVI>
+
+Các ứng dụng AI tương tác với các mô hình ngôn ngữ lớn (LLM) chủ yếu thông qua **prompts**—các đầu vào có cấu trúc hướng dẫn hành vi của mô hình. Điều này giống như việc chỉ dẫn cho một đồng nghiệp tài năng nhưng chưa có kinh nghiệm: bạn càng rõ ràng và cụ thể, kết quả càng tốt. Để có được đầu ra chính xác và phù hợp, prompts cần được thiết kế cẩn thận và điều chỉnh theo từng tác vụ. Trong thực tế, thiết kế prompt là một trong những yếu tố lớn nhất ảnh hưởng đến hiệu suất ứng dụng của bạn.
+
+**Prompt engineering**—thực hành thiết kế và tinh chỉnh prompts để hướng dẫn đầu ra của LLM—là kỹ năng cốt lõi trong việc xây dựng ứng dụng LLM. Bạn sẽ dành phần lớn thời gian để tạo, kiểm tra và lặp lại các prompts nhằm đảm bảo hệ thống của bạn cung cấp kết quả đáng tin cậy và chất lượng cao.
+
+---
+
+## Các loại Prompt
+
+Tạo các prompt hiệu quả là rất quan trọng để có được kết quả tốt nhất trong các ứng dụng LLM. Cho dù ứng dụng của bạn tập trung vào phân loại văn bản, phân tích cảm xúc, tóm tắt, tạo văn bản hay trả lời câu hỏi, mỗi tác vụ đều yêu cầu một prompt được thiết kế cẩn thận. Trong các phần sau, chúng ta sẽ tìm hiểu cách tạo prompts phù hợp với các tác vụ cụ thể này.
+
+Chúng ta sẽ sử dụng ChatGPT cho các ví dụ này để giữ cho mọi thứ đơn giản và giải thích các khái niệm prompt engineering rõ ràng hơn. Các mẫu bạn học ở đây sẽ áp dụng trực tiếp cho các ứng dụng LLM chúng ta xây dựng trong các bài tiếp theo.
+
+### Phân loại văn bản (Text Classification)
+
+Trong phân loại, mục tiêu là gán một văn bản đầu vào vào một trong số các danh mục được xác định trước. Prompt sau đây minh họa khái niệm này—hãy thử nhập nó vào ChatGPT:
+
+```
+INSTRUCTION: Classify the following text into one of these categories: history, tech, gardening.
+TEXT: Headphones provide immersive audio experiences for music lovers and gamers alike.
+```
+
+**Đầu ra:**
+```
+Văn bản "Headphones provide immersive audio experiences for music lovers and gamers alike." 
+nên được phân loại là "tech" vì nó thảo luận về các sản phẩm liên quan đến công nghệ và chức năng của chúng.
+```
+
+Đầu ra quá chi tiết. Hãy sửa lại prompt và chỉ định chỉ hiển thị danh mục:
+
+```
+INSTRUCTION: Classify the following text into one of these categories: history, tech, gardening.
+TEXT: Headphones provide immersive audio experiences for music lovers and gamers alike.
+OUTPUT: only the category
+```
+
+**Đầu ra:**
+```
+Tech
+```
+
+Bây giờ phân loại một câu khác bằng cách áp dụng cùng một prompt và chỉ thay đổi văn bản:
+
+```
+INSTRUCTION: Classify the following text into one of these categories: history, tech, gardening.
+TEXT: Julius Caesar was a Roman general and statesman who played a pivotal role in the 
+demise of the Roman Republic and the rise of the Roman Empire.
+OUTPUT: only the category
+```
+
+**Đầu ra:**
+```
+History
+```
+
+Tóm lại, trong một prompt phân loại văn bản tiêu chuẩn, bạn tìm thấy ba thành phần: **Instruction** (Hướng dẫn), **Text** (Văn bản đầu vào) và **Output specification** (Đặc tả đầu ra). Tiếp theo, hãy đi sâu vào một loại phân loại văn bản chuyên biệt hơn: phân tích cảm xúc.
+
+### Phân tích cảm xúc (Sentiment Analysis)
+
+Phân tích cảm xúc là một loại phân loại văn bản cụ thể nhằm xác định xem một văn bản nhất định được coi là tích cực, trung tính hay tiêu cực. Sau đây là ba prompt mẫu (và phản hồi dự kiến) mà bạn có thể thử nghiệm độc lập:
+
+**Ví dụ 1: Cảm xúc tích cực**
+```
+INSTRUCTION: Classify the following text as positive, neutral or negative
+TEXT: Apple has announced stellar quarterly results
+```
+**Đầu ra:** `Positive`
+
+**Ví dụ 2: Cảm xúc tiêu cực**
+```
+INSTRUCTION: Classify the following text as positive, neutral or negative
+TEXT: this is the worst movie I have watched this month
+```
+**Đầu ra:** `Negative`
+
+**Ví dụ 3: Cảm xúc trung tính**
+```
+INSTRUCTION: Classify the following text as positive, neutral or negative
+TEXT: The customer bought a green dress
+```
+**Đầu ra:** `Neutral`
+
+Nếu bạn có danh sách văn bản và muốn phân tích cảm xúc của chúng một cách tập thể, bạn có thể nhập tất cả vào một prompt duy nhất:
+
+```
+INSTRUCTION: classify the sentiment of following stock reports as positive, neutral or negative
+
+Stock 1: Apple: the launch of the new iPhone has been a success
+Stock 2: Nvidia: sales are being propelled by consumer demand on LLMs
+Stock 3: GX oil: demand of carbon based energy is dropping thanks to the increase 
+of renewable energy
+
+OUTPUT: output a table with the columns "stock name", "sentiment"
+```
+
+**Đầu ra:**
+```
+| Stock Name | Sentiment |
+|------------|-----------|
+| Apple      | positive  |
+| Nvidia     | positive  |
+| GX oil     | negative  |
+```
+
+Như bạn có thể thấy, trong trường hợp này, đầu ra được định dạng trong một bảng và có thể dễ dàng xử lý theo chương trình. Tiếp theo, hãy tạo một prompt cho một trong những trường hợp sử dụng LLM phổ biến nhất: tóm tắt văn bản.
+
+### Tóm tắt văn bản (Text Summarization)
+
+Tạo một prompt tóm tắt văn bản rất đơn giản: bạn chỉ cần yêu cầu tóm tắt một văn bản đầu vào với độ dài ưa thích của bạn.
+
+```
+INSTRUCTION: write a 30 word summary for the following text
+
+TEXT: Home PCs from the 1980s were iconic pioneers of personal computing. Computers 
+like the Apple II, IBM PC, and Commodore 64 revolutionized how we lived and worked...
+```
+
+**Đầu ra:**
+```
+Máy tính gia đình thập niên 1980 như Apple II, IBM PC, Commodore 64 tiên phong trong điện toán 
+cá nhân, giới thiệu xử lý văn bản, game và giao diện đồ họa. Chúng định hình công nghệ ngày nay, 
+tượng trưng cho bình minh của kỷ nguyên số.
+```
+
+### Soạn thảo văn bản (Composing Text)
+
+LLMs là một phần của danh mục AI được gọi là **generative AI** (AI tạo sinh). Khi được nhắc nhở bằng văn bản, chúng có thể tạo nội dung mới, như một đoạn văn hoặc câu, dựa trên danh sách các sự kiện.
+
+Bằng cách thêm nhiều chi tiết vào prompt (PERSONA, INSTRUCTION, Facts, TONE, OUTPUT), bài viết được tạo ra chính xác như bạn mong muốn.
+
+> **💡 MẸO:** Tạo một prompt có cấu trúc tốt với các phần được xác định rõ ràng (Persona, Instruction, Facts, Tone, Output Format) giúp LLM hiểu yêu cầu của bạn tốt hơn và tạo văn bản mong đợi.
+
+### Trả lời câu hỏi (Question Answering)
+
+Khả năng "hiểu" văn bản của LLM khiến chúng phù hợp không chỉ để tóm tắt mà còn để truy xuất thông tin cụ thể, được gọi là trường hợp sử dụng **question answering**.
+
+Trả lời câu hỏi là một trường hợp sử dụng phổ biến đến mức hầu hết các LLM hiểu **Q** và **A** là viết tắt của Question và Answer.
+
+### Suy luận (Reasoning)
+
+Trong khi suy luận là một khả năng mạnh mẽ, đây là một lĩnh vực mà LLM vẫn đang cải thiện. Do đó, bạn có thể cần các kỹ thuật prompt engineering nâng cao hơn để có được kết quả bạn muốn. Hãy khám phá các kỹ thuật này chi tiết hơn.
+
+---
+
+## Suy luận Chi tiết
+
+Khi phát triển các ứng dụng LLM, đặc biệt là những ứng dụng yêu cầu suy luận phức tạp, điều quan trọng là phải hiểu các hạn chế của các kỹ thuật prompt khác nhau. Ví dụ, **zero-shot learning** (học không mẫu) là một phương pháp mà bạn không cung cấp ví dụ nào, mong đợi LLM hiểu và thực hiện nhiệm vụ chỉ dựa trên hướng dẫn. Mặc dù cách tiếp cận này có thể hoạt động tốt trong một số trường hợp, nó không luôn mang lại kết quả chính xác cho các nhiệm vụ phức tạp hơn, chẳng hạn như dạy LLM nhận diện số palindrome. Trong các phần sau, chúng ta sẽ tìm hiểu cách vượt qua zero-shot learning để cải thiện prompts cho hiệu suất đáng tin cậy hơn trong các tác vụ suy luận.
+
+### One-shot Learning (Học một mẫu)
+
+Khi bạn chỉ cung cấp một ví dụ trong prompt, đó được gọi là **one-shot learning**. Đây là cách chúng ta có thể thử giải quyết vấn đề palindrome bằng cách đưa ra một ví dụ duy nhất:
+
+```
+INSTRUCTION: Sum the palindromes in this sequence: 13, 1331, 121, 73, 99, 56, 232, 7
+EXAMPLE: 33 is a palindrome
+```
+
+**Đầu ra:**
+```
+Xin lỗi về sự thiếu sót trước đó. Hãy xác định chính xác và tính tổng các palindrome 
+trong dãy này: 13, 1331, 121, 73, 99, 56, 232, và 7.
+
+Các palindrome trong dãy là 1331, 121, 232, và 7. Để tìm tổng của chúng:
+
+1331 + 121 + 232 + 7 = 1691
+
+Vậy tổng các palindrome trong dãy này là 1691.
+```
+
+Thật không may, ngay cả sau khi sử dụng one-shot learning, vấn đề vẫn tiếp diễn—**99 vẫn bị bỏ sót**. Ngay cả với hai ví dụ, vấn đề vẫn tiếp tục. Giải pháp? **Chia nhỏ vấn đề thành các bước**—tương tự như hướng dẫn đồng nghiệp từng bước một.
+
+### Cung cấp Các Bước
+
+Đây là prompt được sửa đổi với các bước rõ ràng:
+
+```
+INSTRUCTION: Sum the palindromes in this sequence: 13, 1331, 121, 73, 99, 56, 232, 7
+
+Examples:
+33 is a palindrome
+44 is a palindrome
+
+Steps: 1) identify the palindromes; 2) add them up
+```
+
+**Đầu ra:**
+```
+Chắc chắn rồi, hãy làm theo hướng dẫn của bạn từng bước:
+
+Bước 1: Xác định các palindrome trong dãy.
+Các palindrome trong dãy:
+ • 1331
+ • 121
+ • 99
+ • 232
+ • 7
+
+Bước 2: Cộng chúng lại.
+1331 + 121 + 99 + 232 + 7 = 1790
+
+Vậy tổng các palindrome trong dãy là 1790.
+```
+
+**Cuối cùng, chúng ta đã làm đúng!** Thật thú vị, có vẻ như ChatGPT đã trải qua một quá trình đào tạo tương tự (ở quy mô lớn hơn nhiều, tất nhiên) để khắc phục vấn đề này. Để chứng minh điều này, nếu bây giờ bạn nhập prompt ban đầu:
+
+```
+INSTRUCTION: Sum the palindromes in this sequence: 13, 1331, 121, 73, 99, 56, 232, 7
+```
+
+Bạn sẽ thấy đầu ra sau:
+
+```
+Hãy xác định các palindrome trong dãy đã cho:
+ • 1331 là palindrome
+ • 121 là palindrome
+ • 99 là palindrome
+ • 232 là palindrome
+ • 7 là palindrome
+
+Bây giờ, hãy cộng các palindrome này lại:
+1331 + 121 + 99 + 232 + 7 = 1790
+
+Do đó, tổng các palindrome trong dãy là 1790.
+```
+
+Có vẻ như ChatGPT bây giờ tự động giải quyết vấn đề theo từng bước. **Các mô hình suy luận** như o1 hoặc o3 của OpenAI thường tự phân tích vấn đề, mà không cần được chỉ dẫn các bước cần tuân theo. Tuy nhiên, trong các trường hợp phức tạp hơn—đặc biệt khi các bước mang tính xác định—vẫn hữu ích khi nêu rõ chúng trong prompt. Điều này đảm bảo LLM tuân theo trình tự dự định thay vì tự phát minh ra trình tự riêng, điều có thể dẫn đến lỗi.
+
+Ví dụ này minh họa điều bạn có thể trải nghiệm khi làm việc với LLM: bạn có thể đầu tư thời gian để dạy LLM các nhiệm vụ nhất định bằng các kỹ thuật prompt engineering nâng cao, chỉ để phát hiện rằng phiên bản mô hình mới hơn có thể xử lý nhiệm vụ mà không cần đào tạo bổ sung. Các nhiệm vụ này trước đây yêu cầu các prompt phức tạp hơn như **kỹ thuật few-shot** mà chúng ta sẽ khám phá tiếp theo.
+
+### Few-shot Learning (Học nhiều mẫu)
+
+Trong một số trường hợp, chỉ cung cấp hai ví dụ có thể không đủ để dạy LLM một khái niệm mới. Trong những trường hợp như vậy, bạn cần cung cấp nhiều ví dụ, được gọi là **few-shot learning**. Để minh họa điều này, hãy tạo một trò chơi phân loại trong đó một số có thể được phân loại là **Abra**, **Kadabra**, hoặc **Abra Kadabra**. Hãy xem điều gì xảy ra khi không cung cấp thông tin về quy tắc phân loại.
+
+**Thử nghiệm 1: Zero-shot (không có ví dụ)**
+```
+Classify the following numbers as Abra, Kadabra or Abra Kadabra:
+3, 5, 8, 2, 7, 12, 13
+```
+
+**Đầu ra:**
+```
+Việc phân loại các số thành "Abra," "Kadabra," hoặc "Abra Kadabra" không tuân theo 
+một mẫu toán học thông thường. Đây chỉ là những từ, không liên quan đến số. Do đó, 
+không thể phân loại các số bạn cung cấp thành "Abra," "Kadabra," hoặc "Abra Kadabra" 
+dựa trên bất kỳ tiêu chí toán học hoặc logic nào.
+```
+
+ChatGPT không bị ảo giác nhưng đã chính xác chỉ ra rằng bạn chưa làm rõ quy tắc phân loại. Bây giờ hãy cung cấp một prompt mà thay vì giải thích trực tiếp các quy tắc, đưa ra một cách diễn giải dựa trên danh sách các ví dụ cụ thể:
+
+**Thử nghiệm 2: Few-shot learning**
+```
+Classify the following numbers as Abra, Kadabra or Abra Kadabra:
+3, 4, 5, 7, 8, 10, 11, 13, 35
+
+Examples:
+6 // not divisible by 5, not divisible by 7 // None
+15 // divisible by 5, not divisible by 7 // Abra
+12 // not divisible by 5, not divisible by 7 // None
+21 // not divisible by 5, divisible by 7 // Kadabra
+70 // divisible by 5, divisible by 7 // Abra Kadabra
+```
+
+Quan sát định dạng được sử dụng cho mỗi ví dụ: mỗi trường được phân cách bằng hai dấu gạch chéo (`//`), mặc dù ý nghĩa của mỗi trường chưa được nêu rõ. Chúng ta tin tưởng vào LLM để giải mã nó. Đây là đầu ra:
+
+**Đầu ra:**
+```
+Hãy phân loại các số thành Abra, Kadabra, hoặc Abra Kadabra dựa trên việc chúng 
+có chia hết cho 5 và/hoặc 7 không:
+
+3: Không chia hết cho 5, không chia hết cho 7 - None
+4: Không chia hết cho 5, không chia hết cho 7 - None
+5: Chia hết cho 5, không chia hết cho 7 - Abra
+7: Không chia hết cho 5, chia hết cho 7 - Kadabra
+8: Không chia hết cho 5, không chia hết cho 7 - None
+10: Chia hết cho 5, không chia hết cho 7 - Abra
+11: Không chia hết cho 5, không chia hết cho 7 - None
+13: Không chia hết cho 5, không chia hết cho 7 - None
+35: Chia hết cho 5, chia hết cho 7 - Abra Kadabra
+
+Vậy đây là phân loại:
+Abra: 5, 10
+Kadabra: 7
+Abra Kadabra: 35
+None: 3, 4, 8, 11, 13
+```
+
+ChatGPT không chỉ cung cấp kết quả chính xác mà còn giải thích lý do đằng sau chúng. Nó đã thành công trong việc suy ra các quy tắc chung từ các ví dụ đã cho và diễn đạt chúng một cách rõ ràng. Khá ấn tượng, phải không?
+
+> **💡 LƯU Ý:** Bạn có thể quen thuộc với một trò chơi phân loại số tương tự gọi là "FizzBuzz," trong đó số chia hết cho 3 được gọi là "Fizz," số chia hết cho 5 được gọi là "Buzz," và số chia hết cho cả 3 và 5 được gọi là "FizzBuzz." Chúng tôi không sử dụng điều này làm ví dụ vì ChatGPT đã biết nó và có thể phân loại số chính xác mà không cần ví dụ, sử dụng zero-shot learning.
+
+### Triển khai Few-shot Learning Theo Cách Lập Trình
+
+Trong khi việc kiểm tra các prompt trong giao diện ChatGPT hữu ích cho việc khám phá, trong các ứng dụng thực tế bạn sẽ cần thực thi các prompt này theo cách lập trình. Đây là **cách tiếp cận có cấu trúc** tách các ví dụ đào tạo khỏi template prompt:
+
+```python
+from openai import OpenAI
+
+client = OpenAI(api_key="your-api-key")
+
+# Định nghĩa các ví dụ đào tạo dưới dạng dữ liệu có cấu trúc
+examples = [
+    {"number": 6, "reasoning": "not divisible by 5 nor by 7", "result": "None"},
+    {"number": 15, "reasoning": "divisible by 5 but not by 7", "result": "Abra"},
+    {"number": 12, "reasoning": "not divisible by 5 nor by 7", "result": "None"},
+    {"number": 21, "reasoning": "divisible by 7 but not by 5", "result": "Kadabra"},
+    {"number": 70, "reasoning": "divisible by 5 and by 7", "result": "Abra Kadabra"}
+]
+
+# Định dạng các ví dụ thành chuỗi
+formatted_examples = "\n".join([
+    f"{ex['number']} \\\\ {ex['reasoning']} \\\\ {ex['result']}" 
+    for ex in examples
+])
+
+# Tạo prompt đầy đủ
+def create_classification_prompt(numbers_to_classify):
+    return f"""Classify the following numbers as Abra, Kadabra or Abra Kadabra:
+{numbers_to_classify}
+
+Examples:
+{formatted_examples}
+"""
+
+# Sử dụng prompt
+input_numbers = "3, 4, 5, 7, 8, 10, 11, 13, 35"
+prompt = create_classification_prompt(input_numbers)
+
+response = client.chat.completions.create(
+    model="gpt-4",
+    messages=[{"role": "user", "content": prompt}]
+)
+
+print(response.choices[0].message.content)
+```
+
+**Đầu ra:** _(Phân loại chính xác: 5,10 là Abra; 7 là Kadabra; 35 là Abra Kadabra; còn lại là None)_
+
+**Lợi ích của cách tiếp cận có cấu trúc này:**
+
+1. **Tái sử dụng**: Danh sách `examples` có thể dễ dàng sửa đổi hoặc mở rộng mà không cần chạm vào logic prompt
+2. **Bảo trì**: Dữ liệu đào tạo được tách biệt khỏi việc xây dựng prompt
+3. **Linh hoạt**: Bạn có thể thêm hoặc xóa ví dụ động dựa trên nhiệm vụ
+4. **Kiểm thử**: Dễ dàng kiểm tra với các bộ ví dụ khác nhau
+5. **Mở rộng**: Có thể tải các ví dụ từ cơ sở dữ liệu hoặc file thay vì hardcode
+
+Mẫu này đặc biệt hữu ích khi bạn cần:
+- Chuyển đổi giữa các bộ ví dụ khác nhau cho các trường hợp sử dụng khác nhau
+- A/B test các ví dụ đào tạo khác nhau
+- Lưu trữ các ví dụ trong cơ sở dữ liệu hoặc file cấu hình
+
+### Chain of Thought (CoT)
+
+Cuối cùng, hãy khám phá kỹ thuật **Chain of Thought (CoT)**, kết hợp việc cung cấp các bước logic với few-shot learning. Ở đây, chúng ta sẽ tạo một định nghĩa toán học mới: một dãy số được gọi là **"strange" (kỳ lạ)** nếu nó chứa ít nhất hai số lẻ VÀ tổng của tất cả các số lẻ chia hết cho 3.
+
+Đầu tiên, hãy kiểm tra xem LLM có hiểu quy tắc của các dãy "strange" mà không có giải thích nào không:
+
+```
+Is the following sequence "strange"?
+3, 4, 5, 7, 10, 18, 22, 24
+```
+
+**Đầu ra:**
+```
+Dãy bạn cung cấp có vẻ tăng dần, nhưng nó không tuân theo một mẫu toán học phổ biến 
+như cấp số cộng hoặc cấp số nhân. Việc nó được coi là "kỳ lạ" hay không phụ thuộc 
+vào ngữ cảnh hoặc tiêu chí bạn sử dụng để định nghĩa "kỳ lạ." Theo nghĩa toán học, 
+nó có thể được coi là một dãy bất thường hoặc không chuẩn.
+
+Nếu bạn có tiêu chí hoặc quy tắc cụ thể định nghĩa dãy "kỳ lạ" là gì, vui lòng 
+cung cấp thêm chi tiết để phân loại chính xác hơn.
+```
+
+Như mong đợi, ChatGPT không hiểu khái niệm dãy "strange"—nó vẫn chưa phát triển khả năng ngoại cảm!
+
+Bây giờ hãy tạo một prompt sử dụng **kỹ thuật CoT** (được giới thiệu bởi [Wei et al., 2022](https://arxiv.org/abs/2201.11903)). Prompt này mở rộng few-shot learning bằng cách bao gồm:
+- Nhiều dãy mẫu cho few-shot learning
+- Giải thích cho mỗi mẫu cho thấy các bước logic để xác định dãy có "strange" không
+
+```
+Q: Is the following sequence "strange"?
+3, 4, 5, 7, 10, 18, 22, 24
+
+Examples:
+
+Q: is the following sequence strange: 1, 4, 6, 8, 20
+A: 1 is an odd number; I need at least two odd numbers // Not Strange
+
+Q: is the following sequence strange: 5, 6, 7, 8, 20
+A: 5 and 7 are odd numbers; the sum of 5 and 7 is 12; 12 is divisible by 3 // Strange
+
+Q: is the following sequence strange: 1, 5, 6, 7, 8, 20
+A: 1, 5 and 7 are odd numbers; the sum of 1, 5 and 7 is 13; 13 is not divisible by 3 // Not Strange
+
+Q: is the following sequence strange: 5, 6, 7, 8, 9, 20
+A: 5, 7, 9 are odd numbers; the sum of 5, 7 and 9 is 21; 21 is divisible by 3 // Strange
+```
+
+**Đầu ra:**
+```
+Cảm ơn bạn đã cung cấp các ví dụ và làm rõ. Dựa trên tiêu chí bạn đã trình bày:
+
+Dãy "3, 4, 5, 7, 10, 18, 22, 24" có 3 số lẻ: 3, 5, và 7. 
+Tổng của các số lẻ này là 15. 
+15 chia hết cho 3. 
+
+Vì vậy, theo tiêu chí, dãy này là **Strange**.
+```
+
+ChatGPT đã đưa ra câu trả lời đúng và giải thích quá trình suy nghĩ của nó! Hãy thử sử dụng một prompt tương tự với các số khác nhau để củng cố hiểu biết của bạn. Ngoài ra, quan sát cách ChatGPT phản hồi khi dãy chỉ chứa một số lẻ.
+
+**Tóm tắt In-context Learning**
+
+Trong phần này, bạn đã khám phá cách giới thiệu cho LLM một nhiệm vụ mới bằng cách cung cấp các ví dụ khác nhau hoặc phác thảo các bước cần thiết. Cách tiếp cận này được gọi là **in-context learning**—hướng dẫn LLM bằng thông tin được cung cấp trong ngữ cảnh prompt.
+
+> **📖 ĐỊNH NGHĨA:** **In-context learning** đề cập đến bất kỳ phương pháp nào hướng dẫn LLM về một nhiệm vụ không quen thuộc bằng cách sử dụng các ví dụ trong ngữ cảnh prompt. Các kỹ thuật phổ biến bao gồm one-shot, two-shot, hoặc few-shot learning, cũng như cung cấp hướng dẫn từng bước (chain of thought). So với **fine-tuning**—việc đào tạo một LLM chuyên biệt trên văn bản cụ thể cho lĩnh vực—in-context learning tiết kiệm chi phí hơn và ít tốn tài nguyên hơn. Nó không yêu cầu GPU cao cấp hoặc kiến thức sâu về kiến trúc transformer.
+
+Đây là tóm tắt các kỹ thuật in-context learning chúng ta đã đề cập:
+
+| Kỹ thuật | Mô tả |
+|----------|-------|
+| **Zero-shot learning** | Không cung cấp ví dụ nào trong prompt |
+| **One-shot learning** | Cung cấp một ví dụ trong prompt |
+| **Two-shot learning** | Cung cấp hai ví dụ trong prompt |
+| **Few-shot learning** | Cung cấp nhiều ví dụ trong prompt |
+| **Chain of Thought (CoT)** | Nhiều ví dụ với các bước logic được giải thích rõ ràng cho mỗi ví dụ |
+
+> **🚀 Kỹ thuật Nâng cao:** Ngoài CoT, nghiên cứu đã giới thiệu **Tree of Thought (ToT)** để khám phá nhiều con đường suy luận đồng thời ([Yao et al., 2023](https://arxiv.org/abs/2305.10601))—nâng tỷ lệ thành công của GPT-4 trong Game of 24 từ 4% lên 74%—và **Thread of Thought (ThoT)** ([Zhou et al., 2023](https://arxiv.org/abs/2311.08734)) để xử lý ngữ cảnh hỗn loạn bằng cách lọc nhiễu. Các kỹ thuật nâng cao này đáng khám phá cho các ứng dụng phức tạp.
+
+---
+
+## Cấu trúc Prompt
+
+Kết hợp tất cả các yếu tố prompt từ các phần trước tạo ra **cấu trúc prompt tổng quát** sau:
+
+1. **Persona (Vai trò)**: Chỉ định vai trò bạn muốn LLM thể hiện. Dù là nhà quản lý marketing lành nghề, tác giả khoa học viễn tưởng giành giải thưởng hay biên tập viên chuyên nghiệp cho tạp chí máy tính, hãy đặt kỳ vọng cao.
+
+2. **Context (Ngữ cảnh)**: Cung cấp thông tin nền chi tiết để giúp LLM hiểu ngữ cảnh xung quanh yêu cầu của bạn. Độ chính xác tăng khả năng phù hợp với kỳ vọng của bạn.
+
+3. **Instruction (Hướng dẫn)**: Xác định rõ ràng hành động bạn muốn LLM thực hiện với văn bản đầu vào. Dù là dịch thuật, viết, viết lại, cải thiện, phân loại, sắp xếp hay tìm kiếm—hãy rõ ràng.
+
+4. **Input (Đầu vào)**: Đề cập đến chi tiết ngữ cảnh cụ thể, có thể ở dạng đoạn văn, câu hỏi hoặc danh sách các điểm chính. Bạn có thể chọn gán nhãn cho nó, chẳng hạn như "Text," "Question," v.v.
+
+5. **Steps (Các bước)**: Phác thảo các bước xử lý mà LLM nên tuân theo để tạo ra đầu ra.
+
+6. **Tone (Giọng điệu)**: Chỉ định giọng điệu mong muốn của câu trả lời LLM—trang trọng, không chính thức, dí dỏm, nhiệt tình, nghiêm túc, thân thiện, v.v. Các kết hợp cũng có thể.
+
+7. **Output Format (Định dạng đầu ra)**: Tùy chọn chỉ định định dạng đầu ra mong muốn. Nếu không chỉ định, LLM giả định câu trả lời văn bản. Tuy nhiên, bạn có thể yêu cầu các định dạng như bảng, file CSV (với tên cột), JSON (với tên thuộc tính) hoặc các định dạng có cấu trúc khác.
+
+8. **Examples (Ví dụ)**: Trong trường hợp LLM có thể thiếu đào tạo đầy đủ cho một số nhiệm vụ nhất định, đặc biệt là phân loại văn bản và suy luận, hãy cung cấp đào tạo nội tuyến nhỏ thông qua các ví dụ. Ngay cả một vài ví dụ cũng có thể cải thiện đáng kể chất lượng câu trả lời.
+
+### Prompts có Cấu trúc với Thẻ XML
+
+Một cách đáng tin cậy hơn để thực thi cấu trúc prompt—được khuyến nghị trong cả hướng dẫn prompt engineering của [OpenAI](https://platform.openai.com/docs/guides/prompt-engineering) và [Anthropic](https://docs.anthropic.com/claude/docs/prompt-engineering)—là **đánh dấu các phần khác nhau bằng thẻ kiểu XML**.
+
+Ví dụ, đây là một prompt để viết punchline cho bài phát biểu:
+
+```xml
+<Persona>
+Bạn là một nhà phát triển Mô hình Ngôn ngữ Lớn (LLM) giàu kinh nghiệm và là diễn giả nổi tiếng.
+</Persona>
+
+<Context>
+Bạn đã được mời phát biểu chính tại một sự kiện LLM.
+</Context>
+
+<Instruction>
+Viết các câu punchline cho bài phát biểu.
+</Instruction>
+
+<Input>
+Bao gồm các sự kiện sau:
+ • LLM đã trở nên phổ biến với sự ra mắt của ChatGPT vào tháng 11 năm 2022
+ • nhiều LLM phổ biến và chatbot dựa trên LLM đã được ra mắt kể từ đó, 
+   chẳng hạn như LLAMA-2, Falcon180B, Bard
+ • LLM trở nên phổ biến như công cụ tìm kiếm
+ • nhiều công ty muốn tích hợp LLM vào ứng dụng của họ
+</Input>
+
+<Tone>
+Sử dụng giọng điệu dí dỏm nhưng giải trí.
+</Tone>
+
+<OutputFormat>
+Trình bày văn bản trong hai đoạn, mỗi đoạn 5 dòng.
+</OutputFormat>
+```
+
+**Đầu ra:**
+```
+Thưa quý vị, khi chúng ta bắt đầu cuộc hành trình ngôn ngữ này, hãy nhớ điều này: Vào 
+tháng 11 năm 2022, ChatGPT không chỉ xuất hiện; nó là tương đương ngôn ngữ của màn 
+trình diễn encore của một ngôi sao nhạc rock, mở đường cho một cuộc hành trình từ ngữ 
+hoành tráng! Ngày nay, với LLAMA-2, Falcon180B và Bard, có thể nói rằng LLM đã trở 
+thành Beatles của kỷ nguyên số, khiến các công cụ tìm kiếm cảm thấy như tin tức của ngày hôm qua.
+
+Nhưng đây là điểm nhấn – các công ty hiện đang ganh đua nhau, cố gắng đưa các LLM này 
+vào ứng dụng của họ. Giống như cơn sốt vàng, nhưng thay vì vét vàng, chúng ta đang sàng 
+lọc các byte ngôn ngữ xuất sắc. Vì vậy, bạn bè của tôi, trong thời đại này, nơi từ ngữ nắm 
+giữ sức mạnh và LLM là những chiếc bút mạnh mẽ, chúng ta không chỉ viết kịch bản cho 
+tương lai; chúng ta đang viết một câu chuyện ngôn ngữ chắc chắn sẽ là bom tấn! Chào mừng 
+đến với kỷ nguyên của LLM, nơi chúng ta đang viết lại quy tắc, từng câu một, và từ ngữ là 
+đồng tiền của sự thay đổi!
+```
+
+> **💡 LƯU Ý:** Các nghiên cứu (ví dụ: ["The Prompt Report: A Systematic Survey of Prompting Techniques"](https://arxiv.org/abs/2406.06608)) đã phát hiện rằng **đặt tên rõ ràng các phần khác nhau của prompt có xu hướng cải thiện kết quả**. Tuy nhiên, bạn không cần đặt tên cho mọi phần. Hầu hết các LLM có thể tự tìm ra mục đích của văn bản trong prompt. Vì vậy, bạn có thể kết hợp bằng cách đặt tên một số phần (ví dụ: Question hoặc Examples) và bỏ qua tên cho những phần khác (ví dụ: Context hoặc Tone). Hãy thử nghiệm và xem điều gì hiệu quả nhất cho trường hợp của bạn.
+
+### Tài nguyên Nâng cao
+
+Nếu bạn muốn tìm hiểu sâu hơn về prompt engineering, đây là các tài nguyên được khuyến nghị:
+
+- [OpenAI Prompt Engineering Guide](https://platform.openai.com/docs/guides/prompt-engineering)
+- [Anthropic Prompt Engineering Guide](https://docs.anthropic.com/claude/docs/prompt-engineering)
+- [Prompt Engineering Guide by DAIR.AI](https://www.promptingguide.ai/techniques)
+- [Prompt Engineering Guide (GitHub)](https://github.com/dair-ai/Prompt-Engineering-Guide)
+- [Google's Prompting Guide](https://ai.google.dev/gemini-api/docs/prompting-strategies)
+
+---
+
+## Tóm tắt
+
+**Điểm chính cần nhớ:**
+
+- **Prompt rõ ràng là thiết yếu**: Prompt hướng dẫn LLM bằng cách cung cấp chỉ dẫn và ngữ cảnh (thông tin nền, ví dụ: kiến thức chuyên môn hoặc ràng buộc). Prompt rõ ràng, cụ thể tạo ra kết quả tốt hơn prompt mơ hồ.
+
+- **Các tác vụ khác nhau cần mẫu khác nhau**: Prompt phân loại yêu cầu nhãn danh mục hoặc điểm cảm xúc; prompt tạo sinh yêu cầu nội dung sáng tạo gốc; và prompt trích xuất lấy các sự kiện cụ thể từ văn bản đầu vào.
+
+- **Few-shot learning cải thiện kết quả**: Khi prompt không tạo ra đầu ra mong đợi, LLM có thể thiếu ví dụ đào tạo cho định dạng tác vụ đó. Thêm ví dụ few-shot hoặc điều chỉnh độ rõ ràng của chỉ dẫn thường khắc phục điều này. One-shot sử dụng một ví dụ, two-shot sử dụng hai—nhiều ví dụ hơn thường cải thiện tính nhất quán nhưng tăng chi phí token.
+
+- **Cấu trúc prompt chuẩn**: Prompt thường bao gồm persona (vai trò), context (ngữ cảnh), instructions (nhiệm vụ), input (dữ liệu), tone (phong cách/định dạng), và examples (mẫu). Không phải tất cả các phần đều cần thiết cho mọi tác vụ—bạn có thể bỏ qua, sắp xếp lại hoặc mở rộng các phần prompt với các yếu tố tùy chỉnh.
+
+- **Chain-of-Thought (CoT) cho suy luận**: CoT prompting yêu cầu LLM hiển thị quá trình suy luận từng bước trước khi đưa ra câu trả lời cuối cùng. Bao gồm chỉ dẫn như "Hãy suy nghĩ từng bước" hoặc liệt kê rõ ràng các bước suy luận cần thiết.
+
+- **Cấu trúc với thẻ XML**: Sử dụng thẻ kiểu XML để thực thi các phần: `<Persona>`, `<Context>`, `<Instruction>`, `<Input>`, `<Examples>`. Điều này tuân theo hướng dẫn prompt engineering của OpenAI và Anthropic để rõ ràng hơn.
+
+- **Thực thi theo chương trình**: Tự động hóa prompt dựa trên API chèn biến vào template prompt và thực thi yêu cầu theo chương trình. Điều này mở rộng prompting từ yêu cầu đơn lẻ đến hàng nghìn biến thể bằng cách sử dụng placeholder như `{variable_name}`.
+
+- **Tồn tại các kỹ thuật nâng cao**: Ngoài prompting cơ bản, các kỹ thuật như Tree of Thought (ToT) và Thread of Thought (ThoT) giải quyết các tình huống suy luận phức tạp, mặc dù chúng vượt quá phạm vi của phần giới thiệu này.
+
+</LangVI>

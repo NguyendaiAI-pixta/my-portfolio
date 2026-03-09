@@ -1,0 +1,85 @@
+---
+// Google AdSense Ad Slot Component
+// This is a placeholder - replace with actual AdSense code when approved
+interface Props {
+  slot: 'header' | 'sidebar' | 'in-article' | 'footer';
+  format?: 'auto' | 'rectangle' | 'horizontal' | 'vertical';
+}
+
+const { slot, format = 'auto' } = Astro.props;
+
+// TODO: Replace with your actual AdSense publisher ID when approved
+const ADSENSE_ENABLED = false; // Set to true when AdSense is approved
+const ADSENSE_CLIENT = 'ca-pub-XXXXXXXXXXXXXXXX'; // Your AdSense ID
+---
+
+{ADSENSE_ENABLED ? (
+  <div class={`ad-slot ad-slot-${slot}`}>
+    <!-- Google AdSense Ad -->
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client={ADSENSE_CLIENT}
+         data-ad-slot="XXXXXXXXXX"
+         data-ad-format={format}
+         data-full-width-responsive="true"></ins>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </div>
+) : (
+  <div class={`ad-placeholder ad-placeholder-${slot}`}>
+    <p>📢 Ad Space - Ready for Google AdSense</p>
+    <small>{slot} position</small>
+  </div>
+)}
+
+<style>
+  .ad-slot {
+    margin: 2rem 0;
+    min-height: 90px;
+  }
+
+  .ad-placeholder {
+    margin: 2rem 0;
+    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+  }
+
+  .ad-placeholder p {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  .ad-placeholder small {
+    opacity: 0.8;
+    font-size: 0.85rem;
+  }
+
+  /* Responsive ad sizes */
+  .ad-slot-header {
+    min-height: 90px;
+  }
+
+  .ad-slot-sidebar {
+    min-height: 250px;
+  }
+
+  .ad-slot-in-article {
+    min-height: 250px;
+  }
+
+  .ad-slot-footer {
+    min-height: 90px;
+  }
+
+  @media (max-width: 768px) {
+    .ad-slot-sidebar {
+      display: none;
+    }
+  }
+</style>

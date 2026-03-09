@@ -1,0 +1,318 @@
+---
+title: 'Part 1.2: LangChain Framework'
+description: 'Explore LangChain architecture, core object model, and how it simplifies building production-grade LLM applications.'
+pubDate: 'Mar 01 2026'
+category: 'AI Agents & Applications'
+tags: ['llm', 'langchain', 'architecture', 'framework']
+---
+
+import LangToggle from '../../../components/LangToggle.astro';
+import LangEN from '../../../components/LangEN.astro';
+import LangVI from '../../../components/LangVI.astro';
+
+> **Series**: AI Agents & Applications with LangChain, LangGraph and MCP  
+> **Part**: 1.2 — LangChain Framework
+
+<LangToggle />
+
+<LangEN>
+
+We'll also go hands-on with one of the most important day-to-day skills in AI development: writing good prompts. You'll learn how to structure prompts for different tasks, sharpen them with one-shot and few-shot examples, and automate the whole process with LangChain's prompt templates and the OpenAI API.
+
+By the end of this post, you'll be past the experimentation phase and ready to build LLM-powered applications with real purpose and real reliability.
+
+---
+
+## Introducing LangChain
+
+Imagine you need to build a chatbot that answers customer questions from your company's documents, or a search tool that finds exact answers from thousands of internal reports. You quickly run into the same problems:
+
+- How do you get your own data into the model without copying entire documents into prompts?
+- How do you keep prompts, chains, and connections easy to manage as your features grow?
+- How do you handle context limits and costs while keeping answers accurate?
+- How do you organize multi-step workflows and API calls without messy code?
+- Once your app is running, how do you check, fix, and watch its behavior?
+
+Without a framework, developers keep rebuilding the same basic parts—load the data, split it, turn it into embeddings, store it, retrieve it, and prompt it—over and over. This repetition makes it hard to bring your own data into the model reliably and keep everything organized.
+
+LangChain solves these problems by giving you a consistent set of building blocks:
+
+- **Loaders** to bring in data
+- **Splitters** to break it into chunks
+- **Embeddings and vector stores** to index it
+- **Retrievers** to pull only the most relevant context when needed
+
+This means you're not pasting whole documents into prompts. Prompt templates and structured chain building help you standardize and reuse prompts and connections as features grow, rather than copying logic everywhere. And for multi-step workflows, LCEL (LangChain Expression Language) and the Runnable interface give you a uniform way to organize tool calls and processing steps, with clearer structure for tracking, fixing, and checking behavior once the application is live.
+
+LangChain has also grown quickly, powered by an active open source community. It keeps up with new LLM designs, new data sources, and retrieval technologies, while helping establish shared best practices for building and launching LLM-based systems.
+
+Three main ideas guide LangChain's design: **modularity**, **composability**, and **extensibility**.
+
+- **Modularity**: Components follow standard interfaces, so you can swap an LLM, change a vector store, or add a new data connector without rewriting your entire application.
+- **Composability**: Real-world tasks can be built from multiple components, forming chains or agent workflows that pick the right tools for the job on the fly.
+- **Extensibility**: While default implementations exist, you can always extend or replace them with custom logic or third-party integrations, avoiding lock-in and promoting compatibility.
+
+By learning LangChain, you not only gain the ability to build production-grade LLM applications but also learn transferable skills. Other frameworks solve similar problems in similar ways, so once you understand these patterns, you can adapt them to whatever tools you choose in the future.
+
+## LangChain Architecture
+
+LangChain's documentation is detailed, but the best way to understand how it works is by building with it. This section gives you a high-level view that we'll keep coming back to in later posts. Think of it as the map you'll use while we explore the details and code examples.
+
+Most LLM frameworks follow a similar overall pattern, but each one has its own components. In LangChain, the workflow looks roughly like what you see in figure 1.6. You start by pulling in text from different sources—files, databases, or websites—and wrapping it into Document objects. Those documents are often split into smaller chunks so they're easier to handle. Next, each chunk goes through an embedding model, which turns the text into vectors that capture its meaning. Both the raw chunks and their embeddings are stored in a vector store, which lets you quickly find the most relevant pieces of text based on similarity search.
+
+![LangChain architecture showing the flow from document loading through retrieval to LLM response](/src/assets/blog/ai-agents/langchain-architecture.png)
+*Figure 1.6: LangChain architecture. The document loader imports data, which the text splitter divides into chunks. These are vectorized by an embedding model, stored in a vector store, and retrieved through a retriever for the LLM. The LLM cache checks for prior requests to return cached responses, while the output parser formats the LLM's final response.*
+
+When an LLM app runs a task—like summarization or semantic search—it builds a prompt that combines the user's question with extra context. That context usually comes from document chunks pulled from a vector store. Sometimes, you'll also want to bring in information from a graph database. Vector stores are still the backbone of most RAG workflows, but graph databases are becoming more common in apps that need to show and reason about relationships between things. This is especially useful for agents: unlike engines (that typically do one retrieval step and return output), agents may need to keep memory for longer, track things and their relationships over time, and use those relationships to plan next actions (for example, deciding which tool to call or which information to get next). LangChain already works with popular options like Neo4j, and it lets you use graph-based memory or planning components—features that are showing up more in advanced agent designs.
+
+To make all of this easier to connect together, LangChain introduced the Runnable interface and LCEL. These give you a clean, consistent way to chain components without writing lots of connecting code. We'll go deeper into both later in this post.
+
+It's also worth knowing that LangChain's workflow isn't locked into a simple pipeline. You can arrange components as graphs to handle more complex, branching flows—a capability built into the LangGraph module. We'll dig into these patterns and design variations in the next section, where the bigger picture of LLM application design becomes clearer.
+
+Here's what each component does (matching the numbers in figure 1.6):
+
+1. **Document loaders** — Get content from sources (files, web pages, SaaS tools, and databases) and turn it into LangChain Document objects.
+2. **Text splitters** — Break large texts into smaller chunks/Document objects so they fit within context limits and can be embedded, indexed, and retrieved effectively.
+3. **Document** — LangChain's core container for content + metadata (e.g., source, page number, author, and timestamp), used from start to finish.
+4. **Embedding models** — Turn text into vectors that represent meaning, enabling similarity-based search and matching.
+5. **Vector stores** — Special databases that store embeddings (and related Document objects) and support efficient semantic retrieval for RAG.
+6. **Knowledge graph databases** — Graph databases that store entities and relationships. Useful when you need to model and query connections between concepts rather than just text similarity.
+7. **Retrievers** — Components that query one or more backends (vector stores, SQL, and graphs) to return the most relevant Documents for a user question.
+8. **Prompts** — Reusable prompt templates that combine user input with retrieved context (and, optionally, examples) to form the final request sent to the LLM.
+9. **LLM cache** — An optional layer that reuses prior responses to reduce delay and cost for repeated or similar queries.
+10. **LLM/chat model** — The LLM interface used to generate outputs; LangChain supports multiple providers and also mock/fake models for testing.
+11. **Output parser** — Transforms the model's response into a structured format (e.g., JSON), making downstream processing more reliable.
+
+The components in the list above can be organized into a **chain** or structured around **agents**:
+
+- **Chain** — A composite arrangement guiding LangChain's processing workflow, customized for specific use cases and based on a sequence of the described components.
+- **Agent** — Manages a dynamic workflow, extending a sequential chain. The agent's processing is flexible and can adapt based on user input or component output. Resources in the dynamic workflow are called tools or plugins, and the collection of all tools is called the toolkit.
+
+LangChain's design supports three primary application types: summarization and query services, chatbots, and agents. Although the framework can seem complex at first glance, its structure and core concepts will become clearer as we work through examples and build up the pieces step by step.
+
+## LangChain's Core Object Model
+
+With a good understanding of LangChain's high-level architecture, we can now look at its core object model for a clearer picture of how the framework works. Understanding the key objects and how they interact will help you use LangChain much more effectively. Just as importantly, these class families mirror the building blocks you'll find in most LLM applications—documents, chunking, retrieval, prompting, and model calls—so learning the LangChain object model also gives you a practical mental model for how LLM applications are commonly built.
+
+The object model is organized into class families, starting with base classes that other classes build on. Figure 1.7 shows a visual overview of the main class families used across various tasks, all centered around the Document entity. It shows how loaders create Document objects, how splitters divide them into smaller pieces, and how these are then passed into vector stores and retrievers for later steps.
+
+![Object model of classes associated with the Document core entity](/src/assets/blog/ai-agents/langchain-object-model-document.png)
+*Figure 1.7: Object model of classes associated with the Document core entity, including Document loaders (create Document objects), splitters (create a list of Document objects), vector stores (store Document objects in vector stores), and retrievers (retrieve Document objects from vector stores and other sources).*
+
+As covered in the LangChain architecture section, the primary classes include:
+
+- **Document**
+- **DocumentLoader**
+- **TextSplitter**
+- **VectorStore**
+- **Retriever**
+
+LangChain works with a wide variety of third-party tools and services across these components, offering great flexibility. You can find a full list of supported integrations in the official documentation. In addition, LangChain provides the LangChain Hub, a community-driven repository for finding and sharing reusable components such as prompts, chains, and tools.
+
+A key feature shared by many of these components—from loaders to LLMs—is the Runnable interface. This common interface allows objects to be put together and chained consistently, enabling highly modular workflows. We'll dive deeper into this feature, and into LCEL, in a later section focused on building composable and expressive LLM pipelines.
+
+In figure 1.8, you can see the object model related to LLMs, including PromptTemplate and PromptValue. This figure shows how these classes connect to the LLM interface, showing a somewhat more complex structure than the classes presented earlier.
+
+![Object model of classes associated with LLMs](/src/assets/blog/ai-agents/langchain-object-model-llm.png)
+*Figure 1.8: Object model of classes associated with LLMs, including PromptTemplates and PromptValues.*
+
+Now that you've explored LangChain's purpose, architecture, and the core types of applications it supports, I encourage you to experiment with LangChain using a Jupyter Notebook. It's a quick and practical way to get a feel for the framework before we dive deeper.
+
+**Note:** Because we'll be building LLM-based LangChain applications and LangGraph agents, most examples in this series use OpenAI models, primarily from the GPT-4 family. Before running them, you'll need to create an OpenAI account and link a debit or credit card. Most examples run well on GPT-4o-mini, the least expensive model, and completing all exercises should cost less than $5 in total. You're welcome to experiment with larger models if you wish.
+
+At the heart of every LangChain application lies the power of the LLM. LLM-based applications can be thought of as specialized wrappers or interfaces around the model, tailored for specific use cases. Let's now explore the major types of use cases that LLMs are particularly well suited for.
+
+## Typical LLM Use Cases
+
+LLMs are used across a wide range of tasks, from text classification to code generation and logical reasoning. Here are some of the most common use cases, along with real-world examples:
+
+**Text Classification and Sentiment Analysis**
+
+This includes sorting news articles or recommending stocks based on sentiment analysis. For example, GoDaddy uses LLMs to automatically classify support tickets, as described in the article "LLM from the Trenches: 10 Lessons Learned Operationalizing Models at GoDaddy."
+
+**Natural Language Understanding and Generation**
+
+LLMs can identify main topics in a text and create summaries tailored by length, tone, or terminology. Duolingo uses AI to speed up lesson creation, detailed in the blog post "How Duolingo Uses AI to Create Lessons Faster."
+
+**Semantic Search**
+
+This involves searching a knowledge base based on the intent and context of a question, rather than just using simple keywords. The Picnic supermarket app uses LLMs to improve recipe search, as explained in the "Enhancing Search Retrieval with Large Language Models (LLMs)" post on Medium.
+
+**Autonomous Reasoning and Workflow Execution**
+
+LLMs can handle tasks such as planning a complete holiday package by understanding requests and managing each step of the process.
+
+**Structured Data Extraction**
+
+This involves pulling structured data—entities and their relationships, for example—from unstructured text, such as financial reports or news articles.
+
+**Code Understanding and Generation**
+
+LLMs can analyze code to find issues, suggest improvements, or generate new code components—ranging from simple functions and classes to entire applications—based on user instructions. This capability powers popular IDE extensions such as GitHub Copilot and Cline AI, and emerging AI-driven coding assistants such as Cursor and Windsurf, which provide real-time code suggestions and error detection as you work. In addition, CLI-based coding tools such as Anthropic's Claude Code and OpenAI's Codex allow developers to interact with AI through the command line, enabling code generation, refactoring, and debugging directly from terminal environments.
+
+**Personalized Education and Tutoring**
+
+LLMs are increasingly used as interactive tutors, providing personalized help and feedback. For instance, Khan Academy's Khanmigo uses an LLM to assist students with interactive learning.
+
+These use cases assume the LLM can handle user requests well. However, real-world tasks often involve specific domains or scenarios that go beyond the LLM's initial training. How can you ensure your LLM meets user needs effectively in these cases? That's exactly what we'll cover in the next part.
+
+---
+
+**Previous**: [← Part 1.1: Understanding AI Applications](/blog/ai-agents/01-1-understanding-ai)  
+**Next**: [Part 1.3: Making LLMs Smarter →](/blog/ai-agents/01-3-making-llms-smarter)
+
+*— Nguyen Dai, AI Engineer @ PIXTA Vietnam*  
+*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
+
+</LangEN>
+
+<LangVI>
+
+Series này cũng sẽ đi sâu vào một kỹ năng quan trọng nhất trong phát triển AI: viết prompt hiệu quả. Nội dung bao gồm cách cấu trúc prompt cho các tác vụ khác nhau, cải thiện chúng với one-shot và few-shot examples, và tự động hóa toàn bộ quy trình bằng prompt templates của LangChain và OpenAI API.
+
+Kết thúc bài này, bạn sẽ vượt qua giai đoạn thử nghiệm và sẵn sàng xây dựng ứng dụng LLM với mục đích và độ tin cậy thực sự.
+
+---
+
+## Giới Thiệu LangChain
+
+Khi xây dựng chatbot trả lời câu hỏi từ tài liệu công ty, hoặc công cụ tìm kiếm trong hàng nghìn báo cáo nội bộ, developer thường gặp phải những vấn đề tương tự:
+
+- Làm sao đưa dữ liệu riêng vào model mà không phải copy toàn bộ tài liệu vào prompt?
+- Làm sao quản lý prompt, chain và kết nối khi tính năng phát triển?
+- Làm sao xử lý giới hạn context và chi phí mà vẫn giữ độ chính xác?
+- Làm sao tổ chức workflow nhiều bước và API call một cách gọn gàng?
+- Khi app đã chạy, làm sao kiểm tra, sửa lỗi và giám sát hành vi?
+
+Không có framework, developer phải xây dựng lại liên tục các thành phần cơ bản: load dữ liệu, chia nhỏ, tạo embeddings, lưu trữ, truy xuất và prompt. Sự lặp lại này khiến việc tích hợp dữ liệu vào model trở nên khó khăn và khó duy trì.
+
+LangChain giải quyết bằng cách cung cấp bộ building block nhất quán:
+
+- **Loaders** để nhập dữ liệu
+- **Splitters** để chia thành chunk
+- **Embeddings và vector stores** để đánh index
+- **Retrievers** để lấy context liên quan
+
+Điều này có nghĩa là không cần paste toàn bộ tài liệu vào prompt. Prompt template và cấu trúc chain giúp chuẩn hóa và tái sử dụng prompt cùng kết nối khi tính năng phát triển, thay vì sao chép logic khắp nơi. Với workflow nhiều bước, LCEL (LangChain Expression Language) và Runnable interface cung cấp cách thống nhất để tổ chức tool call và các bước xử lý, với cấu trúc rõ ràng hơn để theo dõi, debug và kiểm tra hành vi.
+
+LangChain cũng phát triển nhanh chóng, được thúc đẩy bởi cộng đồng open source năng động. Framework theo kịp với các thiết kế LLM mới, nguồn dữ liệu mới và công nghệ retrieval, đồng thời giúp thiết lập các best practice chung để xây dựng và triển khai hệ thống dựa trên LLM.
+
+Ba nguyên tắc thiết kế chính của LangChain: **modularity**, **composability**, và **extensibility**.
+
+- **Modularity**: Các component tuân theo interface chuẩn, nên bạn có thể đổi LLM, thay vector store, hoặc thêm data connector mới mà không cần viết lại toàn bộ ứng dụng.
+- **Composability**: Các tác vụ thực tế có thể được xây dựng từ nhiều component, tạo thành chain hoặc agent workflow tự động chọn công cụ phù hợp cho công việc.
+- **Extensibility**: Mặc dù có các implementation mặc định, bạn luôn có thể mở rộng hoặc thay thế chúng bằng logic tùy chỉnh hoặc tích hợp bên thứ ba, tránh bị khóa vào một công nghệ và thúc đẩy khả năng tương thích.
+
+Bằng cách học LangChain, bạn không chỉ có khả năng xây dựng ứng dụng LLM cấp production mà còn học được các kỹ năng có thể chuyển giao. Các framework khác giải quyết vấn đề tương tự theo cách tương tự, vì vậy một khi bạn hiểu các pattern này, bạn có thể áp dụng chúng cho bất kỳ công cụ nào bạn chọn trong tương lai.
+
+## Kiến Trúc LangChain
+
+Tài liệu của LangChain rất chi tiết, nhưng cách tốt nhất để hiểu cách nó hoạt động là thực hành xây dựng với nó. Phần này cung cấp cho bạn cái nhìn tổng quan mà chúng ta sẽ quay lại nhiều lần trong các bài sau. Hãy coi nó như bản đồ bạn sẽ dùng khi chúng ta đi sâu vào chi tiết và ví dụ code.
+
+Hầu hết các framework LLM đều theo một pattern chung tương tự, nhưng mỗi framework lại định nghĩa các component riêng. Trong LangChain, workflow trông giống như bạn thấy trong hình 1.6. Bạn bắt đầu bằng việc lấy văn bản từ các nguồn khác nhau—file, database hoặc website—và bao gói chúng vào các Document object. Những tài liệu này thường được chia thành các chunk nhỏ hơn để dễ xử lý hơn. Tiếp theo, mỗi chunk đi qua một embedding model, chuyển văn bản thành các vector nắm bắt ý nghĩa của nó. Cả chunk gốc và embedding của chúng đều được lưu trong vector store, giúp bạn nhanh chóng tìm thấy những đoạn văn bản liên quan nhất dựa trên tìm kiếm tương đồng.
+
+![Kiến trúc LangChain thể hiện quy trình từ load tài liệu qua retrieval đến phản hồi của LLM](/src/assets/blog/ai-agents/langchain-architecture.png)
+*Hình 1.6: Kiến trúc LangChain. Document loader nhập dữ liệu, text splitter chia thành các chunk. Chúng được vector hóa bởi embedding model, lưu trong vector store, và được truy xuất thông qua retriever cho LLM. LLM cache kiểm tra các yêu cầu trước đó để trả về phản hồi đã lưu, trong khi output parser định dạng phản hồi cuối cùng của LLM.*
+
+Khi một ứng dụng LLM chạy một tác vụ—như tóm tắt hoặc tìm kiếm ngữ nghĩa—nó xây dựng một prompt kết hợp câu hỏi của người dùng với ngữ cảnh bổ sung. Ngữ cảnh đó thường đến từ các chunk tài liệu được lấy từ vector store. Thiểu thoảng, bạn cũng muốn đưa vào thông tin từ graph database. Vector store vẫn là xương sống của hầu hết các RAG workflow, nhưng graph database đang trở nên phổ biến hơn trong các ứng dụng cần thể hiện và suy luận về mối quan hệ giữa các thứ. Điều này đặc biệt hữu ích cho agent: khác với engine (thường làm một bước retrieval và trả về kết quả), agent có thể cần giữ bộ nhớ lâu hơn, theo dõi các thứ và mối quan hệ của chúng theo thời gian, và dùng những mối quan hệ đó để lập kế hoạch hành động tiếp theo (ví dụ, quyết định gọi công cụ nào hoặc lấy thông tin nào tiếp theo). LangChain đã tích hợp với các lựa chọn phổ biến như Neo4j, và cho phép bạn dùng các component memory hoặc planning dựa trên graph—những tính năng xuất hiện nhiều hơn trong các thiết kế agent tiên tiến.
+
+Để làm cho việc kết nối tất cả dễ dàng hơn, LangChain giới thiệu Runnable interface và LCEL. Chúng cho bạn cách sạch sẽ, nhất quán để nối các component mà không cần viết nhiều code kết nối. Chúng ta sẽ đi sâu hơn vào cả hai sau trong bài này.
+
+Cũng đáng biết rằng workflow của LangChain không bị khóa vào một pipeline đơn giản. Bạn có thể sắp xếp các component thành graph để xử lý các luồng phức tạp, phân nhánh hơn—khả năng được tích hợp trong module LangGraph. Chúng ta sẽ đi sâu vào những pattern và biến thể thiết kế này trong phần tiếp theo, nơi bức tranh tổng thể về thiết kế ứng dụng LLM trở nên rõ ràng hơn.
+
+Dưới đây là chức năng của từng component (tương ứng với số trong hình 1.6):
+
+1. **Document loaders** — Lấy nội dung từ các nguồn (file, trang web, công cụ SaaS và database) và chuyển thành các Document object của LangChain.
+2. **Text splitters** — Chia văn bản lớn thành các chunk/Document object nhỏ hơn để phù hợp với giới hạn ngữ cảnh và có thể được embed, index và retrieval hiệu quả.
+3. **Document** — Container cốt lõi của LangChain cho nội dung + metadata (ví dụ: nguồn, số trang, tác giả và timestamp), được dùng từ đầu đến cuối.
+4. **Embedding models** — Chuyển văn bản thành các vector biểu diễn ý nghĩa, cho phép tìm kiếm và khớp dựa trên độ tương đồng.
+5. **Vector stores** — Database chuyên dụng lưu trữ embedding (và các Document object liên quan) và hỗ trợ semantic retrieval hiệu quả cho RAG.
+6. **Knowledge graph databases** — Graph database lưu trữ các entity và mối quan hệ. Hữu ích khi bạn cần mô hình hóa và truy vấn kết nối giữa các khái niệm thay vì chỉ tìm kiếm văn bản tương đồng.
+7. **Retrievers** — Các component truy vấn một hoặc nhiều backend (vector store, SQL và graph) để trả về các Document liên quan nhất cho câu hỏi của người dùng.
+8. **Prompts** — Prompt template có thể tái sử dụng kết hợp input của người dùng với ngữ cảnh đã retrieval (và tùy chọn, các ví dụ) để tạo yêu cầu cuối cùng gửi đến LLM.
+9. **LLM cache** — Một lớp tùy chọn tái sử dụng các phản hồi trước đó để giảm độ trễ và chi phí cho các truy vấn lặp lại hoặc tương tự.
+10. **LLM/chat model** — Interface LLM được dùng để sinh kết quả; LangChain hỗ trợ nhiều nhà cung cấp và cả mock/fake model để test.
+11. **Output parser** — Chuyển phản hồi của model thành định dạng có cấu trúc (ví dụ JSON), làm cho việc xử lý tiếp theo đáng tin cậy hơn.
+
+Các component trong danh sách trên có thể được tổ chức thành một **chain** hoặc cấu trúc xung quanh **agent**:
+
+- **Chain** — Một sắp xếp tổng hợp hướng dẫn quy trình xử lý của LangChain, được tùy chỉnh cho các use case cụ thể và dựa trên chuỗi các component đã mô tả.
+- **Agent** — Quản lý một workflow động, mở rộng chuỗi tuần tự. Xử lý của agent linh hoạt và có thể thích ứng dựa trên input của người dùng hoặc output của component. Các tài nguyên trong workflow động được gọi là tool hoặc plugin, và tập hợp tất cả các tool được gọi là toolkit.
+
+Thiết kế của LangChain hỗ trợ ba loại ứng dụng chính: dịch vụ tóm tắt và truy vấn, chatbot và agent. Mặc dù framework có thể trông phức tạp lúc đầu, cấu trúc và các khái niệm cốt lõi của nó sẽ rõ ràng hơn khi chúng ta làm việc qua các ví dụ và xây dựng từng phần từng bước một.
+
+## Mô Hình Object Cốt Lõi Của LangChain
+
+Với sự hiểu biết tốt về kiến trúc cấp cao của LangChain, giờ chúng ta có thể xem xét mô hình object cốt lõi của nó để có bức tranh rõ ràng hơn về cách framework hoạt động. Hiểu các object chính và cách chúng tương tác sẽ giúp bạn sử dụng LangChain hiệu quả hơn nhiều. Quan trọng hơn, các nhóm class này phản ánh các building block bạn sẽ gặp trong hầu hết các ứng dụng LLM—document, chunking, retrieval, prompting và model call—vì vậy việc học mô hình object của LangChain cũng cho bạn một mô hình tư duy thực tế về cách các ứng dụng LLM thường được xây dựng.
+
+Mô hình object được tổ chức thành các nhóm class, bắt đầu với các base class mà các class khác xây dựng dựa trên đó. Hình 1.7 hiển thị cái nhìn tổng quan trực quan về các nhóm class chính được sử dụng trong nhiều tác vụ khác nhau, tất cả đều xoay quanh entity Document. Nó cho thấy loader tạo các Document object như thế nào, splitter chia chúng thành các phần nhỏ hơn ra sao, và chúng được truyền vào vector store và retriever cho các bước sau như thế nào.
+
+![Mô hình object của các class liên quan đến entity Document cốt lõi](/src/assets/blog/ai-agents/langchain-object-model-document.png)
+*Hình 1.7: Mô hình object của các class liên quan đến entity Document cốt lõi, bao gồm Document loader (tạo Document object), splitter (tạo danh sách Document object), vector store (lưu Document object trong vector store), và retriever (truy xuất Document object từ vector store và các nguồn khác).*
+
+Như đã đề cập trong phần kiến trúc LangChain, các class chính bao gồm:
+
+- **Document**
+- **DocumentLoader**
+- **TextSplitter**
+- **VectorStore**
+- **Retriever**
+
+LangChain hoạt động với nhiều công cụ và dịch vụ bên thứ ba qua các component này, mang lại sự linh hoạt lớn. Bạn có thể tìm danh sách đầy đủ các tích hợp được hỗ trợ trong tài liệu chính thức. Ngoài ra, LangChain cung cấp LangChain Hub, một kho lưu trữ do cộng đồng thúc đẩy để tìm kiếm và chia sẻ các component có thể tái sử dụng như prompt, chain và tool.
+
+Một tính năng chính được chia sẻ bởi nhiều component này—từ loader đến LLM—là Runnable interface. Interface chung này cho phép các object được ghép lại và nối chuỗi một cách nhất quán, cho phép các workflow rất linh hoạt theo module. Chúng ta sẽ đi sâu hơn vào tính năng này, và vào LCEL, trong một phần sau tập trung vào xây dựng các pipeline LLM có thể kết hợp và biểu cảm.
+
+Trong hình 1.8, bạn có thể thấy mô hình object liên quan đến LLM, bao gồm PromptTemplate và PromptValue. Hình này cho thấy các class này kết nối với LLM interface như thế nào, thể hiện cấu trúc phức tạp hơn một chút so với các class được trình bày trước đó.
+
+![Mô hình object của các class liên quan đến LLM](/src/assets/blog/ai-agents/langchain-object-model-llm.png)
+*Hình 1.8: Mô hình object của các class liên quan đến LLM, bao gồm PromptTemplate và PromptValue.*
+
+Giờ bạn đã khám phá mục đích, kiến trúc và các loại ứng dụng cốt lõi mà LangChain hỗ trợ, tôi khuyến khích bạn thử nghiệm với LangChain bằng Jupyter Notebook. Đây là cách nhanh và thực tế để làm quen với framework trước khi chúng ta đi sâu hơn.
+
+**Lưu ý:** Vì chúng ta sẽ xây dựng các ứng dụng LangChain và LangGraph agent dựa trên LLM, hầu hết các ví dụ trong series này sử dụng các model của OpenAI, chủ yếu là từ dòng GPT-4. Trước khi chạy chúng, bạn sẽ cần tạo tài khoản OpenAI và liên kết thẻ ghi nợ hoặc thẻ tín dụng. Hầu hết các ví dụ chạy tốt trên GPT-4o-mini, model rẻ nhất, và hoàn thành tất cả các bài tập sẽ tốn dưới 5 USD tổng cộng. Bạn có thể thử nghiệm với các model lớn hơn nếu muốn.
+
+Tại trung tâm của mọi ứng dụng LangChain là sức mạnh của LLM. Các ứng dụng dựa trên LLM có thể được coi là các wrapper hoặc interface chuyên biệt xung quanh model, được tùy chỉnh cho các use case cụ thể. Bây giờ hãy khám phá các loại use case chính mà LLM đặc biệt phù hợp.
+
+## Các Use Case Điển Hình Của LLM
+
+LLM được sử dụng trong nhiều tác vụ khác nhau, từ phân loại văn bản đến sinh code và suy luận logic. Dưới đây là một số use case phổ biến nhất, cùng với các ví dụ thực tế:
+
+**Phân Loại Văn Bản và Phân Tích Cảm Xúc**
+
+Bao gồm việc sắp xếp bài báo hoặc đề xuất cổ phiếu dựa trên phân tích cảm xúc. Ví dụ, GoDaddy sử dụng LLM để tự động phân loại ticket hỗ trợ, như mô tả trong bài viết "LLM from the Trenches: 10 Lessons Learned Operationalizing Models at GoDaddy."
+
+**Hiểu và Sinh Ngôn Ngữ Tự Nhiên**
+
+LLM có thể nhận diện chủ đề chính trong văn bản và tạo bản tóm tắt được tùy chỉnh theo độ dài, giọng điệu hoặc thuật ngữ. Duolingo sử dụng AI để tăng tốc việc tạo bài học, chi tiết trong bài viết "How Duolingo Uses AI to Create Lessons Faster."
+
+**Tìm Kiếm Ngữ Nghĩa**
+
+Liên quan đến việc tìm kiếm trong knowledge base dựa trên ý định và ngữ cảnh của câu hỏi, thay vì chỉ dùng từ khóa đơn giản. Ứng dụng siêu thị Picnic sử dụng LLM để cải thiện tìm kiếm công thức nấu ăn, như giải thích trong bài viết "Enhancing Search Retrieval with Large Language Models (LLMs)" trên Medium.
+
+**Suy Luận Tự Động và Thực Thi Workflow**
+
+LLM có thể xử lý các tác vụ như lập kế hoạch gói nghỉ dưỡng hoàn chỉnh bằng cách hiểu yêu cầu và quản lý từng bước của quy trình.
+
+**Truy Xuất Dữ Liệu Có Cấu Trúc**
+
+Liên quan đến việc lấy dữ liệu có cấu trúc—các entity và mối quan hệ của chúng, chẳng hạn—từ văn bản phi cấu trúc, như báo cáo tài chính hoặc bài báo.
+
+**Hiểu và Sinh Code**
+
+LLM có thể phân tích code để tìm vấn đề, đề xuất cải tiến, hoặc sinh các component code mới—từ các function và class đơn giản đến toàn bộ ứng dụng—dựa trên hướng dẫn của người dùng. Khả năng này cung cấp sức mạnh cho các extension IDE phổ biến như GitHub Copilot và Cline AI, và các trợ lý lập trình AI mới nổi như Cursor và Windsurf, cung cấp gợi ý code và phát hiện lỗi theo thời gian thực khi bạn làm việc. Ngoài ra, các công cụ lập trình dựa trên CLI như Claude Code của Anthropic và Codex của OpenAI cho phép developer tương tác với AI thông qua command line, cho phép sinh code, refactor và debug trực tiếp từ môi trường terminal.
+
+**Giáo Dục và Gia Sư Cá Nhân Hóa**
+
+LLM ngày càng được sử dụng như gia sư tương tác, cung cấp trợ giúp và phản hồi cá nhân hóa. Ví dụ, Khanmigo của Khan Academy sử dụng LLM để hỗ trợ học sinh với việc học tương tác.
+
+Các use case này giả định LLM có thể xử lý yêu cầu của người dùng tốt. Tuy nhiên, các tác vụ thực tế thường liên quan đến các lĩnh vực hoặc kịch bản cụ thể vượt quá việc huấn luyện ban đầu của LLM. Làm sao bạn có thể đảm bảo LLM của bạn đáp ứng nhu cầu người dùng hiệu quả trong những trường hợp này? Đó chính xác là điều chúng ta sẽ đề cập trong phần tiếp theo.
+
+---
+
+**Trước**: [← Phần 1.1: Hiểu về Ứng Dụng AI](/blog/ai-agents/01-1-understanding-ai)  
+**Tiếp theo**: [Phần 1.3: Làm LLM Thông Minh Hơn →](/blog/ai-agents/01-3-making-llms-smarter)
+
+*— Nguyễn Đài, AI Engineer @ PIXTA Vietnam*  
+*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
+
+</LangVI>

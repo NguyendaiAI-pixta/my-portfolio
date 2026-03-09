@@ -1,0 +1,130 @@
+---
+title: 'Part 2: Summarization'
+description: 'Learn practical techniques for summarizing documents, building research engines, and creating agentic systems with LangChain and LangGraph.'
+pubDate: 'Mar 08 2026'
+category: 'AI Agents & Applications'
+tags: ['llm', 'summarization', 'langchain', 'langgraph', 'lcel']
+---
+
+import LangToggle from '../../../components/LangToggle.astro';
+import LangEN from '../../../components/LangEN.astro';
+import LangVI from '../../../components/LangVI.astro';
+
+> **Series**: AI Agents & Applications with LangChain, LangGraph and MCP  
+> **Part**: 2 — Summarization
+
+<LangToggle />
+
+<LangEN>
+
+In this part, we'll tackle one of the most practical challenges in working with LLMs: turning mountains of information into clear, concise summaries. We'll start with the fundamentals—how to summarize documents that are too long to fit in a single prompt, how to combine insights from multiple files, and when to use techniques like MapReduce versus refine strategies. Everything will be connected using LangChain Expression Language (LCEL) to build maintainable, production-ready summarization chains.
+
+Then, we'll level up from basic text summarization to building research engines. Think of systems that can search the web, gather relevant information, and produce comprehensive reports—all powered by smart prompt engineering and modular chain design.
+
+By the end, we'll transform these workflows into intelligent agents using LangGraph. These agents can manage their own state, make decisions on the fly, and adapt to different scenarios. It's the foundation for building truly autonomous AI systems.
+
+---
+
+## What We'll Build
+
+Throughout this part, we'll progressively build more sophisticated summarization systems:
+
+### Part 2.1: Summarizing Text with LangChain
+
+We'll start by building practical summarization chains using LangChain, with a focus on the LangChain Expression Language (LCEL). Think of chains as pipelines where the output of one step flows into the next—perfect for automating summarization workflows.
+
+**Key topics:**
+- Summarization of large documents exceeding the LLM's context window
+- Summarization across multiple documents
+- MapReduce and refine strategies
+- Building maintainable chains with LCEL
+
+Why start with summarization? Because it's one of the most immediately useful LLM applications. Manually summarizing hundreds of documents—even with ChatGPT—would be tedious and expensive. A well-built summarization engine automates this entirely, and it's the perfect foundation for understanding how LangChain works before we tackle more complex systems.
+
+### Part 2.2: Building Research Engines
+
+Here, we go beyond basic summarization and build research systems that can actually think. These systems search the web, filter relevant information, and synthesize everything into coherent reports.
+
+**Key topics:**
+- Web search integration
+- Information retrieval and filtering
+- Report generation from diverse sources
+- Prompt engineering for research tasks
+- Building modular, reusable chains
+
+### Part 2.3: Agentic Summarization Systems
+
+In the final section, we'll take our summarization systems to the next level by turning them into autonomous agents with LangGraph. These aren't just pipelines anymore—they're systems that make decisions, handle state, and adapt their behavior based on what they encounter.
+
+**Key topics:**
+- Introduction to LangGraph
+- State management in agent systems
+- Conditional branching and dynamic workflows
+- Building autonomous summarization agents
+- Scaling and maintaining agentic systems
+
+---
+
+**What's Next**: Start with [Part 2.1: Summarizing Text with LangChain →](/blog/ai-agents/02-1-summarizing-text-langchain)
+
+*— Nguyen Dai, AI Engineer @ PIXTA Vietnam*  
+*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
+
+</LangEN>
+
+<LangVI>
+
+Trong phần này, chúng ta sẽ giải quyết một thử thách thực tế khi làm việc với LLM: biến núi thông tin thành các bản tóm tắt rõ ràng, súc tích. Bắt đầu từ những điều cơ bản—cách tóm tắt tài liệu quá dài không vừa một prompt, cách kết hợp insights từ nhiều files, và khi nào nên dùng MapReduce hay refine. Tất cả sẽ được kết nối bằng LangChain Expression Language (LCEL) để xây dựng các chains có thể maintain và deploy thực tế.
+
+Sau đó, chúng ta sẽ nâng cấp từ tóm tắt văn bản cơ bản sang xây dựng research engines. Hình dung các hệ thống có thể tìm kiếm web, thu thập thông tin liên quan, và tạo ra báo cáo toàn diện—tất cả nhờ prompt engineering thông minh và thiết kế chains modular.
+
+Cuối cùng, chúng ta sẽ biến các workflows này thành intelligent agents bằng LangGraph. Các agents này có thể quản lý state riêng, đưa ra quyết định tức thì, và thích ứng với các tình huống khác nhau. Đây là nền tảng để xây dựng các hệ thống AI thực sự tự động.
+
+---
+
+## Những Gì Chúng Ta Sẽ Xây Dựng
+
+Trong phần này, chúng ta sẽ từng bước xây dựng các hệ thống summarization ngày càng tinh vi:
+
+### Phần 2.1: Tóm Tắt Văn Bản với LangChain
+
+Chúng ta sẽ bắt đầu bằng việc xây dựng các summarization chains thực tế với LangChain, tập trung vào LangChain Expression Language (LCEL). Hãy nghĩ về chains như các pipelines mà output của bước này chảy vào input của bước kế tiếp—hoàn hảo cho việc tự động hóa summarization workflows.
+
+**Chủ đề chính:**
+- Tóm tắt các tài liệu lớn vượt quá context window của LLM
+- Tóm tắt trên nhiều tài liệu
+- Chiến lược MapReduce và refine
+- Xây dựng chains dễ bảo trì với LCEL
+
+Tại sao lại bắt đầu với summarization? Vì đây là một trong những ứng dụng LLM hữu ích nhất. Tóm tắt thủ công hàng trăm tài liệu—ngay cả với ChatGPT—sẽ rất tẻ nhạt và tốn kém. Một summarization engine được xây dựng tốt sẽ tự động hóa hoàn toàn việc này, và đây là nền tảng hoàn hảo để hiểu cách LangChain hoạt động trước khi chúng ta giải quyết các hệ thống phức tạp hơn.
+
+### Phần 2.2: Xây Dựng Research Engines
+
+Ở đây, chúng ta vượt xa việc tóm tắt cơ bản và xây dựng các research systems thực sự có thể "suy nghĩ". Các hệ thống này tìm kiếm web, lọc thông tin liên quan, và tổng hợp mọi thứ thành báo cáo mạch lạc.
+
+**Chủ đề chính:**
+- Tích hợp tìm kiếm web
+- Truy xuất và lọc thông tin
+- Tạo báo cáo từ các nguồn đa dạng
+- Prompt engineering cho các tác vụ nghiên cứu
+- Xây dựng chains modular, có thể tái sử dụng
+
+### Phần 2.3: Hệ Thống Tóm Tắt Agentic
+
+Trong phần cuối, chúng ta sẽ nâng cấp hệ thống summarization lên một tầm cao mới bằng cách biến chúng thành autonomous agents với LangGraph. Đây không chỉ còn là pipelines nữa—chúng là các hệ thống đưa ra quyết định, quản lý state, và điều chỉnh hành vi dựa trên những gì chúng gặp phải.
+
+**Chủ đề chính:**
+- Giới thiệu LangGraph
+- Quản lý state trong agent systems
+- Phân nhánh có điều kiện và dynamic workflows
+- Xây dựng autonomous summarization agents
+- Mở rộng và bảo trì agentic systems
+
+---
+
+**Tiếp theo**: Bắt đầu với [Phần 2.1: Tóm Tắt Văn Bản với LangChain →](/blog/ai-agents/02-1-summarizing-text-langchain)
+
+*— Nguyễn Đài, AI Engineer @ PIXTA Vietnam*  
+*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
+
+</LangVI>
