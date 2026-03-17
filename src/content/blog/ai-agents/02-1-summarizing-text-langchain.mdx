@@ -17,9 +17,55 @@ import LangVI from '../../../components/LangVI.astro';
 
 <LangEN>
 
-Trong chương 1, chúng ta đã khám phá ba loại ứng dụng LLM chính: summarization engines, chatbots, and AI agents. In this chapter, you'll begin building practical summarization chains using LangChain, with a particular focus on the LangChain Expression Language (LCEL) to handle various real-world scenarios. A chain is a sequence of connected operations where the output of one step becomes the input for the next—ideal for automating tasks like summarization. This work lays the foundation for constructing a more advanced summarization engine in the next chapter.
+In Part 1, we explored three main types of LLM applications: summarization engines, chatbots, and AI agents. In this part, you'll begin building practical summarization chains using LangChain, with a particular focus on the LangChain Expression Language (LCEL) to handle various real-world scenarios. A chain is a sequence of connected operations where the output of one step becomes the input for the next—ideal for automating tasks like summarization. This work lays the foundation for constructing a more advanced summarization engine in the next part.
 
 Summarization engines are essential for automating the summarization of large document volumes, a task that would be impractical and costly to handle manually, even with tools such as ChatGPT. Starting with a summarization engine is a practical entry point for developing LLM applications, providing a solid base for more complex projects and showcasing LangChain's capabilities, which we'll further explore in later parts.
+
+### Download Code Examples
+
+All the code examples and data files discussed in this article are available for download:
+
+<div style="text-align: center; margin: 2em 0;">
+  <a 
+    href="/download/03-summarization_examples" 
+    style="
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin: 0 10px 10px 10px;
+    "
+    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';"
+  >
+    📥 Download Notebook: 03-summarization_examples.ipynb
+  </a>
+  <a 
+    href="/code/building-llm-applications/ch03/Moby-Dick.txt" 
+    download
+    style="
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin: 0 10px 10px 10px;
+    "
+    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';"
+  >
+    📄 Download Data: Moby-Dick.txt
+  </a>
+</div>
 
 Before we start building, we'll look at different summarization techniques, each suited to specific scenarios, including large documents, content consolidation, and handling structured data. You've already worked with summarizing small documents using a PromptTemplate in earlier examples, so we'll skip that and focus on more complex scenarios.
 
@@ -40,14 +86,14 @@ Here, I'll show you how to use `TokenTextSplitter`, part of the `tiktoken` packa
 
 ### Chunking the Text into Document Objects
 
-Let's summarize the book Moby Dick using its text file, Moby-Dick.txt, downloaded from the Project Gutenberg site (www.gutenberg.org). You can locate the Moby-Dick.txt file in the chapter's subfolder on my GitHub page. Place this file in your ch03 folder, and load the text into a variable:
+Let's summarize the book Moby Dick using its text file, Moby-Dick.txt, downloaded from the Project Gutenberg site (www.gutenberg.org). Place this file in your working directory, and load the text into a variable:
 
 ```python
 with open("./Moby-Dick.txt", 'r', encoding='utf-8') as f:
     moby_dick_book = f.read()
 ```
 
-**NOTE:** Keep in mind that running the code on the full Moby Dick text can get expensive. The provided Moby-Dick.txt file is a shorter version, containing only five chapters and about 18,000 tokens. Running the code a few times with this version shouldn't cost much. However, if you plan to run many tests, you may want to reduce the file size even more to save money. Each time you execute a chain with an LLMChain block, you'll be charged. If budget allows, you can use the full version of the book, labeled Moby-Dick_ORIGINAL_EXPENSIVE.txt. The entire Moby Dick text has around 300,000 words, or about 350,000 tokens. Using GPT-5, which costs $1.25 per million tokens, processing the full text would cost about $0.37. Running it multiple times will add up. If you switch to GPT-5-nano, which costs $0.05 per million tokens, the cost drops to around $0.015, making it much cheaper.
+**NOTE:** Keep in mind that running the code on the full Moby Dick text can get expensive. The provided Moby-Dick.txt file is a shorter version, containing only five sections and about 18,000 tokens. Running the code a few times with this version shouldn't cost much. However, if you plan to run many tests, you may want to reduce the file size even more to save money. Each time you execute a chain with an LLMChain block, you'll be charged. If budget allows, you can use the full version of the book, labeled Moby-Dick_ORIGINAL_EXPENSIVE.txt. The entire Moby Dick text has around 300,000 words, or about 350,000 tokens. Using GPT-5, which costs $1.25 per million tokens, processing the full text would cost about $0.37. Running it multiple times will add up. If you switch to GPT-5-nano, which costs $0.05 per million tokens, the cost drops to around $0.015, making it much cheaper.
 
 I'll cover chunking strategies in detail—such as chunking by size and content structure—in a later part. For now, let's split the text into chunks of about 3,000 tokens each to simulate a context window shorter than the GPT-5-nano model we'll be using.
 
@@ -200,18 +246,62 @@ fate, choice, and the allure of the unknown in the whaling industry.
 **Previous**: [← Part 2: Summarization Overview](/blog/ai-agents/02-summarization-overview)  
 **Next**: [Part 2.2: Summarizing Multiple Documents →](/blog/ai-agents/02-2-summarizing-multiple-documents)
 
-*— Nguyen Dai, AI Engineer @ PIXTA Vietnam*  
-*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
 
 </LangEN>
 
 <LangVI>
 
-Trong Phần 1, chúng ta đã khám phá ba loại ứng dụng LLM chính: summarization engines, chatbots và AI agents. Trong phần này, bạn sẽ bắt đầu xây dựng các summarization chains thực tế sử dụng LangChain, với trọng tâm đặc biệt vào LangChain Expression Language (LCEL) để xử lý các tình huống thực tế khác nhau. Một chain là một chuỗi các thao tác được kết nối với nhau trong đó đầu ra của một bước trở thành đầu vào cho bước tiếp theo—lý tưởng để tự động hóa các tác vụ như tóm tắt. Công việc này đặt nền móng cho việc xây dựng một summarization engine nâng cao hơn trong phần tiếp theo.
+Trong Phần 1, chúng ta đã khám phá ba loại ứng dụng LLM chính: summarization engines, chatbots và AI agents. Trong bài này, bạn sẽ bắt đầu xây dựng các summarization chains thực tế sử dụng LangChain, với trọng tâm đặc biệt vào LangChain Expression Language (LCEL) để xử lý các tình huống thực tế khác nhau. Một chain là một chuỗi các thao tác được kết nối với nhau trong đó đầu ra của một bước trở thành đầu vào cho bước tiếp theo—lý tưởng để tự động hóa các tác vụ như tóm tắt. Công việc này đặt nền móng cho việc xây dựng một summarization engine nâng cao hơn trong bài tiếp theo.
 
-Summarization engines rất cần thiết để tự động hóa việc tóm tắt khối lượng lớn tài liệu, một nhiệm vụ không thực tế và tốn kém nếu xử lý thủ công, ngay cả với các công cụ như ChatGPT. Bắt đầu với summarization engine là điểm khởi đầu thực tế để phát triển ứng dụng LLM, cung cấp nền tảng vững chắc cho các dự án phức tạp hơn và thể hiện khả năng của LangChain, mà chúng ta sẽ khám phá thêm trong các phần sau.
+Summarization engines rất cần thiết để tự động hóa việc tóm tắt khối lượng lớn tài liệu, một nhiệm vụ không thực tế và tốn kém nếu xử lý thủ công, ngay cả với các công cụ như ChatGPT. Bắt đầu với summarization engine là điểm khởi đầu thực tế để phát triển ứng dụng LLM, cung cấp nền tảng vững chắc cho các dự án phức tạp hơn và thể hiện khả năng của LangChain, mà chúng ta sẽ khám phá thêm trong các bài sau.
 
-Trước khi bắt đầu xây dựng, chúng ta sẽ xem xét các kỹ thuật tóm tắt khác nhau, mỗi kỹ thuật phù hợp với các tình huống cụ thể, bao gồm tài liệu lớn, hợp nhất nội dung và xử lý dữ liệu có cấu trúc. Bạn đã làm việc với việc tóm tắt tài liệu nhỏ bằng PromptTemplate trong các ví dụ trước đó, vì vậy chúng ta sẽ bỏ qua phần đó và tập trung vào các tình huống phức tạp hơn.
+### Tải Code Mẫu
+
+Tất cả các ví dụ code và file dữ liệu được thảo luận trong bài viết này đều có sẵn để tải xuống:
+
+<div style="text-align: center; margin: 2em 0;">
+  <a 
+    href="/download/03-summarization_examples" 
+    style="
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin: 0 10px 10px 10px;
+    "
+    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';"
+  >
+    📥 Tải Notebook: 03-summarization_examples.ipynb
+  </a>
+  <a 
+    href="/code/building-llm-applications/ch03/Moby-Dick.txt" 
+    download
+    style="
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin: 0 10px 10px 10px;
+    "
+    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';"
+  >
+    📄 Tải Dữ liệu: Moby-Dick.txt
+  </a>
+</div>
+
+Trước khi bắt đầu xây dựng, chúng ta sẽ xem xét các kỹ thuật tóm tắt khác nhau, mỗi kỹ thuật phù hợp với các tình huống cụ thể, bao gồm tài liệu lớn, tổng hợp nhiều tài liệu, và xử lý dữ liệu có cấu trúc. Bạn đã làm việc với việc tóm tắt tài liệu nhỏ bằng PromptTemplate trong các ví dụ trước đó, vì vậy chúng ta sẽ bỏ qua phần đó và tập trung vào các tình huống phức tạp hơn.
 
 ---
 
@@ -230,7 +320,7 @@ Khi làm việc với các tài liệu vượt quá context window của LLM, m�
 
 ### Chia Văn Bản Thành Các Document Objects
 
-Hãy tóm tắt cuốn sách Moby Dick sử dụng file văn bản của nó, Moby-Dick.txt, tải xuống từ trang web Project Gutenberg (www.gutenberg.org). Bạn có thể tìm thấy file Moby-Dick.txt trong subfolder trên trang GitHub của tôi. Đặt file này trong thư mục code của bạn và load văn bản vào một biến:
+Hãy tóm tắt cuốn sách Moby Dick sử dụng file văn bản của nó, Moby-Dick.txt, tải xuống từ trang web Project Gutenberg (www.gutenberg.org). Đặt file này trong thư mục làm việc của bạn và load văn bản vào một biến:
 
 ```python
 with open("./Moby-Dick.txt", 'r', encoding='utf-8') as f:
@@ -239,7 +329,7 @@ with open("./Moby-Dick.txt", 'r', encoding='utf-8') as f:
 
 **LƯU Ý:** Hãy nhớ rằng chạy code trên toàn bộ văn bản Moby Dick có thể tốn kém. File Moby-Dick.txt được cung cấp là phiên bản ngắn hơn, chỉ chứa năm phần và khoảng 18,000 tokens. Chạy code vài lần với phiên bản này sẽ không tốn nhiều chi phí. Tuy nhiên, nếu bạn dự định chạy nhiều bài test, bạn có thể muốn giảm kích thước file hơn nữa để tiết kiệm tiền. Mỗi lần bạn thực thi một chain với LLMChain block, bạn sẽ bị tính phí. Nếu ngân sách cho phép, bạn có thể sử dụng phiên bản đầy đủ của cuốn sách, có nhãn Moby-Dick_ORIGINAL_EXPENSIVE.txt. Toàn bộ văn bản Moby Dick có khoảng 300,000 từ, hoặc khoảng 350,000 tokens. Sử dụng GPT-5, có giá $1.25 mỗi triệu tokens, xử lý toàn bộ văn bản sẽ có giá khoảng $0.37. Chạy nó nhiều lần sẽ tăng lên. Nếu bạn chuyển sang GPT-5-nano, có giá $0.05 mỗi triệu tokens, chi phí giảm xuống khoảng $0.015, rẻ hơn nhiều.
 
-Tôi sẽ đề cập chi tiết về các chiến lược chunking—như chunking theo kích thước và cấu trúc nội dung—trong phần sau. Hiện tại, hãy chia văn bản thành các chunks khoảng 3,000 tokens mỗi cái để mô phỏng context window ngắn hơn so với model GPT-5-nano mà chúng ta sẽ sử dụng.
+Tôi sẽ đề cập chi tiết về các chiến lược chunking—như chunking theo kích thước và cấu trúc nội dung—trong bài sau. Hiện tại, hãy chia văn bản thành các chunks khoảng 3,000 tokens mỗi cái để mô phỏng context window ngắn hơn so với model GPT-5-nano mà chúng ta sẽ sử dụng.
 
 #### Split
 
@@ -266,7 +356,7 @@ Bạn sẽ được nhắc nhập OPENAI_API_KEY của mình. Sau đó, khởi t
 llm = ChatOpenAI(openai_api_key=OPENAI_API_KEY, model_name="gpt-5-nano")
 ```
 
-Bây giờ bạn đã sẵn sàng thiết lập chain đầu tiên, sẽ chia tài liệu thành các chunks có kích thước được chỉ định. Trong phần này, bạn sẽ học các kiến thức cơ bản về LCEL, với khám phá chi tiết hơn trong phần tiếp theo:
+Bây giờ bạn đã sẵn sàng thiết lập chain đầu tiên, sẽ chia tài liệu thành các chunks có kích thước được chỉ định. Trong bài này, bạn sẽ học các kiến thức cơ bản về LCEL, với khám phá chi tiết hơn trong bài tiếp theo:
 
 ```python
 # Split
@@ -389,8 +479,5 @@ fate, choice, and the allure of the unknown in the whaling industry.
 
 **Trước đó**: [← Part 2: Tổng Quan Summarization](/blog/ai-agents/02-summarization-overview)  
 **Tiếp theo**: [Part 2.2: Tóm Tắt Nhiều Tài Liệu →](/blog/ai-agents/02-2-summarizing-multiple-documents)
-
-*— Nguyễn Đài, AI Engineer @ PIXTA Vietnam*  
-*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
 
 </LangVI>

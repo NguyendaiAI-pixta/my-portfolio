@@ -61,6 +61,16 @@ import { SITE_TITLE, SITE_DESCRIPTION, SITE_EMAIL } from '../consts';
 				color: var(--gray);
 				margin: 0;
 			}
+			.topic-card .level-badge {
+				display: inline-block;
+				font-size: 0.75rem;
+				background: rgba(var(--accent), 0.12);
+				color: var(--accent);
+				padding: 0.15rem 0.6rem;
+				border-radius: 99px;
+				margin-bottom: 0.6rem;
+				font-weight: 600;
+			}
 			.audience-list {
 				list-style: none;
 				padding: 0;
@@ -78,6 +88,21 @@ import { SITE_TITLE, SITE_DESCRIPTION, SITE_EMAIL } from '../consts';
 				color: var(--accent);
 				font-weight: bold;
 				margin-right: 0.5rem;
+			}
+			.bilingual-box {
+				background: var(--bg-secondary, #f5f5f5);
+				border-left: 4px solid var(--accent);
+				border-radius: 8px;
+				padding: 1.5rem 2rem;
+				margin-top: 1.5rem;
+				line-height: 1.8;
+			}
+			.bilingual-box p {
+				margin-bottom: 0.8rem;
+				color: var(--gray-dark);
+			}
+			.bilingual-box p:last-child {
+				margin-bottom: 0;
 			}
 			.cta-box {
 				background: linear-gradient(135deg, rgba(var(--accent), 0.1) 0%, rgba(var(--accent-light), 0.05) 100%);
@@ -105,54 +130,53 @@ import { SITE_TITLE, SITE_DESCRIPTION, SITE_EMAIL } from '../consts';
 	<body>
 		<Header />
 		<main class="about-container">
+
+			<!-- ✅ Hero: Nhất quán thương hiệu "Mèo Máy", nêu rõ điểm khác biệt song ngữ -->
 			<div class="hero-section">
-				<div class="hero-icon">🤖</div>
-				<h1>Về AI Knowledge Hub</h1>
+				<div class="hero-icon">🐱</div>
+				<h1>Tớ là Mèo Máy</h1>
 				<p style="font-size: 1.2rem; color: var(--gray); margin-top: 1rem;">
-					Hệ thống kiến thức AI từ cơ bản đến chuyên sâu
+					Blog AI song ngữ — học kiến thức, luyện tiếng Anh chuyên ngành cùng một lúc.
 				</p>
 			</div>
 
+			<!-- ✅ Giọng văn "Tớ" nhất quán với trang chủ -->
 			<div class="about-section">
 				<h2>Tại sao có blog này?</h2>
 				<p>
-					<strong>AI Knowledge Hub</strong> được tạo ra bởi một AI Engineer với niềm đam mê chia sẻ kiến thức. 
-					Sau nhiều năm làm việc với AI/ML trong thực tế, tôi nhận ra rằng khoảng cách giữa lý thuyết và thực hành 
-					vẫn còn rất lớn, đặc biệt với những người mới bắt đầu.
+					Tớ là một AI Engineer, và tớ vẫn nhớ rõ cảm giác mới bắt đầu học AI — không biết bắt đầu
+					từ đâu, đọc đâu cũng thấy overwhelming, học xong lý thuyết nhưng không biết áp dụng vào thực tế ra sao.
 				</p>
 				<p>
-					Blog này sinh ra với mục đích thu hẹp khoảng cách đó - cung cấp kiến thức có hệ thống, 
-					từ những khái niệm cơ bản nhất cho đến các kỹ thuật tiên tiến nhất, tất cả đều được 
-					viết bằng ngôn ngữ dễ hiểu và kèm theo ví dụ thực tế.
+					Blog này tớ viết theo cách mà tớ ước gì đã có người giải thích cho mình hồi đó: có hệ thống,
+					dễ hiểu, gắn với thực tế, và không bỏ qua phần nền tảng quan trọng chỉ để trông "advanced" hơn.
 				</p>
 			</div>
 
+			<!-- ✅ Thêm badge "từ cơ bản" để trấn an người mới, tránh cảm giác overwhelming -->
 			<div class="about-section">
 				<h2>Nội dung blog bao gồm</h2>
+				<p>Mỗi chủ đề được xây dựng từ nền tảng đến production-ready — kiến thức bạn học ở đây là kiến thức bạn sẽ dùng thực sự khi đi làm.</p>
 				<div class="topics-grid">
 					<div class="topic-card">
-						<h3>👁️ Computer Vision</h3>
-						<p>Object Detection, Face Recognition, Pose Estimation, Image Segmentation, và các ứng dụng CV</p>
+						<div class="level-badge">Cơ bản → Production-ready</div>
+						<h3>🤖 LLM & AI Agents</h3>
+						<p>Large Language Models, Prompt Engineering, RAG, AI Agents, LangChain, LangGraph — bộ kỹ năng đang được yêu cầu nhiều nhất trong tuyển dụng AI hiện nay.</p>
 					</div>
 					<div class="topic-card">
-						<h3>🤖 LLM & Agents</h3>
-						<p>Large Language Models, Prompt Engineering, RAG, AI Agents, LangChain, LangGraph</p>
+						<div class="level-badge">Cơ bản → Production-ready</div>
+						<h3>⚙️ MLOps & LLMOps</h3>
+						<p>Model Deployment, Monitoring, CI/CD cho ML, Fine-tuning, Serving và tối ưu chi phí — kỹ năng giúp bạn đưa mô hình ra production thực sự.</p>
 					</div>
 					<div class="topic-card">
-						<h3>⚙️ MLOps</h3>
-						<p>Model Deployment, Monitoring, CI/CD cho ML, Model Optimization, Production Best Practices</p>
-					</div>
-					<div class="topic-card">
-						<h3>🔧 LLMOps</h3>
-						<p>LLM Deployment, Evaluation, Fine-tuning, Serving, Cost Optimization cho LLM applications</p>
-					</div>
-					<div class="topic-card">
-						<h3>🧠 Deep Learning</h3>
-						<p>Neural Networks, CNN, RNN, Transformers, Training Techniques, Model Architecture Design</p>
-					</div>
-					<div class="topic-card">
+						<div class="level-badge">Cơ bản → Production-ready</div>
 						<h3>🚀 Production AI</h3>
-						<p>Edge Deployment, Model Serving, API Design, Scalability, Performance Optimization</p>
+						<p>Edge Deployment, API Design, Scalability, Performance Optimization — những gì thực sự xảy ra khi AI chạy trong môi trường production.</p>
+					</div>
+					<div class="topic-card">
+						<div class="level-badge">Cơ bản → Production-ready</div>
+						<h3>🗺️ Lộ trình & Định hướng</h3>
+						<p>Lộ trình và bộ kỹ năng thực chiến của một AI Engineer — từ nền tảng đến những gì thực sự được yêu cầu trong môi trường làm việc thực tế.</p>
 					</div>
 				</div>
 			</div>
@@ -164,36 +188,43 @@ import { SITE_TITLE, SITE_DESCRIPTION, SITE_EMAIL } from '../consts';
 					<li><strong>Người định hướng làm AI Engineer</strong> cần lộ trình học tập rõ ràng</li>
 					<li><strong>Fresher & Junior AI Engineer</strong> muốn nâng cao kỹ năng thực chiến</li>
 					<li><strong>Người từ ngành khác</strong> muốn chuyển sang làm AI</li>
-				
 				</ul>
 			</div>
 
 			<div class="about-section">
 				<h2>Phương pháp tiếp cận</h2>
 				<p>
-					Mỗi chủ đề được viết theo phương pháp <strong>từ cơ bản đến chuyên sâu</strong>:
+					Mỗi chủ đề được xây dựng theo hướng <strong>từ cơ bản đến chuyên sâu</strong> — bắt đầu bằng
+					việc giải thích rõ khái niệm nền tảng, sau đó đi sâu vào lý thuyết, thực hành với code examples,
+					rồi đến best practices từ production và các kỹ thuật nâng cao cho ai muốn đi xa hơn.
 				</p>
-				<ul style="line-height: 2; padding-left: 2rem; margin-top: 1rem;">
-					<li><strong>Khái niệm cơ bản</strong> — Giải thích rõ ràng, dễ hiểu cho người mới</li>
-					<li><strong>Lý thuyết nền tảng</strong> — Hiểu sâu về cách thức hoạt động</li>
-					<li><strong>Thực hành</strong> — Code examples, hands-on tutorials</li>
-					<li><strong>Best practices</strong> — Kinh nghiệm từ production</li>
-					<li><strong>Advanced topics</strong> — Kỹ thuật chuyên sâu cho những ai muốn đi xa hơn</li>
-				</ul>
+				<p>
+					Tớ không bỏ qua phần cơ bản để nhảy thẳng vào advanced — vì kinh nghiệm cho thấy đó thường
+					là lý do khiến người học bị mắc kẹt sau này.
+				</p>
 			</div>
 
+			<!-- ✅ Nâng cấp phần song ngữ thành điểm bán hàng rõ ràng -->
 			<div class="about-section">
-				<h2>Ngôn ngữ</h2>
-				<p>
-					Nội dung được viết song ngữ <strong>Tiếng Việt</strong> và <strong>Tiếng Anh</strong>, 
-					giúp bạn dễ dàng tiếp cận kiến thức bằng ngôn ngữ mà bạn cảm thấy thoải mái nhất.
-				</p>
+				<h2>Blog song ngữ — Tiếng Việt & Tiếng Anh</h2>
+				<div class="bilingual-box">
+					<p>
+						Mỗi chủ đề lớn đều có <strong>bản tiếng Việt</strong> và <strong>bản tiếng Anh</strong>.
+						Thuật ngữ chuyên ngành được giữ nguyên tiếng Anh trong cả hai bản — vì trong ngành AI,
+						khả năng đọc tài liệu gốc tiếng Anh là kỹ năng không thể thiếu.
+					</p>
+					<p>
+						Đọc song song hai bản là một cách tự nhiên để xây dựng vốn từ chuyên ngành mà không
+						cần học riêng — bạn hiểu nội dung qua tiếng Việt, rồi đọc lại bản tiếng Anh để làm
+						quen với cách diễn đạt kỹ thuật chuẩn mà bạn sẽ gặp trong tài liệu, paper, hay công việc thực tế.
+					</p>
+				</div>
 			</div>
 
 			<div class="cta-box">
 				<h2 style="margin-top: 0;">Bắt đầu học ngay</h2>
 				<p style="color: var(--gray); margin-bottom: 0;">
-					Khám phá các bài viết về AI, từ cơ bản đến chuyên sâu
+					Khám phá các bài viết về AI — từ lộ trình định hướng đến hướng dẫn thực hành chuyên sâu
 				</p>
 				<a href="/blog">
 					Xem tất cả bài viết →
@@ -207,6 +238,7 @@ import { SITE_TITLE, SITE_DESCRIPTION, SITE_EMAIL } from '../consts';
 					Hãy liên hệ qua email: <a href={`mailto:${SITE_EMAIL}`} style="color: var(--accent); font-weight: bold;">{SITE_EMAIL}</a>
 				</p>
 			</div>
+
 		</main>
 		<Footer />
 	</body>

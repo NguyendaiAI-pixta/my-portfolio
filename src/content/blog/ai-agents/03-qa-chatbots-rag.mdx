@@ -1,0 +1,690 @@
+---
+title: 'Part 3: Q&A Chatbots with RAG'
+description: 'Master Retrieval-Augmented Generation (RAG) to build intelligent chatbots that answer questions over large knowledge bases using vector stores, retrievers, and LLMs with LangChain and LangSmith.'
+pubDate: 'Mar 16 2026'
+category: 'AI Agents & Applications'
+tags: ['llm', 'rag', 'chatbot', 'vector-store', 'retrieval']
+---
+
+import LangToggle from '../../../components/LangToggle.astro';
+import LangEN from '../../../components/LangEN.astro';
+import LangVI from '../../../components/LangVI.astro';
+
+> **Series**: AI Agents & Applications with LangChain, LangGraph and MCP  
+> **Part**: 3 — Q&A Chatbots with RAG
+
+<LangToggle />
+
+<LangEN>
+
+This part marks a shift from summarizing information to answering meaningful questions. Here, you'll dive into **Retrieval-Augmented Generation (RAG)**—the core technique that enables LLMs to perform question answering over large or private knowledge bases.
+
+You'll learn how RAG combines three critical components—**vector stores, retrievers, and language models**—to locate semantically relevant information and synthesize grounded, coherent answers. Rather than relying solely on the model's internal knowledge, you'll see how to anchor responses in external data, dramatically improving accuracy and trustworthiness.
+
+## What You'll Build
+
+You'll begin by building the essential pieces of a RAG system from scratch to fully understand how they work together. This hands-on approach will give you an intuitive sense of:
+
+- How documents are **ingested, embedded, and retrieved** using semantic similarity rather than keyword matching
+- How **vector stores** enable efficient similarity search at scale
+- How **retrievers** bridge the gap between user queries and relevant context
+- How the **LLM** synthesizes coherent answers grounded in retrieved information
+
+Once you've mastered the fundamentals, you'll take things further by introducing **LangChain's modular RAG components**, which streamline development and make complex pipelines easier to maintain. You'll also incorporate **LangSmith** to monitor, trace, and debug every step of your chatbot's reasoning process—ensuring visibility into how answers are formed and why certain results are chosen.
+
+By the end of this part, you'll have built a **fully functional, search-enabled chatbot** capable of:
+
+- Reasoning across multiple sources
+- Handling follow-up questions
+- Maintaining conversational context
+- Providing transparent, traceable answers
+
+More importantly, you'll know **when to keep your implementation minimal** using direct APIs and **when to use LangChain's abstractions** for speed, modularity, and observability.
+
+## Why This Matters
+
+This part lays the groundwork for building truly intelligent assistants that not only summarize knowledge but also actively help users find and understand the information they need. RAG is the foundation for modern AI applications that require:
+
+- **Accuracy over hallucination**—Ground responses in verified external data
+- **Privacy and control**—Query private knowledge bases without exposing data to model training
+- **Scalability**—Handle knowledge bases too large to fit in a single prompt
+- **Transparency**—Trace exactly which sources informed each answer
+
+Let's begin by understanding the fundamentals of RAG and building your first question-answering system from the ground up.
+
+---
+
+## RAG Fundamentals with ChromaDB
+
+In this section, we'll explore two key concepts: **semantic search** and **Retrieval-Augmented Generation (RAG)**. You'll see how large language models are used for semantic search through a chatbot, enabling you to query a system for information across multiple documents and retrieve the fragments that best match the **meaning** of your question, rather than just matching keywords. This approach is also known as **Q&A over documents** or **querying a knowledge base**.
+
+In earlier parts, you learned about summarization—a typical use case for LLMs. Now we'll walk through the basics of building a Q&A chatbot that searches across multiple documents. You'll interact with the LLM to find the answers you're looking for.
+
+### What Is RAG?
+
+RAG is the design pattern that powers semantic search systems. At its core, RAG combines:
+
+1. **Retrieval**—Finding relevant information from a knowledge base
+2. **Augmentation**—Adding that information to the LLM's context
+3. **Generation**—Producing an answer grounded in the retrieved data
+
+This pattern solves a fundamental challenge: LLMs have impressive general knowledge, but they don't know about your private data, recent events, or domain-specific information. RAG bridges this gap by:
+
+- **Grounding responses** in external, verifiable data sources
+- **Reducing hallucinations** by providing factual context
+- **Enabling privacy** by keeping data out of model training
+- **Supporting real-time updates** without retraining the model
+
+### Understanding Vector Stores
+
+A **vector store** is a specialized database that stores and retrieves information based on semantic similarity rather than exact keyword matches. Here's how it works:
+
+1. **Documents are converted to embeddings**—numerical representations that capture semantic meaning
+2. **Embeddings are stored** in the vector store with their original text
+3. **When you query**, your question is also converted to an embedding
+4. **The vector store finds** the most similar embeddings using distance metrics
+5. **Relevant text chunks** are retrieved and sent to the LLM
+
+This enables powerful semantic search capabilities:
+
+- **"What are the benefits of exercise?"** matches documents about health, fitness, and wellness—even if they don't contain the word "benefits"
+- **Synonyms and related concepts** are automatically understood
+- **Multilingual support** becomes possible with the right embeddings
+
+### Technical Terminology
+
+You'll encounter several terms that are often used interchangeably in RAG systems:
+
+- **Semantic search**—Finding information based on meaning, not keywords
+- **Q&A over documents**—Answering questions using a document collection
+- **Knowledge base querying**—Searching across structured information
+- **Document retrieval**—Locating relevant text fragments
+
+All of these describe aspects of the same fundamental pattern: using embeddings and vector similarity to find and use relevant information.
+
+### Building with ChromaDB and OpenAI
+
+By the end of this section, you'll have implemented a basic RAG architecture using:
+
+- **OpenAI's embedding models**—To convert text into semantic vectors
+- **OpenAI's language models**—To generate grounded answers
+- **ChromaDB**—As the vector store for efficient similarity search
+
+This hands-on foundation will prepare you for building more sophisticated Q&A chatbots in the following sections, where we'll add conversation memory, multi-turn dialogue, and advanced retrieval strategies.
+
+Let's start by understanding how embeddings work and why they're essential for semantic search.
+
+---
+
+## Semantic Search
+
+Semantic search is a popular use case for LLMs, alongside summarization and code generation. It's one of the key applications driving the LLM and Generative AI boom.
+
+**Definition**: Semantic search means searching for information by focusing on its **meaning**. This involves:
+
+1. **Understanding a query's meaning**—Not just matching keywords
+2. **Retrieving relevant document fragments**—From a document store that closely match the query's meaning
+3. **Optionally generating a natural language answer**—Synthesizing information into a coherent response
+
+### Semantic Search vs. Keyword Search
+
+Semantic search differs fundamentally from traditional keyword-based searches:
+
+**Keyword Search** (Traditional):
+- Matches exact words or phrases
+- Fails when different terminology is used
+- **Example**: Searching for "benefits of exercise" won't find documents about "advantages of physical activity"
+
+**Semantic Search** (Modern):
+- Understands meaning and context
+- Produces relevant results even when exact words don't match
+- **Example**: "benefits of exercise" successfully finds documents about "advantages of physical activity," "health gains from working out," or "positive effects of fitness"
+
+The power of semantic search lies in its ability to bridge the **vocabulary gap**—the problem where users and documents use different words to express the same concepts.
+
+### Real-World Examples
+
+Consider these query-document pairs that semantic search handles well:
+
+| User Query | Matching Document Content | Why It Matches |
+|------------|---------------------------|----------------|
+| "How do I reduce stress?" | "Meditation techniques for anxiety management" | Understands stress ≈ anxiety |
+| "Best practices for remote work" | "Tips for effective telecommuting" | Recognizes remote work ≈ telecommuting |
+| "What causes inflation?" | "Economic factors behind rising prices" | Links inflation ≈ rising prices |
+
+None of these examples share exact keywords, yet semantic search connects them based on **conceptual similarity**.
+
+### Understanding the Architecture
+
+Before diving into the code, you need to have a clear understanding of a semantic search chatbot's architecture. We'll start with a simple example to ease you in, but by the end of this section, you'll grasp the architecture of a real-world Q&A chatbot.
+
+The architecture consists of several key components working together:
+
+1. **Document Ingestion**—Loading and processing your knowledge base
+2. **Text Chunking**—Breaking documents into manageable pieces
+3. **Embedding Generation**—Converting text into semantic vectors
+4. **Vector Storage**—Storing embeddings for efficient retrieval
+5. **Query Processing**—Converting questions into the same vector space
+6. **Similarity Search**—Finding the most relevant document chunks
+7. **Answer Generation**—Using the LLM to synthesize a response
+
+Let's explore each component in detail, starting with how embeddings capture semantic meaning.
+
+---
+
+## A Basic Q&A Chatbot Over a Single Document
+
+Let's start with a simple scenario that will help you understand how a Q&A chatbot works and get you familiar with its components. The first chatbot example answers questions about a single document, as shown in Figure 3.1.
+
+![Simple Q&A chatbot process](/src/assets/blog/ai-agents/basic-qa-chatbot.png)
+*Figure 3.1: The simple Q&A chatbot process involves: (1) the user sends a prompt containing a document (context) and a question to the chatbot, (2) the chatbot returns an initial answer, (3) the user follows up with a more detailed question, and (4) the chatbot provides a more accurate answer.*
+
+The main elements of this basic setup are:
+
+- **Document**—Contains the text for semantic search or information extraction
+- **Prompt**—Encapsulates the user's question (semantic search) and the context (the document) with the information needed for the answer
+- **LLM-based chatbot**—Sends the prompt to the LLM, which understands the question and context, selects relevant information, and synthesizes an answer for the user
+
+Let's break down these concepts further.
+
+### Key Definitions
+
+**Context** is the text or information in the prompt, along with the user's question, used to formulate an answer.
+
+**Synthesize** means to generate an answer from the question and context provided.
+
+### A Simple Example
+
+You don't need to write any code to implement this initial setup. Just log in to ChatGPT or an alternative LLM-based chatbot such as Gemini or Claude, and you're ready to go.
+
+Let's try a simple Q&A interaction using text about Paestum from Britannica. Submit this prompt to ChatGPT:
+
+```
+Read the following text and let me know how many temples are in Paestum, 
+who built them, and what architectural style they are:
+
+---
+Paestum, Greek Poseidonia, ancient city in southern Italy near the west 
+coast, 22 miles (35 km) southeast of modern Salerno and 5 miles (8 km) 
+south of the Sele (ancient Silarus) River. Paestum is noted for its 
+splendidly preserved Greek temples.
+
+Poseidonia was probably founded about 600 BC by Greek colonists from 
+Sybaris... [full text continues]
+```
+
+Here's a typical answer (keep in mind, you might get a slightly different result because of the stochastic nature of LLMs):
+
+> "There are three temples in Paestum, and they are constructed in the Doric architectural style. These temples are:
+> - The Temple of Athena (also known as the Temple of Ceres), from the 6th century BC.
+> - The Temple of Hera I (also known as the Basilica), also from the 6th century BC.
+> - The Temple of Hera II (also known as the Temple of Neptune), built around 460 BC and the best-preserved of the three."
+
+This is almost complete, but it's missing **who built the temples**. If this had been a Q&A engine instead of a chatbot, the client system wouldn't have received any answer about who built the temples.
+
+### Chatbot vs. Q&A Engine
+
+> **NOTE:** A **Q&A engine**, like a summarization engine, is called by a client system and returns one answer. A **chatbot**, used by a person, allows for multiple questions so you can refine the answer through interaction.
+
+Next, we can send a follow-up prompt:
+
+```
+This answer is almost what I expected, but you forgot to answer something: 
+who built the temples?
+```
+
+Response:
+
+> "I apologize for missing that part. The temples in Paestum were built by Greek colonists from Sybaris who founded the city of Poseidonia (later Paestum) around 600 BC. So, the Greek colonists constructed these temples in the Doric architectural style."
+
+This demonstrates the **advantage of a chatbot over an engine**: after a couple of rounds of questions, the chatbot answered all the questions about the temples in Paestum. Importantly, we didn't have to resubmit the full text—the chatbot remembered the initial context.
+
+### Stateful Sessions
+
+> **NOTE:** A chatbot like ChatGPT creates a **stateful session** that remembers the exchange by passing the history of the conversation as additional context, allowing the user to refine the answer without resending the initial text.
+
+This simple example illustrates the foundation of Q&A systems:
+
+1. **Context is provided** to the LLM along with the question
+2. **The LLM synthesizes** an answer based on the context
+3. **Conversation memory** enables iterative refinement
+4. **Follow-up questions** can clarify or expand the initial answer
+
+While this works well for a single document, real-world applications need to handle **multiple documents** and **large knowledge bases**. That's where the full RAG architecture becomes essential, which we'll build in the following sections.
+
+---
+
+## The Hallucination Problem
+
+Let's try another question with the same Paestum context:
+
+```
+Is the archaeological site in Paestum recognized by UNESCO?
+```
+
+Response:
+
+> "Yes, the archaeological site of Paestum is recognized by UNESCO. In 1998, it was designated a UNESCO World Heritage Site. This designation acknowledges the historical and architectural significance of the well-preserved Greek temples and ancient ruins in Paestum."
+
+Hold on! The original text didn't include this information. ChatGPT used its own knowledge, likely from Wikipedia or other sources, to answer correctly. This eagerness to answer questions using unprovided content can be helpful, as shown in this example, but it can also be dangerous, as you'll see shortly.
+
+Let's try another question:
+
+```
+How many columns do the three temples have in total?
+```
+
+Response:
+
+> "The three temples in Paestum have a total of 94 columns:
+> - The Temple of Athena (Temple of Ceres) has 6 columns on its shorter sides and 13 columns on its longer sides, for a total of 32 columns.
+> - The Temple of Hera I (Basilica) has 6 columns on its shorter sides and 9 columns on its longer sides, for a total of 30 columns.
+> - The Temple of Hera II (Temple of Neptune) has 6 columns on its shorter sides and 14 columns on its longer sides, for a total of 32 columns."
+
+ChatGPT tried to answer, but **the answer is wrong**. The Temple of Hera I actually has 50 columns, not 30, as you can verify on Wikipedia.
+
+### Understanding Hallucination
+
+> **WARNING:** When a chatbot can't find the information in the provided text, it might rely on its own knowledge, which can lead to incorrect or made-up information, known as **hallucination**.
+
+In one instance, ChatGPT provided accurate information about UNESCO, yet in another, it gave an incorrect answer about the number of columns. This raises an important question: **How can you tell when ChatGPT is providing reliable information and when it isn't?**
+
+As a general rule, you should be cautious about trusting ChatGPT for facts or details you haven't independently verified or supplied yourself.
+
+### Why This Matters for RAG
+
+This example highlights the critical need for **proper RAG implementation**:
+
+1. **Without RAG**: The LLM might mix its internal knowledge (which can be outdated or wrong) with your provided context
+2. **With RAG**: You can enforce that answers come **only** from your verified knowledge base
+3. **Controlled grounding**: RAG systems can be configured to say "I don't know" when information isn't found, rather than hallucinating
+
+The next sections will show you how to build a RAG system that:
+- **Retrieves only from your documents**
+- **Cites its sources** for transparency
+- **Admits uncertainty** when information isn't available
+- **Prevents hallucination** by grounding answers in verified data
+
+Let's start by understanding how to convert documents into searchable embeddings.
+
+---
+
+## Preventing Hallucinations with Explicit Instructions
+
+> **TIP:** To avoid hallucination issues, instruct ChatGPT to use only the information you provided and indicate if it doesn't know the answer.
+
+You can address the previous issue with this improved prompt:
+
+```
+How many columns do the three temples have in total? 
+Use only the information I gave you in the text. 
+If you don't know the answer, just say so.
+```
+
+You'll get a more accurate response:
+
+> "I apologize for the error in my previous response. The text you provided doesn't mention the total number of columns in the three temples in Paestum."
+
+This is exactly what we want! Instead of making up information, the chatbot now **admits when it doesn't know**.
+
+### Designing Safe Prompts
+
+> **TIP:** Designing safe prompts for Q&A chatbots reduces the chance of hallucinations. Key strategies include:
+> - **Explicitly state**: "Use only the provided information"
+> - **Require acknowledgment**: "Say 'I don't know' if the answer isn't in the text"
+> - **Request citations**: "Include which part of the text supports your answer"
+> - **Set boundaries**: "Do not use your general knowledge for this question"
+
+You'll learn more about these techniques throughout this part as we build production-ready RAG systems.
+
+### Moving to Complex Use Cases
+
+Now let's move on to a more complex use case. This time, the chatbot must pull specific information from a **much larger amount of text**—scenarios where:
+
+- Documents are too large to fit in a single prompt
+- Multiple documents need to be searched
+- Only relevant fragments should be retrieved
+- Efficiency and cost become important factors
+
+This is where the full RAG architecture with vector stores becomes essential. Continue to [Part 3.1: Building Q&A Chatbots Over Large Knowledge Bases](/blog/ai-agents/03-1-complex-qa-knowledge-base) to learn how to scale your RAG system to handle enterprise knowledge bases with thousands of documents.
+
+---
+
+</LangEN>
+
+<LangVI>
+
+Phần này đánh dấu sự chuyển đổi từ tóm tắt thông tin sang trả lời các câu hỏi có ý nghĩa. Ở đây, bạn sẽ đi sâu vào **Retrieval-Augmented Generation (RAG)**—kỹ thuật cốt lõi cho phép LLM thực hiện hỏi đáp trên các cơ sở kiến thức lớn hoặc riêng tư.
+
+Bạn sẽ học cách RAG kết hợp ba thành phần quan trọng—**vector stores, retrievers và language models**—để định vị thông tin có liên quan về mặt ngữ nghĩa và tổng hợp các câu trả lời có căn cứ, mạch lạc. Thay vì chỉ dựa vào kiến thức nội bộ của mô hình, bạn sẽ thấy cách neo câu trả lời vào dữ liệu bên ngoài, cải thiện đáng kể độ chính xác và độ tin cậy.
+
+## Bạn Sẽ Xây Dựng Gì
+
+Bạn sẽ bắt đầu bằng cách xây dựng các thành phần thiết yếu của hệ thống RAG từ đầu để hiểu đầy đủ cách chúng hoạt động cùng nhau. Cách tiếp cận thực hành này sẽ cho bạn cảm nhận trực quan về:
+
+- Cách các tài liệu được **nhập, embedding và truy xuất** bằng cách sử dụng độ tương đồng ngữ nghĩa thay vì khớp từ khóa
+- Cách **vector stores** cho phép tìm kiếm tương đồng hiệu quả ở quy mô lớn
+- Cách **retrievers** kết nối khoảng cách giữa truy vấn của người dùng và ngữ cảnh liên quan
+- Cách **LLM** tổng hợp các câu trả lời mạch lạc có căn cứ trong thông tin được truy xuất
+
+Sau khi đã thành thạo các kiến thức cơ bản, bạn sẽ đi xa hơn bằng cách giới thiệu **các thành phần RAG modular của LangChain**, giúp đơn giản hóa việc phát triển và làm cho các pipeline phức tạp dễ bảo trì hơn. Bạn cũng sẽ tích hợp **LangSmith** để giám sát, theo dõi và debug từng bước trong quy trình suy luận của chatbot—đảm bảo khả năng hiển thị về cách các câu trả lời được hình thành và tại sao một số kết quả được chọn.
+
+Đến cuối phần này, bạn sẽ xây dựng được một **chatbot tìm kiếm hoàn chỉnh, hoạt động đầy đủ** có khả năng:
+
+- Suy luận trên nhiều nguồn
+- Xử lý các câu hỏi tiếp theo
+- Duy trì ngữ cảnh hội thoại
+- Cung cấp câu trả lời minh bạch, có thể truy vết
+
+Quan trọng hơn, bạn sẽ biết **khi nào nên giữ implementation tối giản** bằng cách sử dụng API trực tiếp và **khi nào nên sử dụng các abstractions của LangChain** để có tốc độ, tính modular và khả năng quan sát.
+
+## Tại Sao Điều Này Quan Trọng
+
+Phần này đặt nền móng để xây dựng các trợ lý thông minh thực sự không chỉ tóm tắt kiến thức mà còn chủ động giúp người dùng tìm và hiểu thông tin họ cần. RAG là nền tảng cho các ứng dụng AI hiện đại đòi hỏi:
+
+- **Độ chính xác thay vì ảo giác**—Neo câu trả lời vào dữ liệu bên ngoài đã được xác minh
+- **Quyền riêng tư và kiểm soát**—Truy vấn các cơ sở kiến thức riêng tư mà không để lộ dữ liệu cho việc training mô hình
+- **Khả năng mở rộng**—Xử lý các cơ sở kiến thức quá lớn để vừa trong một prompt
+- **Tính minh bạch**—Truy vết chính xác những nguồn nào đã thông tin cho mỗi câu trả lời
+
+Hãy bắt đầu bằng cách hiểu các nguyên tắc cơ bản của RAG và xây dựng hệ thống hỏi đáp đầu tiên của bạn từ đầu.
+
+---
+
+## Các Nguyên Tắc Cơ Bản Của RAG Với ChromaDB
+
+Trong phần này, chúng ta sẽ khám phá hai khái niệm chính: **semantic search** (tìm kiếm ngữ nghĩa) và **Retrieval-Augmented Generation (RAG)**. Bạn sẽ thấy cách các mô hình ngôn ngữ lớn được sử dụng cho tìm kiếm ngữ nghĩa thông qua chatbot, cho phép bạn truy vấn hệ thống để tìm thông tin trên nhiều tài liệu và truy xuất các đoạn phù hợp nhất với **ý nghĩa** câu hỏi của bạn, thay vì chỉ khớp từ khóa. Cách tiếp cận này còn được gọi là **Q&A over documents** (hỏi đáp trên tài liệu) hoặc **querying a knowledge base** (truy vấn cơ sở kiến thức).
+
+Trong các phần trước, bạn đã học về tóm tắt—một use case điển hình cho LLM. Bây giờ chúng ta sẽ tìm hiểu các kiến thức cơ bản về xây dựng chatbot Q&A tìm kiếm trên nhiều tài liệu. Bạn sẽ tương tác với LLM để tìm câu trả lời bạn đang tìm kiếm.
+
+### RAG Là Gì?
+
+RAG là mẫu thiết kế cung cấp sức mạnh cho các hệ thống tìm kiếm ngữ nghĩa. Về cốt lõi, RAG kết hợp:
+
+1. **Retrieval** (Truy xuất)—Tìm thông tin liên quan từ cơ sở kiến thức
+2. **Augmentation** (Bổ sung)—Thêm thông tin đó vào ngữ cảnh của LLM
+3. **Generation** (Tạo sinh)—Tạo ra câu trả lời có căn cứ trong dữ liệu được truy xuất
+
+Mẫu này giải quyết một thách thức cơ bản: LLM có kiến thức tổng quát ấn tượng, nhưng chúng không biết về dữ liệu riêng tư của bạn, các sự kiện gần đây hoặc thông tin chuyên môn cụ thể. RAG thu hẹp khoảng cách này bằng cách:
+
+- **Neo câu trả lời** vào các nguồn dữ liệu bên ngoài, có thể xác minh
+- **Giảm ảo giác** bằng cách cung cấp ngữ cảnh thực tế
+- **Cho phép bảo mật** bằng cách giữ dữ liệu ngoài quá trình training mô hình
+- **Hỗ trợ cập nhật thời gian thực** mà không cần training lại mô hình
+
+### Hiểu Về Vector Stores
+
+**Vector store** là một cơ sở dữ liệu chuyên biệt lưu trữ và truy xuất thông tin dựa trên độ tương đồng ngữ nghĩa thay vì khớp từ khóa chính xác. Đây là cách nó hoạt động:
+
+1. **Tài liệu được chuyển đổi thành embeddings**—biểu diễn số nắm bắt ý nghĩa ngữ nghĩa
+2. **Embeddings được lưu trữ** trong vector store cùng với văn bản gốc
+3. **Khi bạn truy vấn**, câu hỏi của bạn cũng được chuyển đổi thành embedding
+4. **Vector store tìm** các embeddings tương tự nhất bằng các phép đo khoảng cách
+5. **Các đoạn văn bản liên quan** được truy xuất và gửi đến LLM
+
+Điều này cho phép khả năng tìm kiếm ngữ nghĩa mạnh mẽ:
+
+- **"Lợi ích của việc tập thể dục là gì?"** khớp với các tài liệu về sức khỏe, thể dục và chăm sóc sức khỏe—ngay cả khi chúng không chứa từ "lợi ích"
+- **Từ đồng nghĩa và khái niệm liên quan** được hiểu tự động
+- **Hỗ trợ đa ngôn ngữ** trở nên khả thi với embeddings phù hợp
+
+### Thuật Ngữ Kỹ Thuật
+
+Bạn sẽ gặp một số thuật ngữ thường được sử dụng thay thế cho nhau trong các hệ thống RAG:
+
+- **Semantic search** (Tìm kiếm ngữ nghĩa)—Tìm thông tin dựa trên ý nghĩa, không phải từ khóa
+- **Q&A over documents** (Hỏi đáp trên tài liệu)—Trả lời câu hỏi bằng cách sử dụng bộ sưu tập tài liệu
+- **Knowledge base querying** (Truy vấn cơ sở kiến thức)—Tìm kiếm trên thông tin có cấu trúc
+- **Document retrieval** (Truy xuất tài liệu)—Định vị các đoạn văn bản liên quan
+
+Tất cả những điều này mô tả các khía cạnh của cùng một mẫu cơ bản: sử dụng embeddings và độ tương đồng vector để tìm và sử dụng thông tin liên quan.
+
+### Xây Dựng Với ChromaDB Và OpenAI
+
+Đến cuối phần này, bạn sẽ triển khai một kiến trúc RAG cơ bản sử dụng:
+
+- **OpenAI's embedding models**—Để chuyển đổi văn bản thành các vector ngữ nghĩa
+- **OpenAI's language models**—Để tạo các câu trả lời có căn cứ
+- **ChromaDB**—Làm vector store cho tìm kiếm tương đồng hiệu quả
+
+Nền tảng thực hành này sẽ chuẩn bị cho bạn xây dựng các chatbot Q&A phức tạp hơn trong các phần tiếp theo, nơi chúng ta sẽ thêm bộ nhớ hội thoại, đối thoại đa lượt và các chiến lược truy xuất nâng cao.
+
+Hãy bắt đầu bằng cách hiểu cách embeddings hoạt động và tại sao chúng lại cần thiết cho tìm kiếm ngữ nghĩa.
+
+---
+
+## Tìm Kiếm Ngữ Nghĩa (Semantic Search)
+
+Tìm kiếm ngữ nghĩa là một use case phổ biến cho LLM, cùng với tóm tắt và tạo code. Đây là một trong những ứng dụng chính thúc đẩy sự bùng nổ của LLM và Generative AI.
+
+**Định nghĩa**: Tìm kiếm ngữ nghĩa có nghĩa là tìm kiếm thông tin bằng cách tập trung vào **ý nghĩa** của nó. Điều này bao gồm:
+
+1. **Hiểu ý nghĩa của truy vấn**—Không chỉ khớp từ khóa
+2. **Truy xuất các đoạn tài liệu liên quan**—Từ kho tài liệu khớp chặt chẽ với ý nghĩa của truy vấn
+3. **Tùy chọn tạo câu trả lời bằng ngôn ngữ tự nhiên**—Tổng hợp thông tin thành phản hồi mạch lạc
+
+### Tìm Kiếm Ngữ Nghĩa vs. Tìm Kiếm Từ Khóa
+
+Tìm kiếm ngữ nghĩa khác biệt cơ bản so với tìm kiếm dựa trên từ khóa truyền thống:
+
+**Tìm Kiếm Từ Khóa** (Truyền thống):
+- Khớp các từ hoặc cụm từ chính xác
+- Thất bại khi sử dụng thuật ngữ khác nhau
+- **Ví dụ**: Tìm kiếm "lợi ích của tập thể dục" sẽ không tìm thấy tài liệu về "ưu điểm của hoạt động thể chất"
+
+**Tìm Kiếm Ngữ Nghĩa** (Hiện đại):
+- Hiểu ý nghĩa và ngữ cảnh
+- Tạo kết quả liên quan ngay cả khi từ chính xác không khớp
+- **Ví dụ**: "lợi ích của tập thể dục" tìm thấy thành công các tài liệu về "ưu điểm của hoạt động thể chất," "lợi ích sức khỏe từ tập luyện," hoặc "hiệu quả tích cực của thể dục"
+
+Sức mạnh của tìm kiếm ngữ nghĩa nằm ở khả năng thu hẹp **khoảng cách từ vựng**—vấn đề khi người dùng và tài liệu sử dụng các từ khác nhau để diễn đạt cùng một khái niệm.
+
+### Ví Dụ Thực Tế
+
+Xem xét các cặp truy vấn-tài liệu này mà tìm kiếm ngữ nghĩa xử lý tốt:
+
+| Truy Vấn Người Dùng | Nội Dung Tài Liệu Khớp | Tại Sao Khớp |
+|---------------------|------------------------|---------------|
+| "Làm thế nào để giảm căng thẳng?" | "Kỹ thuật thiền để quản lý lo âu" | Hiểu căng thẳng ≈ lo âu |
+| "Thực hành tốt nhất cho làm việc từ xa" | "Mẹo làm việc từ xa hiệu quả" | Nhận biết làm việc từ xa ≈ làm việc từ xa (telecommuting) |
+| "Nguyên nhân gây lạm phát là gì?" | "Các yếu tố kinh tế đằng sau giá cả tăng" | Liên kết lạm phát ≈ giá cả tăng |
+
+Không có ví dụ nào trong số này chia sẻ từ khóa chính xác, nhưng tìm kiếm ngữ nghĩa kết nối chúng dựa trên **độ tương đồng khái niệm**.
+
+### Hiểu Về Kiến Trúc
+
+Trước khi đi vào code, bạn cần hiểu rõ về kiến trúc của chatbot tìm kiếm ngữ nghĩa. Chúng ta sẽ bắt đầu với một ví dụ đơn giản để làm quen, nhưng đến cuối phần này, bạn sẽ nắm bắt kiến trúc của một chatbot Q&A thực tế.
+
+Kiến trúc bao gồm một số thành phần chính hoạt động cùng nhau:
+
+1. **Document Ingestion** (Nhập tài liệu)—Tải và xử lý cơ sở kiến thức của bạn
+2. **Text Chunking** (Chia nhỏ văn bản)—Chia tài liệu thành các phần dễ quản lý
+3. **Embedding Generation** (Tạo embedding)—Chuyển đổi văn bản thành các vector ngữ nghĩa
+4. **Vector Storage** (Lưu trữ vector)—Lưu trữ embeddings để truy xuất hiệu quả
+5. **Query Processing** (Xử lý truy vấn)—Chuyển đổi câu hỏi vào cùng không gian vector
+6. **Similarity Search** (Tìm kiếm tương đồng)—Tìm các đoạn tài liệu liên quan nhất
+7. **Answer Generation** (Tạo câu trả lời)—Sử dụng LLM để tổng hợp phản hồi
+
+Hãy khám phá từng thành phần chi tiết, bắt đầu với cách embeddings nắm bắt ý nghĩa ngữ nghĩa.
+
+---
+
+## Chatbot Q&A Cơ Bản Trên Một Tài Liệu
+
+Hãy bắt đầu với một kịch bản đơn giản giúp bạn hiểu cách chatbot Q&A hoạt động và làm quen với các thành phần của nó. Ví dụ chatbot đầu tiên trả lời câu hỏi về một tài liệu duy nhất, như được minh họa trong Hình 3.1.
+
+![Quy trình chatbot Q&A đơn giản](/src/assets/blog/ai-agents/basic-qa-chatbot.png)
+*Hình 3.1: Quy trình chatbot Q&A đơn giản bao gồm: (1) người dùng gửi prompt chứa tài liệu (ngữ cảnh) và câu hỏi đến chatbot, (2) chatbot trả về câu trả lời ban đầu, (3) người dùng theo dõi với câu hỏi chi tiết hơn, và (4) chatbot cung cấp câu trả lời chính xác hơn.*
+
+Các yếu tố chính của thiết lập cơ bản này là:
+
+- **Document** (Tài liệu)—Chứa văn bản để tìm kiếm ngữ nghĩa hoặc trích xuất thông tin
+- **Prompt**—Đóng gói câu hỏi của người dùng (tìm kiếm ngữ nghĩa) và ngữ cảnh (tài liệu) với thông tin cần thiết cho câu trả lời
+- **LLM-based chatbot**—Gửi prompt đến LLM, LLM hiểu câu hỏi và ngữ cảnh, chọn thông tin liên quan và tổng hợp câu trả lời cho người dùng
+
+Hãy phân tích sâu hơn các khái niệm này.
+
+### Định Nghĩa Chính
+
+**Context** (Ngữ cảnh) là văn bản hoặc thông tin trong prompt, cùng với câu hỏi của người dùng, được sử dụng để xây dựng câu trả lời.
+
+**Synthesize** (Tổng hợp) có nghĩa là tạo ra câu trả lời từ câu hỏi và ngữ cảnh được cung cấp.
+
+### Một Ví Dụ Đơn Giản
+
+Bạn không cần viết code nào để triển khai thiết lập ban đầu này. Chỉ cần đăng nhập vào ChatGPT hoặc một chatbot dựa trên LLM thay thế như Gemini hoặc Claude, và bạn đã sẵn sàng.
+
+Hãy thử một tương tác Q&A đơn giản sử dụng văn bản về Paestum từ Britannica. Gửi prompt này đến ChatGPT:
+
+```
+Đọc văn bản sau và cho tôi biết có bao nhiêu ngôi đền ở Paestum, 
+ai xây dựng chúng và chúng có phong cách kiến trúc gì:
+
+---
+Paestum, Greek Poseidonia, thành phố cổ đại ở miền nam Ý gần bờ 
+biển phía tây, 22 dặm (35 km) về phía đông nam của Salerno hiện đại 
+và 5 dặm (8 km) về phía nam của sông Sele (Silarus cổ đại). Paestum 
+nổi tiếng với các ngôi đền Hy Lạp được bảo tồn tuyệt vời.
+
+Poseidonia có lẽ được thành lập vào khoảng năm 600 trước Công 
+nguyên bởi những người thuộc địa Hy Lạp từ Sybaris... [văn bản đầy đủ tiếp tục]
+```
+
+Đây là một câu trả lời điển hình (lưu ý, bạn có thể nhận được kết quả hơi khác do tính ngẫu nhiên của LLM):
+
+> "Có ba ngôi đền ở Paestum, và chúng được xây dựng theo phong cách kiến trúc Doric. Những ngôi đền này là:
+> - Đền Athena (còn được gọi là Đền Ceres), từ thế kỷ thứ 6 trước Công nguyên.
+> - Đền Hera I (còn được gọi là Basilica), cũng từ thế kỷ thứ 6 trước Công nguyên.
+> - Đền Hera II (còn được gọi là Đền Neptune), được xây dựng vào khoảng năm 460 trước Công nguyên và được bảo tồn tốt nhất trong ba ngôi đền."
+
+Đây gần như đầy đủ, nhưng thiếu **ai đã xây dựng các ngôi đền**. Nếu đây là một Q&A engine thay vì chatbot, hệ thống client sẽ không nhận được câu trả lời nào về người xây dựng các ngôi đền.
+
+### Chatbot vs. Q&A Engine
+
+> **LƯU Ý:** Một **Q&A engine**, giống như summarization engine, được gọi bởi hệ thống client và trả về một câu trả lời. Một **chatbot**, được sử dụng bởi con người, cho phép nhiều câu hỏi để bạn có thể tinh chỉnh câu trả lời thông qua tương tác.
+
+Tiếp theo, chúng ta có thể gửi một prompt theo dõi:
+
+```
+Câu trả lời này gần như những gì tôi mong đợi, nhưng bạn quên trả lời 
+một điều: ai đã xây dựng các ngôi đền?
+```
+
+Phản hồi:
+
+> "Tôi xin lỗi vì đã bỏ sót phần đó. Các ngôi đền ở Paestum được xây dựng bởi những người thuộc địa Hy Lạp từ Sybaris, những người thành lập thành phố Poseidonia (sau này là Paestum) vào khoảng năm 600 trước Công nguyên. Vì vậy, những người thuộc địa Hy Lạp đã xây dựng những ngôi đền này theo phong cách kiến trúc Doric."
+
+Điều này chứng minh **lợi thế của chatbot so với engine**: sau một vài vòng câu hỏi, chatbot đã trả lời tất cả các câu hỏi về các ngôi đền ở Paestum. Quan trọng là, chúng ta không phải gửi lại toàn bộ văn bản—chatbot đã nhớ ngữ cảnh ban đầu.
+
+### Stateful Sessions (Phiên Có Trạng Thái)
+
+> **LƯU Ý:** Một chatbot như ChatGPT tạo ra một **stateful session** (phiên có trạng thái) nhớ các trao đổi bằng cách truyền lịch sử cuộc hội thoại như ngữ cảnh bổ sung, cho phép người dùng tinh chỉnh câu trả lời mà không cần gửi lại văn bản ban đầu.
+
+Ví dụ đơn giản này minh họa nền tảng của các hệ thống Q&A:
+
+1. **Ngữ cảnh được cung cấp** cho LLM cùng với câu hỏi
+2. **LLM tổng hợp** câu trả lời dựa trên ngữ cảnh
+3. **Bộ nhớ hội thoại** cho phép tinh chỉnh lặp đi lặp lại
+4. **Câu hỏi tiếp theo** có thể làm rõ hoặc mở rộng câu trả lời ban đầu
+
+Mặc dù điều này hoạt động tốt cho một tài liệu, các ứng dụng thực tế cần xử lý **nhiều tài liệu** và **cơ sở kiến thức lớn**. Đó là lúc kiến trúc RAG đầy đủ trở nên thiết yếu, mà chúng ta sẽ xây dựng trong các phần tiếp theo.
+
+---
+
+## Vấn Đề Ảo Giác (Hallucination)
+
+Hãy thử một câu hỏi khác với cùng ngữ cảnh Paestum:
+
+```
+Di tích khảo cổ ở Paestum có được UNESCO công nhận không?
+```
+
+Phản hồi:
+
+> "Có, di tích khảo cổ Paestum được UNESCO công nhận. Năm 1998, nó đã được chỉ định là Di sản Thế giới UNESCO. Việc chỉ định này công nhận tầm quan trọng lịch sử và kiến trúc của các ngôi đền Hy Lạp được bảo tồn tốt và các di tích cổ đại ở Paestum."
+
+Khoan đã! Văn bản gốc không bao gồm thông tin này. ChatGPT đã sử dụng kiến thức riêng của nó, có thể từ Wikipedia hoặc các nguồn khác, để trả lời chính xác. Sự nhiệt tình trả lời câu hỏi bằng nội dung không được cung cấp này có thể hữu ích, như được thể hiện trong ví dụ này, nhưng nó cũng có thể nguy hiểm, như bạn sẽ thấy ngay sau đây.
+
+Hãy thử một câu hỏi khác:
+
+```
+Ba ngôi đền có tổng cộng bao nhiêu cột?
+```
+
+Phản hồi:
+
+> "Ba ngôi đền ở Paestum có tổng cộng 94 cột:
+> - Đền Athena (Đền Ceres) có 6 cột ở các cạnh ngắn hơn và 13 cột ở các cạnh dài hơn, tổng cộng 32 cột.
+> - Đền Hera I (Basilica) có 6 cột ở các cạnh ngắn hơn và 9 cột ở các cạnh dài hơn, tổng cộng 30 cột.
+> - Đền Hera II (Đền Neptune) có 6 cột ở các cạnh ngắn hơn và 14 cột ở các cạnh dài hơn, tổng cộng 32 cột."
+
+ChatGPT đã cố gắng trả lời, nhưng **câu trả lời sai**. Đền Hera I thực tế có 50 cột, không phải 30, như bạn có thể xác minh trên Wikipedia.
+
+### Hiểu Về Hallucination (Ảo Giác)
+
+> **CẢNH BÁO:** Khi chatbot không thể tìm thấy thông tin trong văn bản được cung cấp, nó có thể dựa vào kiến thức riêng của nó, điều này có thể dẫn đến thông tin không chính xác hoặc bịa đặt, được gọi là **hallucination** (ảo giác).
+
+Trong một trường hợp, ChatGPT cung cấp thông tin chính xác về UNESCO, nhưng trong trường hợp khác, nó đưa ra câu trả lời không chính xác về số lượng cột. Điều này đặt ra một câu hỏi quan trọng: **Làm thế nào bạn có thể biết khi nào ChatGPT cung cấp thông tin đáng tin cậy và khi nào thì không?**
+
+Theo nguyên tắc chung, bạn nên thận trọng khi tin tưởng ChatGPT về các sự kiện hoặc chi tiết mà bạn chưa tự xác minh độc lập hoặc tự cung cấp.
+
+### Tại Sao Điều Này Quan Trọng Cho RAG
+
+Ví dụ này làm nổi bật nhu cầu thiết yếu cho **triển khai RAG đúng cách**:
+
+1. **Không có RAG**: LLM có thể trộn lẫn kiến thức nội bộ của nó (có thể lỗi thời hoặc sai) với ngữ cảnh bạn cung cấp
+2. **Có RAG**: Bạn có thể áp dụng rằng câu trả lời chỉ đến **duy nhất** từ cơ sở kiến thức đã xác minh của bạn
+3. **Controlled grounding (Neo chặt được kiểm soát)**: Hệ thống RAG có thể được cấu hình để nói "Tôi không biết" khi không tìm thấy thông tin, thay vì ảo giác
+
+Các phần tiếp theo sẽ chỉ cho bạn cách xây dựng một hệ thống RAG:
+- **Chỉ truy xuất từ tài liệu của bạn**
+- **Trích dẫn nguồn** để minh bạch
+- **Thừa nhận không chắc chắn** khi thông tin không có sẵn
+- **Ngăn chặn ảo giác** bằng cách neo câu trả lời vào dữ liệu đã xác minh
+
+Hãy bắt đầu bằng cách hiểu cách chuyển đổi tài liệu thành các embeddings có thể tìm kiếm được.
+
+---
+
+## Ngăn Chặn Ảo Giác Với Hướng Dẫn Rõ Ràng
+
+> **MẸO:** Để tránh vấn đề ảo giác, hãy hướng dẫn ChatGPT chỉ sử dụng thông tin bạn cung cấp và chỉ ra nếu nó không biết câu trả lời.
+
+Bạn có thể giải quyết vấn đề trước đó bằng prompt cải tiến này:
+
+```
+Ba ngôi đền có tổng cộng bao nhiêu cột?
+Chỉ sử dụng thông tin tôi đã cung cấp trong văn bản.
+Nếu bạn không biết câu trả lời, chỉ cần nói như vậy.
+```
+
+Bạn sẽ nhận được phản hồi chính xác hơn:
+
+> "Tôi xin lỗi vì sai sót trong câu trả lời trước của tôi. Văn bản bạn cung cấp không đề cập đến tổng số cột trong ba ngôi đền ở Paestum."
+
+Đây chính xác là những gì chúng ta muốn! Thay vì bịa đặt thông tin, chatbot bây giờ **thừa nhận khi nó không biết**.
+
+### Thiết Kế Prompts An Toàn
+
+> **MẸO:** Thiết kế prompts an toàn cho chatbot Q&A giảm khả năng ảo giác. Các chiến lược chính bao gồm:
+> - **Nêu rõ ràng**: "Chỉ sử dụng thông tin được cung cấp"
+> - **Yêu cầu thừa nhận**: "Nói 'Tôi không biết' nếu câu trả lời không có trong văn bản"
+> - **Yêu cầu trích dẫn**: "Bao gồm phần nào của văn bản hỗ trợ câu trả lời của bạn"
+> - **Đặt ranh giới**: "Không sử dụng kiến thức chung của bạn cho câu hỏi này"
+
+Bạn sẽ học thêm về các kỹ thuật này trong suốt phần này khi chúng ta xây dựng các hệ thống RAG production-ready.
+
+### Chuyển Sang Các Use Case Phức Tạp
+
+Bây giờ hãy chuyển sang một use case phức tạp hơn. Lần này, chatbot phải trích xuất thông tin cụ thể từ **lượng văn bản lớn hơn nhiều**—các kịch bản mà:
+
+- Tài liệu quá lớn để vừa trong một prompt
+- Nhiều tài liệu cần được tìm kiếm
+- Chỉ các đoạn liên quan nên được truy xuất
+- Hiệu quả và chi phí trở thành các yếu tố quan trọng
+
+Đây là lúc kiến trúc RAG đầy đủ với vector stores trở nên thiết yếu. Tiếp tục đến [Part 3.1: Xây Dựng Chatbot Q&A Trên Knowledge Bases Lớn](/blog/ai-agents/03-1-complex-qa-knowledge-base) để học cách mở rộng hệ thống RAG của bạn xử lý cơ sở kiến thức doanh nghiệp với hàng nghìn tài liệu.
+
+---
+
+</LangVI>

@@ -110,8 +110,6 @@ By weighing these factors, you can select an LLM that fits your project's goals 
 **Previous**: [← Part 1.2: LangChain Framework](/blog/ai-agents/01-2-langchain-framework)  
 **Next**: [Part 1.4: Executing Prompts Programmatically →](/blog/ai-agents/01-4-executing-prompts-programmatically)
 
-*— Nguyen Dai, AI Engineer @ PIXTA Vietnam*  
-*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
 
 </LangEN>
 
@@ -131,7 +129,7 @@ Hãy bắt đầu với phương pháp cơ bản nhất: prompt engineering.
 
 Prompt cho LLM có thể đơn giản như một lệnh duy nhất hoặc phức tạp như một khối hướng dẫn được làm phong phú với các ví dụ và ngữ cảnh. Prompt engineering là thực hành thiết kế các đầu vào này sao cho mô hình hiểu nhiệm vụ và tạo ra các phản hồi hữu ích, chính xác. Khi làm tốt, nó cho phép developer hướng dẫn hành vi của mô hình, điều chỉnh nó theo nhu cầu cụ thể của lĩnh vực, và thậm chí xử lý các vấn đề mà mô hình không được huấn luyện rõ ràng. Một kỹ thuật phổ biến ở đây là in-context learning (học trong ngữ cảnh), trong đó mô hình suy ra các pattern từ các ví dụ được nhúng trực tiếp trong prompt—không cần fine-tuning.
 
-Trong thực tế, prompt thường được tổ chức dưới dạng template: một hướng dẫn cố định với các trường biến chấp nhận đầu vào động. Điều này làm cho prompt có thể tái sử dụng và dễ quản lý hơn trên các phần khác nhau của ứng dụng. Một pattern được sử dụng rộng rãi là few-shot prompting, trong đó bạn bao gồm một số ví dụ để dạy mô hình cách tổng quát hóa sang các đầu vào tương tự.
+Trong thực tế, prompt thường được tổ chức dưới dạng template: một khung hướng dẫn cố định với các trường biến để nhận giá trị thay đổi theo từng lần sử dụng. Điều này làm cho prompt có thể tái sử dụng và dễ quản lý hơn trên các phần khác nhau của ứng dụng. Một pattern được sử dụng rộng rãi là few-shot prompting, trong đó bạn bao gồm một số ví dụ để dạy mô hình cách tổng quát hóa sang các đầu vào tương tự.
 
 Prompt được thiết kế tốt có sức mạnh đáng ngạc nhiên. Chúng có thể tạo ra đầu ra chất lượng cao, nhận biết lĩnh vực từ LLM mà không cần dữ liệu huấn luyện bổ sung. Ví dụ, chatbot thường nhúng các lượt hội thoại gần đây vào prompt để mô hình duy trì ngữ cảnh và tạo ra các câu trả lời mạch lạc, nhiều lượt. Prompt engineering thường có thể đưa bạn đi rất xa, khiến nó trở thành một công cụ nhẹ nhưng hiệu quả cho nhiều ứng dụng thực tế.
 
@@ -158,7 +156,7 @@ RAG mang lại nhiều lợi ích:
 
 Để làm cho RAG đáng tin cậy, prompt nên hướng dẫn rõ ràng LLM chỉ dựa vào ngữ cảnh đã truy xuất. LangChain cũng hỗ trợ guardrail và validator để giúp thực thi hành vi an toàn. Trong các trường hợp quan trọng, human-in-the-loop review vẫn là biện pháp bảo vệ tốt nhất.
 
-Tóm lại, RAG thu hẹp khoảng cách giữa các mô hình pretrained tĩnh và các ứng dụng động, cụ thể theo lĩnh vực. Bằng cách dạy ứng dụng của bạn "nói cùng ngôn ngữ" với LLM—vector—bạn mở khóa một cách thực tế để cung cấp câu trả lời có căn cứ và tiết kiệm chi phí. Nếu prompt engineering và RAG vẫn không đáp ứng nhu cầu của bạn, bước tiếp theo là fine-tuning mô hình, mà chúng ta sẽ đề cập trong phần tiếp theo. Chúng ta sẽ quay lại RAG một cách sâu sắc và khám phá các pattern và kỹ thuật nâng cao mở rộng sức mạnh của nó cho các ứng dụng thực tế.
+Tóm lại, RAG thu hẹp khoảng cách giữa các model pretrained tĩnh và các ứng dụng thực tế cần dữ liệu cụ thể theo lĩnh vực. Bằng cách dạy ứng dụng của bạn "nói cùng ngôn ngữ" với LLM—vector—bạn mở khóa một cách thực tế để cung cấp câu trả lời có căn cứ và tiết kiệm chi phí. Nếu prompt engineering và RAG vẫn không đáp ứng nhu cầu của bạn, bước tiếp theo là fine-tuning mô hình, mà chúng ta sẽ đề cập trong phần tiếp theo. Chúng ta sẽ quay lại RAG một cách sâu sắc và khám phá các pattern và kỹ thuật nâng cao mở rộng sức mạnh của nó cho các ứng dụng thực tế.
 
 ### Fine-tuning
 
@@ -166,11 +164,11 @@ Fine-tuning là quá trình điều chỉnh một LLM đã được pretrained �
 
 Theo truyền thống, fine-tuning đòi hỏi các framework machine learning chuyên biệt và truy cập vào phần cứng mạnh mẽ, nhưng nhiều nền tảng ngày nay—bao gồm fine-tuning API của OpenAI và một số toolkit mã nguồn mở—cho phép thực hiện chỉ với việc tải lên dataset và cấu hình tối thiểu.
 
-Lợi ích chính của fine-tuning là hiệu quả: một khi mô hình đã tiếp thu kiến thức cụ thể theo lĩnh vực, bạn không cần nhồi nhét mỗi prompt với các hướng dẫn hoặc ví dụ dài. Thay vào đó, mô hình "biết" cách phản hồi trong ngữ cảnh của bạn. Tuy nhiên, sự đánh đổi là có thật. Chuẩn bị các dataset chất lượng cao tốn thời gian và chuyên môn, và các lần chạy huấn luyện có thể tốn kém vì chúng thường yêu cầu GPU.
+Lợi ích chính của fine-tuning là một khi mô hình đã tiếp thu kiến thức cụ thể theo lĩnh vực, bạn không cần nhồi nhét mỗi prompt với các hướng dẫn hoặc ví dụ dài. Thay vào đó, mô hình "biết" cách phản hồi trong ngữ cảnh của bạn. Tuy nhiên, sự đánh đổi là có thật. Chuẩn bị các dataset chất lượng cao tốn thời gian và chuyên môn, và các lần chạy huấn luyện có thể tốn kém vì chúng thường yêu cầu GPU.
 
 Những tiến bộ gần đây như Low-Rank Adaptation (LoRA) và các phương pháp fine-tuning tiết kiệm tham số khác đã giảm cả chi phí và độ phức tạp, làm cho fine-tuning dễ tiếp cận hơn. Các kỹ thuật liên quan, như instruction tuning và Reinforcement Learning from Human Feedback (RLHF), thúc đẩy các mô hình tuân theo hướng dẫn một cách đáng tin cậy hơn, mặc dù chúng thường đòi hỏi nhiều nỗ lực kỹ thuật và cơ sở hạ tầng hơn.
 
-Liệu fine-tuning có thực sự cần thiết hay không là một cuộc tranh luận đang diễn ra. Các LLM đa năng ngạc nhiên là mạnh mẽ ngay từ đầu, đặc biệt khi kết hợp với RAG. Trên thực tế, nghiên cứu trong "Fine-Tuning vs. RAG for Less Popular Knowledge" (của Heydar Soudani, Evangelos Kanoulas và Faegheh Hasibi; https://arxiv.org/abs/2403.01432) cho thấy RAG thường vượt trội hơn fine-tuning bằng cách cho phép bạn cung cấp ngữ cảnh động tại thời điểm chạy, giảm cả chi phí và nhu cầu huấn luyện lại.
+Liệu fine-tuning có thực sự cần thiết hay không là một cuộc tranh luận đang diễn ra. Các LLM đa năng ngạc nhiên là mạnh mẽ ngay từ đầu, đặc biệt khi kết hợp với RAG. Trên thực tế, nghiên cứu trong "Fine-Tuning vs. RAG for Less Popular Knowledge" (của Heydar Soudani, Evangelos Kanoulas và Faegheh Hasibi; https://arxiv.org/abs/2403.01432) cho thấy RAG thường vượt trội hơn fine-tuning bằng cách cho phép bạn cung cấp ngữ cảnh linh hoạt tại thời điểm chạy, giảm cả chi phí và nhu cầu huấn luyện lại.
 
 Điều đó nói rằng, trong các lĩnh vực chuyên môn cao—như y học, luật pháp hoặc tài chính—fine-tuning vẫn vô giá. Nó cho phép các mô hình nắm bắt thuật ngữ và quy trình làm việc cụ thể theo lĩnh vực theo cách mà các mô hình chung khó có thể sánh kịp. Các ví dụ nổi tiếng bao gồm:
 
@@ -193,7 +191,7 @@ Sau đây là ba yếu tố chính cần cân nhắc khi chọn mô hình:
 - **Tốc độ (độ trễ)**—Các mô hình nhỏ hơn phản hồi nhanh hơn. Điều này khiến chúng hấp dẫn cho các ứng dụng tương tác như chatbot nơi khả năng phản hồi là quan trọng—nhưng sự đánh đổi là độ chính xác thấp hơn.
 - **Chi phí**—Chi phí inference liên quan trực tiếp đến kích thước mô hình. Các mô hình lớn hơn, chính xác hơn mang phí cao hơn cho mỗi token, trong khi các mô hình nhỏ hơn rẻ hơn để sử dụng ở quy mô lớn.
 
-Trong thực tế, bạn sẽ cần đạt được sự cân bằng trên ba khía cạnh này. Mô hình "tốt nhất" hiếm khi là mô hình lớn nhất hoặc rẻ nhất; đó là mô hình phù hợp với yêu cầu của ứng dụng của bạn. Ví dụ, một chatbot hỗ trợ khách hàng có thể ưu tiên tốc độ và chi phí, trong khi một công cụ phân tích tài liệu pháp lý sẽ ưu tiên độ chính xác ngay cả với chi phí cao hơn.
+Trong thực tế, bạn sẽ cần đạt được sự cân bằng trên ba khía cạnh này. Mô hình "tốt nhất" không nhất thiết là mô hình lớn nhất hay rẻ nhất; đó là mô hình phù hợp với yêu cầu của ứng dụng. Ví dụ, một chatbot hỗ trợ khách hàng có thể ưu tiên tốc độ và chi phí, trong khi một công cụ phân tích tài liệu pháp lý sẽ ưu tiên độ chính xác ngay cả với chi phí cao hơn.
 
 Ngoài những đánh đổi cốt lõi này, còn có các cân nhắc bổ sung có thể làm cho một nhóm mô hình phù hợp hơn nhóm khác:
 
@@ -210,7 +208,5 @@ Bằng cách cân nhắc các yếu tố này, bạn có thể chọn một LLM 
 **Trước**: [← Phần 1.2: Framework LangChain](/blog/ai-agents/01-2-langchain-framework)  
 **Tiếp theo**: [Phần 1.4: Thực Thi Prompt Tự Động →](/blog/ai-agents/01-4-executing-prompts-programmatically)
 
-*— Nguyễn Đài, AI Engineer @ PIXTA Vietnam*  
-*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
 
 </LangVI>

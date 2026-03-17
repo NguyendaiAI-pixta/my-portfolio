@@ -17,7 +17,7 @@ import LangVI from '../../../components/LangVI.astro';
 
 <LangEN>
 
-We'll also go hands-on with one of the most important day-to-day skills in AI development: writing good prompts. You'll learn how to structure prompts for different tasks, sharpen them with one-shot and few-shot examples, and automate the whole process with LangChain's prompt templates and the OpenAI API.
+This post introduces LangChain—the framework that turns LLM development from repeated boilerplate into structured, reusable components. You'll understand its architecture, learn how components like loaders, retrievers, and chains work together, and see how LangChain simplifies building production-ready applications.
 
 By the end of this post, you'll be past the experimentation phase and ready to build LLM-powered applications with real purpose and real reliability.
 
@@ -158,17 +158,23 @@ These use cases assume the LLM can handle user requests well. However, real-worl
 
 ---
 
+## Download Code Examples
+
+You can download the Jupyter Notebook with all code examples from this post:
+
+**[📓 Download: 01-langchain_examples.ipynb](/download/01-langchain_examples)**
+
+---
+
 **Previous**: [← Part 1.1: Understanding AI Applications](/blog/ai-agents/01-1-understanding-ai)  
 **Next**: [Part 1.3: Making LLMs Smarter →](/blog/ai-agents/01-3-making-llms-smarter)
 
-*— Nguyen Dai, AI Engineer @ PIXTA Vietnam*  
-*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
 
 </LangEN>
 
 <LangVI>
 
-Series này cũng sẽ đi sâu vào một kỹ năng quan trọng nhất trong phát triển AI: viết prompt hiệu quả. Nội dung bao gồm cách cấu trúc prompt cho các tác vụ khác nhau, cải thiện chúng với one-shot và few-shot examples, và tự động hóa toàn bộ quy trình bằng prompt templates của LangChain và OpenAI API.
+Bài này giới thiệu LangChain—framework giúp chuyển việc phát triển LLM từ code lặp đi lặp lại thành các component có cấu trúc, có thể tái sử dụng. Bạn sẽ hiểu kiến trúc của nó, cách các component như loader, retriever và chain hoạt động cùng nhau, và cách LangChain đơn giản hóa việc xây dựng ứng dụng production-ready.
 
 Kết thúc bài này, bạn sẽ vượt qua giai đoạn thử nghiệm và sẵn sàng xây dựng ứng dụng LLM với mục đích và độ tin cậy thực sự.
 
@@ -214,7 +220,7 @@ Hầu hết các framework LLM đều theo một pattern chung tương tự, nh�
 ![Kiến trúc LangChain thể hiện quy trình từ load tài liệu qua retrieval đến phản hồi của LLM](/src/assets/blog/ai-agents/langchain-architecture.png)
 *Hình 1.6: Kiến trúc LangChain. Document loader nhập dữ liệu, text splitter chia thành các chunk. Chúng được vector hóa bởi embedding model, lưu trong vector store, và được truy xuất thông qua retriever cho LLM. LLM cache kiểm tra các yêu cầu trước đó để trả về phản hồi đã lưu, trong khi output parser định dạng phản hồi cuối cùng của LLM.*
 
-Khi một ứng dụng LLM chạy một tác vụ—như tóm tắt hoặc tìm kiếm ngữ nghĩa—nó xây dựng một prompt kết hợp câu hỏi của người dùng với ngữ cảnh bổ sung. Ngữ cảnh đó thường đến từ các chunk tài liệu được lấy từ vector store. Thiểu thoảng, bạn cũng muốn đưa vào thông tin từ graph database. Vector store vẫn là xương sống của hầu hết các RAG workflow, nhưng graph database đang trở nên phổ biến hơn trong các ứng dụng cần thể hiện và suy luận về mối quan hệ giữa các thứ. Điều này đặc biệt hữu ích cho agent: khác với engine (thường làm một bước retrieval và trả về kết quả), agent có thể cần giữ bộ nhớ lâu hơn, theo dõi các thứ và mối quan hệ của chúng theo thời gian, và dùng những mối quan hệ đó để lập kế hoạch hành động tiếp theo (ví dụ, quyết định gọi công cụ nào hoặc lấy thông tin nào tiếp theo). LangChain đã tích hợp với các lựa chọn phổ biến như Neo4j, và cho phép bạn dùng các component memory hoặc planning dựa trên graph—những tính năng xuất hiện nhiều hơn trong các thiết kế agent tiên tiến.
+Khi một ứng dụng LLM chạy một tác vụ—như tóm tắt hoặc tìm kiếm ngữ nghĩa—nó xây dựng một prompt kết hợp câu hỏi của người dùng với ngữ cảnh bổ sung. Ngữ cảnh đó thường đến từ các chunk tài liệu được lấy từ vector store. Đôi khi, bạn cũng muốn sử dụng thông tin từ graph database. Vector store vẫn là xương sống của hầu hết các RAG workflow, nhưng graph database đang trở nên phổ biến hơn trong các ứng dụng cần mô hình hóa và suy luận về mối quan hệ giữa các đối tượng. Điều này đặc biệt hữu ích cho agent: khác với engine (thường làm một bước retrieval và trả về kết quả), agent có thể cần giữ bộ nhớ lâu hơn, theo dõi các đối tượng và mối quan hệ của chúng theo thời gian, và dùng những mối quan hệ đó để lập kế hoạch hành động tiếp theo (ví dụ, quyết định gọi công cụ nào hoặc lấy thông tin nào tiếp theo). LangChain đã tích hợp với các lựa chọn phổ biến như Neo4j, và cho phép bạn dùng các component memory hoặc planning dựa trên graph—những tính năng xuất hiện nhiều hơn trong các thiết kế agent tiên tiến.
 
 Để làm cho việc kết nối tất cả dễ dàng hơn, LangChain giới thiệu Runnable interface và LCEL. Chúng cho bạn cách sạch sẽ, nhất quán để nối các component mà không cần viết nhiều code kết nối. Chúng ta sẽ đi sâu hơn vào cả hai sau trong bài này.
 
@@ -260,7 +266,7 @@ Như đã đề cập trong phần kiến trúc LangChain, các class chính bao
 
 LangChain hoạt động với nhiều công cụ và dịch vụ bên thứ ba qua các component này, mang lại sự linh hoạt lớn. Bạn có thể tìm danh sách đầy đủ các tích hợp được hỗ trợ trong tài liệu chính thức. Ngoài ra, LangChain cung cấp LangChain Hub, một kho lưu trữ do cộng đồng thúc đẩy để tìm kiếm và chia sẻ các component có thể tái sử dụng như prompt, chain và tool.
 
-Một tính năng chính được chia sẻ bởi nhiều component này—từ loader đến LLM—là Runnable interface. Interface chung này cho phép các object được ghép lại và nối chuỗi một cách nhất quán, cho phép các workflow rất linh hoạt theo module. Chúng ta sẽ đi sâu hơn vào tính năng này, và vào LCEL, trong một phần sau tập trung vào xây dựng các pipeline LLM có thể kết hợp và biểu cảm.
+Một tính năng chính được chia sẻ bởi nhiều component này—từ loader đến LLM—là Runnable interface. Interface chung này cho phép các object được ghép lại và nối chuỗi một cách nhất quán, cho phép các workflow rất linh hoạt theo module. Chúng ta sẽ đi sâu hơn vào tính năng này cũng như LCEL trong một phần sau, tập trung vào xây dựng các pipeline LLM có thể kết hợp và linh hoạt.
 
 Trong hình 1.8, bạn có thể thấy mô hình object liên quan đến LLM, bao gồm PromptTemplate và PromptValue. Hình này cho thấy các class này kết nối với LLM interface như thế nào, thể hiện cấu trúc phức tạp hơn một chút so với các class được trình bày trước đó.
 
@@ -271,7 +277,7 @@ Giờ bạn đã khám phá mục đích, kiến trúc và các loại ứng d�
 
 **Lưu ý:** Vì chúng ta sẽ xây dựng các ứng dụng LangChain và LangGraph agent dựa trên LLM, hầu hết các ví dụ trong series này sử dụng các model của OpenAI, chủ yếu là từ dòng GPT-4. Trước khi chạy chúng, bạn sẽ cần tạo tài khoản OpenAI và liên kết thẻ ghi nợ hoặc thẻ tín dụng. Hầu hết các ví dụ chạy tốt trên GPT-4o-mini, model rẻ nhất, và hoàn thành tất cả các bài tập sẽ tốn dưới 5 USD tổng cộng. Bạn có thể thử nghiệm với các model lớn hơn nếu muốn.
 
-Tại trung tâm của mọi ứng dụng LangChain là sức mạnh của LLM. Các ứng dụng dựa trên LLM có thể được coi là các wrapper hoặc interface chuyên biệt xung quanh model, được tùy chỉnh cho các use case cụ thể. Bây giờ hãy khám phá các loại use case chính mà LLM đặc biệt phù hợp.
+Cốt lõi của mọi ứng dụng LangChain là sức mạnh của LLM. Các ứng dụng dựa trên LLM có thể được coi là các wrapper hoặc interface chuyên biệt xung quanh model, được tùy chỉnh cho các use case cụ thể. Bây giờ hãy khám phá các loại use case chính mà LLM hoạt động hiệu quả nhất.
 
 ## Các Use Case Điển Hình Của LLM
 
@@ -309,10 +315,14 @@ Các use case này giả định LLM có thể xử lý yêu cầu của ngườ
 
 ---
 
+## Tải Code Ví Dụ
+
+Bạn có thể tải Jupyter Notebook với tất cả code ví dụ từ bài này:
+
+**[📓 Tải về: 01-langchain_examples.ipynb](/download/01-langchain_examples)**
+
+---
 **Trước**: [← Phần 1.1: Hiểu về Ứng Dụng AI](/blog/ai-agents/01-1-understanding-ai)  
 **Tiếp theo**: [Phần 1.3: Làm LLM Thông Minh Hơn →](/blog/ai-agents/01-3-making-llms-smarter)
-
-*— Nguyễn Đài, AI Engineer @ PIXTA Vietnam*  
-*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
 
 </LangVI>

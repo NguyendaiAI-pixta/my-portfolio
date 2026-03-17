@@ -13,7 +13,7 @@ const posts = (await getCollection('blog')).sort(
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
 		<style>
@@ -30,23 +30,18 @@ const posts = (await getCollection('blog')).sort(
 				margin-bottom: 0.5rem;
 				color: white;
 			}
-			.hero .subtitle {
-				font-size: 1.5rem;
+			.hero .tagline {
+				font-size: 1.4rem;
 				font-weight: 600;
-				margin-bottom: 1rem;
+				margin-bottom: 1.2rem;
 				opacity: 0.95;
 			}
-			.hero .company {
-				font-size: 1.1rem;
-				opacity: 0.85;
-				margin-bottom: 1.5rem;
-			}
 			.hero p {
-				font-size: 1.2rem;
+				font-size: 1.15rem;
 				opacity: 0.9;
-				max-width: 600px;
+				max-width: 620px;
 				margin: 0 auto 0.5rem;
-				line-height: 1.6;
+				line-height: 1.7;
 			}
 			.cta-buttons {
 				display: flex;
@@ -136,40 +131,50 @@ const posts = (await getCollection('blog')).sort(
 	<body>
 		<Header />
 		<main>
+			<!-- ✅ HERO: Tập trung vào người đọc, không phải tác giả -->
 			<div class="hero">
-				<h1>👋 Hi, I'm {SITE_AUTHOR}</h1>
-				<p class="subtitle">Building intelligent systems and sharing AI knowledge</p>
-				<p>Passionate about Computer Vision, LLM, AI Agents, MLOps, and sharing practical insights</p>
+				<h1>👋 Tớ là Mèo Máy</h1>
+				<p class="tagline">Học AI không cần phải bắt đầu bằng cách bị overwhelmed.</p>
+				<p>
+					Blog này dành cho người mới học, người đang chuyển ngành, và bất kỳ ai muốn trở thành
+					AI Engineer nhưng chưa biết bắt đầu từ đâu.
+				</p>
+				<p>
+					Tớ chia sẻ lộ trình, kiến thức nền và hướng dẫn thực hành — viết theo cách mà tớ ước
+					gì đã có người giải thích cho mình hồi mới bắt đầu.
+				</p>
 				<div class="cta-buttons">
-					<a href="/blog" class="cta-btn cta-primary">📚 Read My Blog</a>
-					<a href="/about" class="cta-btn cta-secondary">ℹ️ About This Blog</a>
+					<a href="/blog" class="cta-btn cta-primary">📚 Đọc Blog</a>
+					<a href="/about" class="cta-btn cta-secondary">ℹ️ Về Blog này</a>
 				</div>
 			</div>
 
+			<!-- ✅ Section: Định vị theo giá trị production-ready, nhất quán với about.astro -->
 			<section class="section">
-				<h2>What I Do</h2>
+				<h2>Tớ viết về gì?</h2>
 				<div class="features">
 					<div class="feature-card">
-						<div class="feature-icon">🤖</div>
-						<h3>AI Engineering</h3>
-						<p>Building and deploying Computer Vision & Deep Learning systems — from research to production-ready MLOps pipelines.</p>
+						<div class="feature-icon">🗺️</div>
+						<h3>Lộ trình & Định hướng</h3>
+						<p>Lộ trình và bộ kỹ năng thực chiến của một AI Engineer — từ nền tảng đến những gì thực sự được yêu cầu trong môi trường làm việc thực tế.</p>
 					</div>
 					<div class="feature-card">
-						<div class="feature-icon">✍️</div>
-						<h3>Knowledge Sharing</h3>
-						<p>Writing about AI research, practical ML techniques, and lessons learned from real-world projects.</p>
+						<div class="feature-icon">🛠️</div>
+						<h3>Kiến thức chuyên sâu</h3>
+						<p>LLM, AI Agents, MLOps — mỗi chủ đề được xây dựng từ nền tảng đến production-ready, với kiến thức bạn có thể đưa vào CV và áp dụng trực tiếp khi đi làm.</p>
 					</div>
 					<div class="feature-card">
-						<div class="feature-icon">🔬</div>
-						<h3>Research</h3>
-						<p>Reading and implementing state-of-the-art papers, running experiments, and pushing the boundaries of what AI can do.</p>
+						<div class="feature-icon">💡</div>
+						<h3>Góc nhìn từ thực tế</h3>
+						<p>Không chỉ lý thuyết — tớ chia sẻ những gì thực sự xảy ra trong production, bao gồm cả những bài học rút ra từ sai lầm để bạn không phải mắc lại từ đầu.</p>
 					</div>
 				</div>
 			</section>
 
+			<!-- ✅ Việt hóa toàn bộ cho nhất quán -->
 			{posts.length > 0 && (
 				<section class="section">
-					<h2>Latest Blog Posts</h2>
+					<h2>Bài viết mới nhất</h2>
 					<div class="latest-posts">
 						{posts.map((post) => (
 							<div class="post-preview">
@@ -180,12 +185,12 @@ const posts = (await getCollection('blog')).sort(
 									<FormattedDate date={post.data.pubDate} />
 								</p>
 								<p>{post.data.description}</p>
-								<a href={`/blog/${post.id}/`}>Read more →</a>
+								<a href={`/blog/${post.id}/`}>Đọc tiếp →</a>
 							</div>
 						))}
 					</div>
 					<p style="text-align: center; margin-top: 2rem;">
-						<a href="/blog" style="color: var(--accent); font-weight: bold;">View all posts →</a>
+						<a href="/blog" style="color: var(--accent); font-weight: bold;">Xem tất cả bài viết →</a>
 					</p>
 				</section>
 			)}

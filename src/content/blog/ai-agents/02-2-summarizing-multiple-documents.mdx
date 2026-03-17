@@ -26,6 +26,8 @@ This process, as shown in Figure 2.2, builds on the MapReduce technique we cover
 
 In this approach, content from each raw text source is loaded into a corresponding Document instance. During the map operation, these Document objects are converted into individual summaries, which are then combined into a single summary during the reduce operation.
 
+> **📝 NOTE:** The code examples for this article are included in the notebook from Part 2.1. You can download it from the previous article: [Part 2.1: Summarizing Text with LangChain](/blog/ai-agents/02-1-summarizing-text-langchain#download-code-examples)
+
 ---
 
 ## The Refine Technique: An Alternative Approach
@@ -35,7 +37,9 @@ Next, I'll introduce you to an alternative technique called **refine**, as illus
 ![Summarizing across documents using the refine technique](/src/assets/blog/ai-agents/summarization-across-documents-refine.png)
 *Figure 2.3: Summarizing across documents using the refine technique. The final summary is built progressively by refining it with each document.*
 
-Here's how it works: each document is sent to the LLM for summarization, along with the current draft of the summary. This continues until all documents are processed, leading to the final summary.
+Here's how it works: at each iteration, the LLM receives **two inputs**: (1) a new document to process and (2) the summary being built from previous documents. The LLM then refines the current summary by incorporating information from the new document. This process repeats until all documents have been processed, producing the complete final summary.
+
+**Think of it like writing a research paper**: You start with a rough outline after reading the first source. With each additional source you read, you refine and expand your outline, adding new insights while maintaining the core narrative. By the time you've read all sources, you have a comprehensive summary that captures the essence of everything.
 
 **When to use which technique?**
 - **MapReduce**: Works well for summarizing large volumes of text, where some content loss is acceptable to manage the processing load. It's also faster because chunks can be processed in parallel.
@@ -253,10 +257,8 @@ The choice ultimately depends on your specific requirements around speed, contex
 ---
 
 **Previous**: [← Part 2.1: Summarizing Text with LangChain](/blog/ai-agents/02-1-summarizing-text-langchain)  
-**Next**: [Part 2.3: Agentic Summarization Systems →](/blog/ai-agents/02-3-agentic-summarization-systems)
+**Next**: [Part 2.3: Agentic Workflows with LangGraph →](/blog/ai-agents/02-3-agentic-workflows-langgraph)
 
-*— Nguyen Dai, AI Engineer @ PIXTA Vietnam*  
-*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
 
 </LangEN>
 
@@ -271,6 +273,8 @@ Quá trình này, như được hiển thị trong Hình 2.2, xây dựng dựa 
 
 Trong phương pháp này, nội dung từ mỗi nguồn văn bản được load vào một Document instance tương ứng. Trong map operation, các Document objects này được chuyển đổi thành các bản tóm tắt riêng lẻ, sau đó được kết hợp thành một bản tóm tắt duy nhất trong reduce operation.
 
+> **📝 LƯU Ý:** Các ví dụ code cho bài viết này đã được bao gồm trong notebook từ Phần 2.1. Bạn có thể tải xuống từ bài trước: [Phần 2.1: Tóm Tắt Văn Bản với LangChain](/blog/ai-agents/02-1-summarizing-text-langchain#tải-code-mẫu)
+
 ---
 
 ## Kỹ Thuật Refine: Phương Pháp Thay Thế
@@ -280,7 +284,9 @@ Tiếp theo, tôi sẽ giới thiệu cho bạn một kỹ thuật thay thế g�
 ![Tóm tắt trên nhiều tài liệu sử dụng kỹ thuật refine](/src/assets/blog/ai-agents/summarization-across-documents-refine.png)
 *Hình 2.3: Tóm tắt trên nhiều tài liệu sử dụng kỹ thuật refine. Bản tóm tắt cuối cùng được xây dựng dần dần bằng cách tinh chỉnh nó với mỗi tài liệu.*
 
-Đây là cách nó hoạt động: mỗi tài liệu được gửi đến LLM để tóm tắt, cùng với bản nháp hiện tại của bản tóm tắt. Điều này tiếp tục cho đến khi tất cả các tài liệu được xử lý, dẫn đến bản tóm tắt cuối cùng.
+Đây là cách nó hoạt động: ở mỗi bước lặp, LLM nhận **hai đầu vào**: (1) một tài liệu mới cần xử lý và (2) bản tóm tắt đang được xây dựng từ các tài liệu trước đó. LLM sau đó tinh chỉnh bản tóm tắt hiện tại bằng cách bổ sung thông tin từ tài liệu mới. Quá trình này lặp lại cho đến khi tất cả các tài liệu được xử lý, tạo ra bản tóm tắt cuối cùng hoàn chỉnh.
+
+**Hãy nghĩ về nó như việc viết một bài nghiên cứu**: Bạn bắt đầu với một dàn ý thô sau khi đọc nguồn đầu tiên. Với mỗi nguồn bổ sung bạn đọc, bạn tinh chỉnh và mở rộng dàn ý của mình, thêm những góc nhìn mới trong khi duy trì luồng chính. Khi bạn đã đọc hết tất cả các nguồn, bạn có một bản tóm tắt toàn diện nắm bắt được bản chất của mọi thứ.
 
 **Khi nào nên sử dụng kỹ thuật nào?**
 - **MapReduce**: Hoạt động tốt cho việc tóm tắt khối lượng lớn văn bản, nơi một số mất mát nội dung có thể chấp nhận được để quản lý khối lượng xử lý. Nó cũng nhanh hơn vì các chunks có thể được xử lý song song.
@@ -498,9 +504,7 @@ Lựa chọn cuối cùng phụ thuộc vào yêu cầu cụ thể của bạn v
 ---
 
 **Trước đó**: [← Part 2.1: Tóm Tắt Văn Bản với LangChain](/blog/ai-agents/02-1-summarizing-text-langchain)  
-**Tiếp theo**: [Part 2.3: Hệ Thống Tóm Tắt Agentic →](/blog/ai-agents/02-3-agentic-summarization-systems)
+**Tiếp theo**: [Part 2.3: Agentic Workflows với LangGraph →](/blog/ai-agents/02-3-agentic-workflows-langgraph)
 
-*— Nguyễn Đài, AI Engineer @ PIXTA Vietnam*  
-*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
 
 </LangVI>

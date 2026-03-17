@@ -4,11 +4,11 @@
 export const SITE_TITLE = 'AI Knowledge Hub';
 export const SITE_DESCRIPTION = 'Hệ thống kiến thức AI từ cơ bản đến chuyên sâu - Computer Vision, LLM, Agents, MLOps, LLMOps';
 export const SITE_AUTHOR = 'AI Engineer';
-export const SITE_EMAIL = 'nguyendai53100@gmail.com';
+export const SITE_EMAIL = 'forworkainguyendai@gmail.com';
 
 // Social Links
 export const SOCIAL_LINKS = {
-  email: 'nguyendai53100@gmail.com'
+  email: 'forworkainguyendai@gmail.com'
 };
 
 // ===== MONETIZATION CONFIGURATION =====

@@ -1,0 +1,661 @@
+---
+title: 'Part 2.3.1: Building Agentic Workflows with LangGraph - Practical Implementation'
+description: 'Hands-on guide to transforming a LangChain web research assistant into an agentic workflow using LangGraph with state management and conditional routing.'
+pubDate: 'Mar 09 2026'
+category: 'AI Agents & Applications'
+tags: ['llm', 'langgraph', 'agents', 'workflows', 'hands-on', 'tutorial']
+---
+
+import LangToggle from '../../../components/LangToggle.astro';
+import LangEN from '../../../components/LangEN.astro';
+import LangVI from '../../../components/LangVI.astro';
+
+> **Series**: AI Agents & Applications with LangChain, LangGraph and MCP  
+> **Part**: 2.3.1 — Building Agentic Workflows with LangGraph: Practical Implementation  
+> **Prerequisites**: [Part 2.3: Agentic Workflows with LangGraph](/blog/ai-agents/02-3-agentic-workflows-langgraph)
+
+<LangToggle />
+
+<LangEN>
+
+This article is the **hands-on companion** to Part 2.3, where we explored the fundamentals of agentic workflows and LangGraph. Here, we'll put those concepts into practice by transforming a real application.
+
+> **💻 CODE DOWNLOAD:** The complete code for this tutorial is available for download:  
+> [Download ch05.zip](/code/building-llm-applications/ch05.zip) — Extract and follow along with the implementation.
+
+---
+
+## Turning the Web Research Assistant into an AI Agent
+
+To demonstrate how LangGraph works, I'll show you how to transform the web research assistant originally built with LangChain into an agent-based system. This upgrade allows the application to assess the relevance of summaries from web page results and, if less than 50% of them are relevant, redirect the flow back to generating new search queries. If enough summaries are relevant, the application can proceed to write the final report as usual. 
+
+Achieving this level of dynamic control would be very complex with plain LangChain, which justifies the move to an agent-based approach with LangGraph. This case study guides you through each step, highlighting the benefits of explicit state management and modular design.
+
+---
+
+## Original LangChain Implementation Overview
+
+Our original web research assistant used LangChain's sequential chains. The process followed these steps:
+
+1. Choose the appropriate research assistant based on the user's question.
+2. Generate search queries.
+3. Perform web searches, and collect URLs.
+4. Scrape and summarize each search result.
+5. Compile a final research report.
+
+Each step fed its output into the next step. You can see this in the following extract from the original implementation:
+
+```python
+assistant_instructions_chain = (
+    {'user_question': RunnablePassthrough()}
+    | ASSISTANT_SELECTION_PROMPT_TEMPLATE
+    | get_llm()
+    | StrOutputParser()
+    | to_obj
+)
+
+web_searches_chain = (
+    # ...input processing...
+    | WEB_SEARCH_PROMPT_TEMPLATE
+    | get_llm()
+    | StrOutputParser()
+    | to_obj
+)
+
+web_research_chain = (
+    assistant_instructions_chain
+    | web_searches_chain
+    | search_and_summarization_chain.map()
+    | RunnableLambda(lambda x: # ...process results...)
+    | RESEARCH_REPORT_PROMPT_TEMPLATE
+    | get_llm()
+    | StrOutputParser()
+)
+```
+
+This approach works but has clear limitations:
+
+- **The flow is rigid and linear**, making it difficult to adapt dynamically based on intermediate results. For instance, a conditional flow that redirects the application to generate new search queries if less than 50% of the summaries are relevant would be cumbersome to implement.
+
+- **Error handling is challenging**, as the lack of explicit state makes it hard to track and manage failures effectively.
+
+- **State isn't explicitly managed**, which complicates maintaining context across multiple steps.
+
+- **Debugging becomes difficult** when issues arise, especially with complex flows, because it's unclear which part of the chain failed or why.
+
+---
+
+## Identifying Components for Conversion
+
+To convert the web research assistant to LangGraph, let's first identify the key components that will serve as nodes. Each node handles a specific part of the process:
+
+- **Assistant Selector**—Determines which type of research assistant to use based on the user's question
+- **Query Generator**—Creates search queries derived from the user's input
+- **Web Searcher**—Conducts searches and gathers URLs based on the generated queries
+- **Content Summarizer**—Scrapes and summarizes the content of web pages
+- **Relevance Evaluator**—Assesses if the summaries are relevant enough to proceed or if new search queries are needed
+- **Report Writer**—Compiles the final research report using the relevant summaries
+
+Unlike a simple linear flow, this setup introduces a conditional element. After evaluating the relevance of the summaries, the flow can either proceed to the Report Writer if enough content is relevant or redirect back to the Query Generator to create new search queries. This decision is based on a defined threshold (e.g., if less than 50% of summaries are relevant) and can repeat up to a maximum of three iterations to avoid infinite loops.
+
+The flow control is managed by a conditional routing function, `route_based_on_relevance`, which checks the relevance of the search results and the current iteration count. If the relevance is insufficient and the maximum number of iterations hasn't been reached, the application generates new queries and repeats the search and evaluation steps. If the maximum iteration count is reached, the application proceeds to compile a report using the available results, regardless of their relevance.
+
+For each component, we define the following:
+
+- **Input state**—The data each node requires to function
+- **Processing**—The tasks each node performs
+- **State updates**—The information each node returns to update the overall state
+
+This modular and conditional approach makes the system flexible and adaptive, which would be cumbersome to achieve with plain LangChain's linear chains. Next, let's start the transformation process.
+
+---
+
+## Step-by-Step Transformation Process
+
+Now I'll guide you through the process of converting a LangChain application to LangGraph.
+
+### Step 1: Define the State
+
+The first step is to design the state structure that will flow through the graph. A well-defined state helps you keep track of data across all nodes. In our case, we'll model a composite state using inner types, as shown in the following listing. This state structure clearly defines the data available at each stage, reducing ambiguity and simplifying debugging.
+
+```python
+from typing import List, Dict, Any, TypedDict, Optional
+
+class AssistantInfo(TypedDict):
+    assistant_type: str
+    assistant_instructions: str
+    user_question: str
+
+class SearchQuery(TypedDict):
+    search_query: str
+    user_question: str
+
+class SearchResult(TypedDict):
+    result_url: str
+    search_query: str
+    user_question: str
+    is_fallback: Optional[bool]
+
+class SearchSummary(TypedDict):
+    summary: str
+    result_url: str
+    user_question: str
+    is_fallback: Optional[bool]
+
+class ResearchReport(TypedDict):
+    report: str
+
+class ResearchState(TypedDict):
+    user_question: str
+    assistant_info: Optional[AssistantInfo]
+    search_queries: Optional[List[SearchQuery]]
+    search_results: Optional[List[SearchResult]]
+    search_summaries: Optional[List[SearchSummary]]
+    research_summary: Optional[str]
+    final_report: Optional[str]
+    used_fallback_search: Optional[bool]
+    relevance_evaluation: Optional[Dict[str, Any]]
+    should_regenerate_queries: Optional[bool]
+    iteration_count: Optional[int]
+```
+
+### Step 2: Convert Components to Node Functions
+
+Next, we'll convert each component into a node function. Each function takes the current state, processes it, and returns updated state information, as you can see in the next listing.
+
+```python
+def select_assistant(state: dict) -> dict:
+    """Select the appropriate research assistant."""
+    user_question = state["user_question"]
+    
+    # Use the LLM to select an assistant
+    prompt = ASSISTANT_SELECTION_PROMPT_TEMPLATE.format(
+        user_question=user_question
+    )
+    response = get_llm().invoke(prompt)
+    assistant_info = parse_assistant_info(response.content)
+    
+    return {"assistant_info": assistant_info}
+
+def generate_search_queries(state: dict) -> dict:
+    """Generate search queries based on the question."""
+    assistant_info = state["assistant_info"]
+    user_question = state["user_question"]
+    
+    prompt = WEB_SEARCH_PROMPT_TEMPLATE.format(
+        assistant_instructions=assistant_info["assistant_instructions"],
+        user_question=user_question,
+        num_search_queries=3
+    )
+    response = get_llm().invoke(prompt)
+    search_queries = parse_search_queries(response.content)
+    
+    return {"search_queries": search_queries}
+```
+
+Additional node functions follow the same pattern, each handling its own task. Next, I'll define the graph structure.
+
+### Step 3: Define the Graph Structure
+
+With node functions in place, we'll create the graph and define how the nodes connect, establishing the execution order and data flow, as shown in the following listing. Unlike a simple linear chain, this version of the graph introduces a new node for relevance evaluation and a conditional edge that dynamically alters the flow based on the relevance of the search results.
+
+```python
+from langgraph.graph import StateGraph, END
+
+graph = StateGraph(ResearchState)
+
+graph.add_node("select_assistant", select_assistant)
+graph.add_node("generate_search_queries", generate_search_queries)
+graph.add_node("perform_web_searches", perform_web_searches)
+graph.add_node("summarize_search_results", summarize_search_results)
+graph.add_node("evaluate_search_relevance", evaluate_search_relevance)
+graph.add_node("write_research_report", write_research_report)
+
+def route_based_on_relevance(state):
+    iteration_count = state.get("iteration_count", 0) + 1
+    state["iteration_count"] = iteration_count
+    
+    if iteration_count >= 3:
+        return "write_research_report"
+    
+    if state.get("should_regenerate_queries", False):
+        return "generate_search_queries"
+    
+    return "write_research_report"
+
+graph.add_edge("select_assistant", "generate_search_queries")
+graph.add_edge("generate_search_queries", "perform_web_searches")
+graph.add_edge("perform_web_searches", "summarize_search_results")
+graph.add_edge("summarize_search_results", "evaluate_search_relevance")
+graph.add_edge("write_research_report", END)
+
+graph.add_conditional_edges(
+    "evaluate_search_relevance",
+    route_based_on_relevance,
+    {
+        "generate_search_queries": "generate_search_queries",
+        "write_research_report": "write_research_report"
+    }
+)
+
+graph.set_entry_point("select_assistant")
+```
+
+The new Relevance Evaluator node checks to see if enough of the summarized results are relevant. If less than 50% of the results meet the criteria, the graph redirects the flow back to the Query Generator to refine the search. If the summaries are sufficient or if the maximum of three iterations is reached, it moves forward to compile the final report. This conditional flow is a significant enhancement over the rigid linear chains of LangChain, allowing the system to adapt dynamically based on intermediate results.
+
+### Step 4: Compile and Run the Graph
+
+After defining the graph, we'll compile and run it using an initial state, as shown in the following listing. This step involves setting up an initial state with all required fields, including additional parameters for controlling the conditional flow, such as `should_regenerate_queries` and `iteration_count`.
+
+```python
+app = graph.compile()
+
+initial_state = {
+    "user_question": "What can you tell me about Astorga's roman spas?",
+    "assistant_info": None,
+    "search_queries": None,
+    "search_results": None,
+    "search_summaries": None,
+    "research_summary": None,
+    "final_report": None,
+    "used_fallback_search": False,
+    "relevance_evaluation": None,
+    "should_regenerate_queries": None,
+    "iteration_count": 0
+}
+
+result = app.invoke(initial_state)
+final_report = result["final_report"]
+```
+
+By introducing conditional edges and relevance evaluation, this step-by-step process transforms a rigid, linear chain into a flexible, stateful, and adaptive agent-based workflow. The system can now evaluate its own results, adapt by refining search queries if needed, and ensure that the final report is based on sufficiently relevant information. This adaptability would be cumbersome to implement in plain LangChain, justifying the shift to LangGraph for complex LLM applications.
+
+---
+
+## Code Comparison and Benefits Realized
+
+This case study demonstrates how LangGraph enhances flexibility, control, and adaptability in complex, multi-step AI applications compared to traditional LangChain chains. The ability to implement conditional flows based on runtime evaluations makes LangGraph a powerful choice for building smart, context-aware agent-based systems.
+
+Specifically, the LangGraph approach offers the following significant benefits:
+
+- **Explicit state management**—The state is clearly defined and passed through each node, making data handling transparent and reliable.
+
+- **Modular components**—Each node handles a single task, simplifying testing, debugging, and maintenance.
+
+- **Clear flow control**—The graph structure visually represents the execution order and data flow, making it easier to trace and understand complex processes.
+
+- **Easier debugging**—With well-defined nodes and edges, it's straightforward to identify where errors occur and what data caused them.
+
+- **Enhanced error handling**—Each node can implement specific error-handling strategies without affecting the rest of the system.
+
+- **Conditional flow control**—The introduction of conditional edges based on relevance evaluation allows the application to dynamically alter its path—either refining search queries if results are insufficient or proceeding to report writing. This adaptability ensures that the application can respond intelligently to intermediate results, which would be cumbersome to implement in plain LangChain.
+
+- **Future extensibility**—Adding or modifying nodes requires minimal changes to the overall system, allowing for smooth upgrades and new capabilities.
+
+---
+
+## Summary: Part 2.3 - Agentic Workflows with LangGraph
+
+> **Note**: This summary covers both the theoretical foundations from [Part 2.3](/blog/ai-agents/02-3-agentic-workflows-langgraph) and the practical implementation in this article.
+
+- Agentic workflows execute predefined steps in sequence. Agents dynamically select tools and adjust paths based on intermediate results or errors.
+
+- LangGraph builds workflows as directed graphs. Nodes represent processing functions, edges define transitions, and conditional edges route execution based on the runtime state. Research assistants demonstrate this by deciding whether to search more sources or compile results based on content quality from previous searches.
+
+- State management tracks data across workflow steps using typed state objects that nodes read from and write to. State is immutable per node but accumulates across the graph.
+
+- Conditional edges route execution based on runtime conditions. A research workflow might loop back to search if retrieved content is insufficient, or it might proceed to synthesis if enough sources are found.
+
+- The `StateGraph` class defines the workflow structure. Node functions perform discrete tasks (search, parse, summarize), and edges connect them based on the logic you define.
+
+- Converting linear chains to LangGraph graphs separates concerns into discrete nodes. This simplifies debugging, testing, and extending workflows with new capabilities.
+
+- LangGraph workflows preserve execution history and intermediate states. You can inspect reasoning paths, replay workflows from checkpoints, or branch from previous decisions. These capabilities are difficult to implement in simple LangChain chains.
+
+- Define state using Python `TypedDict` for strong typing: `class ResearchState(TypedDict): question: str; search_queries: list[str]; results: list[dict]`. This ensures that data flowing between nodes is type-checked.
+
+- Create a graph with `graph = StateGraph(ResearchState)` where `ResearchState` is your typed state definition. This enforces that all nodes receive and return compatible state structures.
+
+- Add nodes with `graph.add_node("node_name", node_function)` where `node_function` is a Python function that takes state and returns state updates. Node functions should be pure functions when possible.
+
+- Connect nodes with `graph.add_edge("source_node", "destination_node")` to create directed data flow. This establishes the execution order between nodes.
+
+- Define the entry point with `graph.set_entry_point("first_node")` or use the `START` constant to mark where execution begins. The first node receives the initial state.
+
+- Mark endpoints with `graph.add_edge("final_node", END)` to indicate workflow termination. Execution stops when reaching `END`, returning the final state.
+
+- Compile the graph with `app = graph.compile()` before execution. This validates the graph structure and creates an executable application.
+
+- Node functions receive current state as input and return partial state updates (not full state replacement). Return only the fields you want to update: `return {"search_queries": queries}`.
+
+- Add conditional edges with `graph.add_conditional_edges("source_node", router_function, {"option1": "node1", "option2": "node2"})`. The router function returns a string matching one of the options.
+
+- Router functions for conditional edges must return string values matching the next node names. Use if logic to determine routing: `return "search_more" if len(results) < 3 else "write_report"`.
+
+- LangGraph extends LangChain, not replaces it. Use LangChain components (LLMs, retrievers, embeddings) as building blocks within LangGraph nodes for complex workflows.
+
+---
+
+</LangEN>
+
+<LangVI>
+
+Bài viết này là **phần thực hành** đi kèm với Phần 2.3, nơi chúng ta đã khám phá các nguyên tắc cơ bản về agentic workflows và LangGraph. Ở đây, chúng ta sẽ áp dụng các khái niệm đó vào thực tế bằng cách chuyển đổi một ứng dụng thực.
+
+> **💻 TẢI CODE MẪU:** Code hoàn chỉnh cho bài hướng dẫn này có sẵn để tải về:  
+> [Tải ch05.zip](/code/building-llm-applications/ch05.zip) — Giải nén và thực hành theo hướng dẫn.
+
+---
+
+## Chuyển Đổi Web Research Assistant Thành AI Agent
+
+Để minh họa cách LangGraph hoạt động, tôi sẽ chỉ cho bạn cách chuyển đổi web research assistant ban đầu được xây dựng bằng LangChain—thành một hệ thống dựa trên agent. Nâng cấp này cho phép ứng dụng đánh giá mức độ liên quan của các bản tóm tắt từ kết quả trang web và, nếu ít hơn 50% trong số chúng có liên quan, chuyển hướng luồng trở lại việc tạo các truy vấn tìm kiếm mới. Nếu đủ số lượng bản tóm tắt có liên quan, ứng dụng có thể tiến hành viết báo cáo cuối cùng như bình thường.
+
+Đạt được mức độ kiểm soát động này sẽ rất phức tạp với LangChain thuần túy, điều này chứng minh cho việc chuyển sang cách tiếp cận dựa trên agent với LangGraph. Case study này hướng dẫn bạn qua từng bước, nêu bật lợi ích của việc quản lý trạng thái rõ ràng và thiết kế theo module.
+
+---
+
+## Tổng Quan Về Implementation LangChain Ban Đầu
+
+Web research assistant ban đầu của chúng ta sử dụng sequential chains của LangChain. Quy trình tuân theo các bước sau:
+
+1. Chọn research assistant phù hợp dựa trên câu hỏi của người dùng.
+2. Tạo các truy vấn tìm kiếm.
+3. Thực hiện tìm kiếm web và thu thập URLs.
+4. Scrape và tóm tắt mỗi kết quả tìm kiếm.
+5. Biên soạn báo cáo nghiên cứu cuối cùng.
+
+Mỗi bước đưa output của nó vào bước tiếp theo. Bạn có thể thấy điều này trong đoạn trích sau từ implementation ban đầu:
+
+```python
+assistant_instructions_chain = (
+    {'user_question': RunnablePassthrough()}
+    | ASSISTANT_SELECTION_PROMPT_TEMPLATE
+    | get_llm()
+    | StrOutputParser()
+    | to_obj
+)
+
+web_searches_chain = (
+    # ...input processing...
+    | WEB_SEARCH_PROMPT_TEMPLATE
+    | get_llm()
+    | StrOutputParser()
+    | to_obj
+)
+
+web_research_chain = (
+    assistant_instructions_chain
+    | web_searches_chain
+    | search_and_summarization_chain.map()
+    | RunnableLambda(lambda x: # ...process results...)
+    | RESEARCH_REPORT_PROMPT_TEMPLATE
+    | get_llm()
+    | StrOutputParser()
+)
+```
+
+Cách tiếp cận này hoạt động nhưng có những hạn chế rõ ràng:
+
+- **Luồng cứng nhắc và tuyến tính**, khiến việc thích ứng một cách linh hoạt dựa trên kết quả trung gian trở nên khó khăn. Ví dụ, một luồng có điều kiện chuyển hướng ứng dụng để tạo các truy vấn tìm kiếm mới nếu ít hơn 50% các bản tóm tắt có liên quan sẽ rất cồng kềnh để triển khai.
+
+- **Xử lý lỗi là thách thức**, vì thiếu state rõ ràng khiến việc theo dõi và quản lý các lỗi một cách hiệu quả trở nên khó khăn.
+
+- **State không được quản lý rõ ràng**, điều này làm phức tạp việc duy trì ngữ cảnh qua nhiều bước.
+
+- **Debugging trở nên khó khăn** khi có vấn đề phát sinh, đặc biệt với các luồng phức tạp, vì không rõ phần nào của chain bị lỗi hoặc tại sao.
+
+---
+
+## Xác Định Các Thành Phần Để Chuyển Đổi
+
+Để chuyển đổi web research assistant sang LangGraph, trước tiên hãy xác định các thành phần chính sẽ đóng vai trò là các nodes. Mỗi node xử lý một phần cụ thể của quy trình:
+
+- **Assistant Selector**—Xác định loại research assistant nào sẽ sử dụng dựa trên câu hỏi của người dùng
+- **Query Generator**—Tạo các truy vấn tìm kiếm từ input của người dùng
+- **Web Searcher**—Thực hiện tìm kiếm và thu thập URLs dựa trên các truy vấn đã tạo
+- **Content Summarizer**—Scrape và tóm tắt nội dung của các trang web
+- **Relevance Evaluator**—Đánh giá xem các bản tóm tắt có đủ liên quan để tiếp tục hay cần tạo các truy vấn tìm kiếm mới
+- **Report Writer**—Biên soạn báo cáo nghiên cứu cuối cùng bằng các bản tóm tắt có liên quan
+
+Khác với luồng tuyến tính đơn giản, thiết lập này giới thiệu một yếu tố có điều kiện. Sau khi đánh giá mức độ liên quan của các bản tóm tắt, luồng có thể tiến tới Report Writer nếu đủ nội dung có liên quan hoặc chuyển hướng trở lại Query Generator để tạo các truy vấn tìm kiếm mới. Quyết định này dựa trên một ngưỡng xác định (ví dụ: nếu ít hơn 50% bản tóm tắt có liên quan) và có thể lặp lại tối đa ba lần để tránh vòng lặp vô hạn.
+
+Kiểm soát luồng được quản lý bởi một hàm định tuyến có điều kiện, `route_based_on_relevance`, kiểm tra mức độ liên quan của kết quả tìm kiếm và số lần lặp hiện tại. Nếu mức độ liên quan không đủ và số lần lặp tối đa chưa đạt được, ứng dụng tạo các truy vấn mới và lặp lại các bước tìm kiếm và đánh giá. Nếu số lần lặp tối đa đã đạt, ứng dụng tiến hành biên soạn báo cáo bằng các kết quả có sẵn, bất kể mức độ liên quan của chúng.
+
+Đối với mỗi thành phần, chúng ta định nghĩa những điều sau:
+
+- **Input state**—Dữ liệu mà mỗi node cần để hoạt động
+- **Processing**—Các tác vụ mà mỗi node thực hiện
+- **State updates**—Thông tin mà mỗi node trả về để cập nhật state tổng thể
+
+Cách tiếp cận theo module và có điều kiện này làm cho hệ thống linh hoạt và thích ứng, điều này sẽ rất cồng kềnh để đạt được với linear chains thuần túy của LangChain. Tiếp theo, hãy bắt đầu quá trình chuyển đổi.
+
+---
+
+## Quy Trình Chuyển Đổi Từng Bước
+
+Bây giờ tôi sẽ hướng dẫn bạn qua quy trình chuyển đổi một ứng dụng LangChain sang LangGraph.
+
+### Bước 1: Định Nghĩa State
+
+Bước đầu tiên là thiết kế cấu trúc state sẽ chảy qua đồ thị. Một state được định nghĩa rõ ràng giúp bạn theo dõi dữ liệu qua tất cả các nodes. Trong trường hợp của chúng ta, chúng ta sẽ mô hình hóa một composite state bằng cách sử dụng các kiểu dữ liệu bên trong, như được hiển thị trong listing sau. Cấu trúc state này định nghĩa rõ ràng dữ liệu có sẵn ở mỗi giai đoạn, giảm sự mơ hồ và đơn giản hóa việc debugging.
+
+```python
+from typing import List, Dict, Any, TypedDict, Optional
+
+class AssistantInfo(TypedDict):
+    assistant_type: str
+    assistant_instructions: str
+    user_question: str
+
+class SearchQuery(TypedDict):
+    search_query: str
+    user_question: str
+
+class SearchResult(TypedDict):
+    result_url: str
+    search_query: str
+    user_question: str
+    is_fallback: Optional[bool]
+
+class SearchSummary(TypedDict):
+    summary: str
+    result_url: str
+    user_question: str
+    is_fallback: Optional[bool]
+
+class ResearchReport(TypedDict):
+    report: str
+
+class ResearchState(TypedDict):
+    user_question: str
+    assistant_info: Optional[AssistantInfo]
+    search_queries: Optional[List[SearchQuery]]
+    search_results: Optional[List[SearchResult]]
+    search_summaries: Optional[List[SearchSummary]]
+    research_summary: Optional[str]
+    final_report: Optional[str]
+    used_fallback_search: Optional[bool]
+    relevance_evaluation: Optional[Dict[str, Any]]
+    should_regenerate_queries: Optional[bool]
+    iteration_count: Optional[int]
+```
+
+### Bước 2: Chuyển Đổi Các Thành Phần Thành Hàm Node
+
+Tiếp theo, chúng ta sẽ chuyển đổi từng thành phần thành một hàm node. Mỗi hàm nhận state hiện tại, xử lý nó và trả về thông tin state đã cập nhật, như bạn có thể thấy trong listing tiếp theo.
+
+```python
+def select_assistant(state: dict) -> dict:
+    """Chọn research assistant phù hợp."""
+    user_question = state["user_question"]
+    
+    # Sử dụng LLM để chọn assistant
+    prompt = ASSISTANT_SELECTION_PROMPT_TEMPLATE.format(
+        user_question=user_question
+    )
+    response = get_llm().invoke(prompt)
+    assistant_info = parse_assistant_info(response.content)
+    
+    return {"assistant_info": assistant_info}
+
+def generate_search_queries(state: dict) -> dict:
+    """Tạo các truy vấn tìm kiếm dựa trên câu hỏi."""
+    assistant_info = state["assistant_info"]
+    user_question = state["user_question"]
+    
+    prompt = WEB_SEARCH_PROMPT_TEMPLATE.format(
+        assistant_instructions=assistant_info["assistant_instructions"],
+        user_question=user_question,
+        num_search_queries=3
+    )
+    response = get_llm().invoke(prompt)
+    search_queries = parse_search_queries(response.content)
+    
+    return {"search_queries": search_queries}
+```
+
+Các hàm node bổ sung tuân theo cùng một mẫu, mỗi hàm xử lý tác vụ riêng của nó. Tiếp theo, tôi sẽ định nghĩa cấu trúc đồ thị.
+
+### Bước 3: Định Nghĩa Cấu Trúc Đồ Thị
+
+Với các hàm node đã có, chúng ta sẽ tạo đồ thị và định nghĩa cách các nodes kết nối, thiết lập thứ tự thực thi và luồng dữ liệu, như được hiển thị trong listing sau. Khác với chain tuyến tính đơn giản, phiên bản đồ thị này giới thiệu một node mới cho việc đánh giá mức độ liên quan và một conditional edge thay đổi luồng một cách động dựa trên mức độ liên quan của kết quả tìm kiếm.
+
+```python
+from langgraph.graph import StateGraph, END
+
+graph = StateGraph(ResearchState)
+
+graph.add_node("select_assistant", select_assistant)
+graph.add_node("generate_search_queries", generate_search_queries)
+graph.add_node("perform_web_searches", perform_web_searches)
+graph.add_node("summarize_search_results", summarize_search_results)
+graph.add_node("evaluate_search_relevance", evaluate_search_relevance)
+graph.add_node("write_research_report", write_research_report)
+
+def route_based_on_relevance(state):
+    iteration_count = state.get("iteration_count", 0) + 1
+    state["iteration_count"] = iteration_count
+    
+    if iteration_count >= 3:
+        return "write_research_report"
+    
+    if state.get("should_regenerate_queries", False):
+        return "generate_search_queries"
+    
+    return "write_research_report"
+
+graph.add_edge("select_assistant", "generate_search_queries")
+graph.add_edge("generate_search_queries", "perform_web_searches")
+graph.add_edge("perform_web_searches", "summarize_search_results")
+graph.add_edge("summarize_search_results", "evaluate_search_relevance")
+graph.add_edge("write_research_report", END)
+
+graph.add_conditional_edges(
+    "evaluate_search_relevance",
+    route_based_on_relevance,
+    {
+        "generate_search_queries": "generate_search_queries",
+        "write_research_report": "write_research_report"
+    }
+)
+
+graph.set_entry_point("select_assistant")
+```
+
+Node Relevance Evaluator mới kiểm tra xem có đủ kết quả được tóm tắt có liên quan không. Nếu ít hơn 50% kết quả đáp ứng tiêu chí, đồ thị chuyển hướng luồng trở lại Query Generator để tinh chỉnh tìm kiếm. Nếu các bản tóm tắt đủ hoặc nếu đạt tối đa ba lần lặp, nó tiến tới biên soạn báo cáo cuối cùng. Luồng có điều kiện này là một cải tiến đáng kể so với các chains tuyến tính cứng nhắc của LangChain, cho phép hệ thống thích ứng động dựa trên kết quả trung gian.
+
+### Bước 4: Compile và Chạy Đồ Thị
+
+Sau khi định nghĩa đồ thị, chúng ta sẽ compile và chạy nó bằng một initial state, như được hiển thị trong listing sau. Bước này bao gồm việc thiết lập một initial state với tất cả các trường bắt buộc, bao gồm các tham số bổ sung để kiểm soát luồng có điều kiện, chẳng hạn như `should_regenerate_queries` và `iteration_count`.
+
+```python
+app = graph.compile()
+
+initial_state = {
+    "user_question": "What can you tell me about Astorga's roman spas?",
+    "assistant_info": None,
+    "search_queries": None,
+    "search_results": None,
+    "search_summaries": None,
+    "research_summary": None,
+    "final_report": None,
+    "used_fallback_search": False,
+    "relevance_evaluation": None,
+    "should_regenerate_queries": None,
+    "iteration_count": 0
+}
+
+result = app.invoke(initial_state)
+final_report = result["final_report"]
+```
+
+Bằng cách giới thiệu conditional edges và đánh giá mức độ liên quan, quy trình từng bước này chuyển đổi một chain tuyến tính cứng nhắc thành một workflow dựa trên agent linh hoạt, có trạng thái và thích ứng. Hệ thống giờ đây có thể đánh giá kết quả của chính nó, thích ứng bằng cách tinh chỉnh các truy vấn tìm kiếm nếu cần và đảm bảo rằng báo cáo cuối cùng dựa trên thông tin đủ liên quan. Khả năng thích ứng này sẽ rất cồng kềnh để triển khai trong LangChain thuần túy, chứng minh cho việc chuyển sang LangGraph cho các ứng dụng LLM phức tạp.
+
+---
+
+## So Sánh Code và Lợi Ích Đạt Được
+
+Case study này chứng minh cách LangGraph nâng cao tính linh hoạt, khả năng kiểm soát và khả năng thích ứng trong các ứng dụng AI phức tạp, đa bước so với các chains truyền thống của LangChain. Khả năng triển khai các luồng có điều kiện dựa trên đánh giá runtime làm cho LangGraph trở thành lựa chọn mạnh mẽ để xây dựng các hệ thống dựa trên agent thông minh, nhận biết ngữ cảnh.
+
+Cụ thể, cách tiếp cận LangGraph mang lại các lợi ích đáng kể sau:
+
+- **Quản lý state rõ ràng**—State được định nghĩa rõ ràng và được truyền qua mỗi node, làm cho việc xử lý dữ liệu minh bạch và đáng tin cậy.
+
+- **Các thành phần theo module**—Mỗi node xử lý một tác vụ duy nhất, đơn giản hóa việc testing, debugging và bảo trì.
+
+- **Kiểm soát luồng rõ ràng**—Cấu trúc đồ thị trực quan hóa thứ tự thực thi và luồng dữ liệu, giúp dễ dàng theo dõi và hiểu các quy trình phức tạp.
+
+- **Debugging dễ dàng hơn**—Với các nodes và edges được định nghĩa rõ ràng, việc xác định nơi xảy ra lỗi và dữ liệu nào gây ra chúng trở nên đơn giản.
+
+- **Xử lý lỗi tốt hơn**—Mỗi node có thể triển khai các chiến lược xử lý lỗi cụ thể mà không ảnh hưởng đến phần còn lại của hệ thống.
+
+- **Kiểm soát luồng có điều kiện**—Việc giới thiệu conditional edges dựa trên đánh giá mức độ liên quan cho phép ứng dụng thay đổi đường đi một cách động—hoặc tinh chỉnh các truy vấn tìm kiếm nếu kết quả không đủ hoặc tiến hành viết báo cáo. Khả năng thích ứng này đảm bảo rằng ứng dụng có thể phản ứng một cách thông minh với các kết quả trung gian, điều này sẽ rất cồng kềnh để triển khai trong LangChain thuần túy.
+
+- **Khả năng mở rộng trong tương lai**—Thêm hoặc sửa đổi các nodes chỉ yêu cầu thay đổi tối thiểu đối với toàn bộ hệ thống, cho phép nâng cấp mượt mà và các khả năng mới.
+
+---
+
+## Tóm Tắt: Phần 2.3 - Agentic Workflows với LangGraph
+
+> **Lưu ý**: Phần tóm tắt này bao gồm cả nền tảng lý thuyết từ [Phần 2.3](/blog/ai-agents/02-3-agentic-workflows-langgraph) và phần thực hành trong bài viết này.
+
+- Agentic workflows thực thi các bước được định nghĩa trước theo trình tự. Agents tự động lựa chọn công cụ và điều chỉnh đường đi dựa trên kết quả trung gian hoặc lỗi.
+
+- LangGraph xây dựng workflows dưới dạng đồ thị có hướng. Nodes đại diện cho các hàm xử lý, edges định nghĩa các chuyển đổi và conditional edges định tuyến việc thực thi dựa trên trạng thái runtime. Research assistants minh họa điều này bằng cách quyết định xem nên tìm kiếm thêm nguồn hay biên soạn kết quả dựa trên chất lượng nội dung từ các tìm kiếm trước đó.
+
+- Quản lý state theo dõi dữ liệu qua các bước workflow bằng cách sử dụng các typed state objects mà các nodes đọc từ và ghi vào. State là bất biến (immutable) cho mỗi node nhưng tích lũy qua đồ thị.
+
+- Conditional edges định tuyến việc thực thi dựa trên các điều kiện runtime. Một research workflow có thể quay lại tìm kiếm nếu nội dung thu thập không đủ, hoặc có thể tiến hành tổng hợp nếu tìm đủ nguồn.
+
+- Class `StateGraph` định nghĩa cấu trúc workflow. Các hàm node thực hiện các tác vụ riêng biệt (search, parse, summarize), và các edges kết nối chúng dựa trên logic bạn định nghĩa.
+
+- Chuyển đổi linear chains sang LangGraph graphs tách các mối quan tâm thành các nodes riêng biệt. Điều này đơn giản hóa debugging, testing và mở rộng workflows với các khả năng mới.
+
+- LangGraph workflows bảo tồn lịch sử thực thi và các trạng thái trung gian. Bạn có thể kiểm tra các đường suy luận, replay workflows từ checkpoints hoặc phân nhánh từ các quyết định trước đó. Các khả năng này rất khó triển khai trong LangChain chains đơn giản.
+
+- Định nghĩa state bằng Python `TypedDict` để có strong typing: `class ResearchState(TypedDict): question: str; search_queries: list[str]; results: list[dict]`. Điều này đảm bảo rằng dữ liệu chảy giữa các nodes được kiểm tra kiểu.
+
+- Tạo một graph với `graph = StateGraph(ResearchState)` trong đó `ResearchState` là định nghĩa state có kiểu của bạn. Điều này đảm bảo rằng tất cả các nodes nhận và trả về các cấu trúc state tương thích.
+
+- Thêm nodes với `graph.add_node("node_name", node_function)` trong đó `node_function` là một hàm Python nhận state và trả về state updates. Các hàm node nên là pure functions khi có thể.
+
+- Kết nối các nodes với `graph.add_edge("source_node", "destination_node")` để tạo luồng dữ liệu có hướng. Điều này thiết lập thứ tự thực thi giữa các nodes.
+
+- Định nghĩa điểm bắt đầu với `graph.set_entry_point("first_node")` hoặc sử dụng hằng số `START` để đánh dấu nơi bắt đầu thực thi. Node đầu tiên nhận initial state.
+
+- Đánh dấu các điểm kết thúc với `graph.add_edge("final_node", END)` để chỉ ra sự kết thúc workflow. Việc thực thi dừng lại khi đạt đến `END`, trả về final state.
+
+- Compile graph với `app = graph.compile()` trước khi thực thi. Điều này xác thực cấu trúc graph và tạo một ứng dụng có thể thực thi.
+
+- Các hàm node nhận current state làm input và trả về partial state updates (không phải full state replacement). Chỉ trả về các trường bạn muốn cập nhật: `return {"search_queries": queries}`.
+
+- Thêm conditional edges với `graph.add_conditional_edges("source_node", router_function, {"option1": "node1", "option2": "node2"})`. Hàm router trả về một chuỗi khớp với một trong các tùy chọn.
+
+- Các hàm router cho conditional edges phải trả về các giá trị chuỗi khớp với tên node tiếp theo. Sử dụng logic if để xác định routing: `return "search_more" if len(results) < 3 else "write_report"`.
+
+- LangGraph mở rộng LangChain, không thay thế nó. Sử dụng các thành phần LangChain (LLMs, retrievers, embeddings) làm khối xây dựng trong các nodes LangGraph cho các workflows phức tạp.
+
+---
+
+</LangVI>

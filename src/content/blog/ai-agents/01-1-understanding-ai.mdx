@@ -75,7 +75,7 @@ Later we'll see that AI agents build on these capabilities but differ in where t
 
 #### LLM-Based Chatbots
 
-LLM chatbot hoạt động như trợ lý thông minh với khả năng trò chuyện liên tục và tự nhiên. Khác với chương trình hỏi-đáp đơn giản, các hệ thống này cố gắng giữ cuộc trò chuyện vừa hữu ích vừa an toàn. Chất lượng phụ thuộc nhiều vào cách viết instruction: instruction rõ ràng giúp định hình hành vi model và ngăn chặn câu trả lời sai, mơ hồ hoặc nguy hiểm. Các công cụ chat hiện đại như OpenAI hỗ trợ nhiều loại message (system, user, assistant), giúp thiết lập tính cách và duy trì hành vi nhất quán.
+LLM chatbot hoạt động như trợ lý thông minh với khả năng trò chuyện liên tục và tự nhiên. Khác với bài viết trình hỏi-đáp đơn giản, các hệ thống này cố gắng giữ cuộc trò chuyện vừa hữu ích vừa an toàn. Chất lượng phụ thuộc nhiều vào cách viết instruction: instruction rõ ràng giúp định hình hành vi model và ngăn chặn câu trả lời sai, mơ hồ hoặc nguy hiểm. Các công cụ chat hiện đại như OpenAI hỗ trợ nhiều loại message (system, user, assistant), giúp thiết lập tính cách và duy trì hành vi nhất quán.
 
 To make answers more accurate, chatbots often bring in real facts from local knowledge sources like vector stores. This lets them mix smooth conversation skills with specific knowledge, so the answers aren't just well-written but also useful and trustworthy.
 
@@ -86,7 +86,7 @@ LLM chatbots are usually built for specific tasks like making summaries, answeri
 ![A summary chatbot is similar to a summary tool, but it offers an interactive experience where the LLM and the user can work together to improve the results](/src/assets/blog/ai-agents/summarization-chatbot.png.png)
 *Figure 1.3: A summary chatbot is similar to a summary tool, but it offers an interactive experience where the LLM and the user can work together to improve the results.*
 
-The main difference between a summary tool and a summary chatbot is interaction. A chatbot lets you improve responses in real time: if you want a shorter or more casual summary, you can just ask, as shown in the sequence diagram in figure 1.4.
+The main difference between a summary tool and a summary chatbot is interaction. A chatbot lets you improve responses in real time: if you want a shorter or more casual summary, you can just ask.
 
 This back-and-forth makes the process feel like teamwork—creating answers that feel more customized and aware of context. In the next chapter, we'll explore role instructions, few-shot examples, and better prompt writing to give you more control over how chatbots behave and what they produce.
 
@@ -122,8 +122,6 @@ Interest in agents has grown even more with the introduction of the Model Contex
 
 **Next**: [Part 1.2: LangChain Framework →](/blog/ai-agents/01-2-langchain-framework)
 
-*— Nguyen Dai, AI Engineer @ PIXTA Vietnam*  
-*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
 
 </LangEN>
 
@@ -159,7 +157,7 @@ Chúng ta sẽ xem xét từng loại này trước khi khám phá cách LangCha
 
 #### Ứng Dụng LLM và Engine
 
-Một ứng dụng dựa trên LLM hoạt động như một công cụ backend xử lý các yêu cầu ngôn ngữ tự nhiên cụ thể cho các hệ thống khác. Ví dụ, một summarization engine (bộ máy tóm tắt) ngưng tụ các đoạn văn bản dài thành bản tóm tắt ngắn gọn. Các bản tóm tắt này có thể được trả về ngay cho client hoặc lưu vào database để các ứng dụng khác sử dụng sau, như thể hiện trong hình 1.1.
+Một ứng dụng dựa trên LLM hoạt động như một công cụ backend xử lý các yêu cầu ngôn ngữ tự nhiên cụ thể cho các hệ thống khác. Ví dụ, một summarization engine (bộ máy tóm tắt) chuyển đổi các đoạn văn bản dài thành bản tóm tắt ngắn gọn. Các bản tóm tắt này có thể được trả về ngay cho client hoặc lưu vào database để các ứng dụng khác sử dụng sau, như thể hiện trong hình 1.1.
 
 ![Summarization engine tóm tắt và lưu trữ nội dung từ khối lượng văn bản lớn và có thể được các hệ thống khác gọi thông qua REST API](/src/assets/blog/ai-agents/summarization-engine.png)
 *Hình 1.1: Một summarization engine tóm tắt và lưu trữ nội dung từ khối lượng văn bản lớn và có thể được các hệ thống khác gọi thông qua REST API.*
@@ -179,32 +177,32 @@ Quy trình này được gọi là Retrieval-Augmented Generation (RAG), như th
 ![Một Q&A engine được triển khai với thiết kế RAG. Một LLM query engine lưu thông tin tài liệu cụ thể theo lĩnh vực trong vector store](/src/assets/blog/ai-agents/rag-qa-engine.png)
 *Hình 1.2: Một Q&A engine được triển khai với thiết kế RAG. Một LLM query engine lưu thông tin tài liệu cụ thể theo lĩnh vực trong vector store. Khi một hệ thống bên ngoài gửi truy vấn, nó chuyển đổi câu hỏi ngôn ngữ tự nhiên thành biểu diễn embedding (hoặc vector), truy xuất các tài liệu liên quan từ vector store, rồi cung cấp cho LLM thông tin cần thiết để tạo ra câu trả lời bằng ngôn ngữ tự nhiên.*
 
-Engine không chỉ giới hạn ở Q&A. Chúng cũng có thể gọi các tool bên ngoài bằng cách chạy các chuỗi bước đã được định nghĩa trước, thường gọi là chain. Ví dụ, một engine xử lý yêu cầu của người dùng có thể chuyển đổi các hướng dẫn ngôn ngữ tự nhiên thành các lời gọi API, lấy dữ liệu từ các hệ thống bên ngoài, rồi sử dụng LLM để giải thích và trình bày kết quả dưới dạng sạch sẽ, dễ đọc.
+Engine không chỉ giới hạn ở Q&A. Chúng cũng có thể gọi các tool bên ngoài bằng cách chạy các chuỗi bước đã được định nghĩa trước, thường gọi là chain. Ví dụ, một engine xử lý yêu cầu của người dùng có thể chuyển đổi các hướng dẫn(pompt) ngôn ngữ tự nhiên thành các lời gọi API, lấy dữ liệu từ các hệ thống bên ngoài, rồi sử dụng LLM để giải thích và trình bày kết quả dưới dạng sạch sẽ, dễ đọc.
 
 Về bản chất, các engine này được thiết kế cho công việc cấp hệ thống: tự động hóa quy trình, xử lý dữ liệu thông minh, và kết nối các nền tảng khác nhau. Chúng đơn giản hóa các workflow liên quan đến ngôn ngữ tự nhiên bằng cách xử lý các phần rối rắm—retrieval, transformation, orchestration—để bạn không phải làm.
-
-Sau này chúng ta sẽ thấy rằng AI agent xây dựng dựa trên các khả năng này nhưng khác biệt ở chỗ "ra quyết định" nằm ở đâu. Một engine thường thực thi một chain đã định sẵn: các bước và logic phân nhánh chủ yếu được thiết kế trước, và hệ thống chạy workflow đó đến khi hoàn tất cho một yêu cầu cụ thể. Ngược lại, một agent sử dụng LLM để lên kế hoạch và điều chỉnh cách tiếp cận tại thời điểm chạy (runtime)—chọn tool nào cần gọi, điều chỉnh kế hoạch dựa trên kết quả trung gian, và có thể lặp qua nhiều hành động cho đến khi đạt điều kiện dừng. Nói đơn giản: engine chạy workflow còn agent quản lý workflow, đổi một phần tính dự đoán được lấy sự linh hoạt lớn hơn cho các tác vụ nhiều bước, mở.
+Nói đơn giản: engine chạy workflow còn agent quản lý workflow.
+Sau này chúng ta sẽ thấy rằng AI agent xây dựng dựa trên các khả năng này nhưng khác biệt ở chỗ "ra quyết định" nằm ở đâu. Một engine thường thực thi một chain đã định sẵn: các bước và logic phân nhánh chủ yếu được thiết kế trước, và hệ thống chạy workflow đó đến khi hoàn tất cho một yêu cầu cụ thể. Ngược lại, một agent sử dụng LLM để lên kế hoạch và điều chỉnh cách tiếp cận tại thời điểm chạy (runtime)—chọn tool nào cần gọi, điều chỉnh kế hoạch dựa trên kết quả trung gian, và có thể lặp qua nhiều hành động cho đến khi đạt điều kiện dừng. .
 
 #### Chatbot Dựa Trên LLM
 
-Chatbot LLM hoạt động như một trợ lý thông minh, giúp bạn trò chuyện liên tục một cách tự nhiên. Khác với các chương trình hỏi-đáp đơn giản, hệ thống này cố gắng giữ cuộc trò chuyện vừa hữu ích vừa an toàn. Chúng phụ thuộc rất nhiều vào cách viết hướng dẫn: hướng dẫn rõ ràng sẽ định hình cách mô hình phản hồi và giúp tránh những câu trả lời sai, mơ hồ hoặc không an toàn. Các công cụ chat hiện đại—như của OpenAI—hỗ trợ các loại tin nhắn theo vai trò (hệ thống, người dùng, trợ lý), giúp bạn thiết lập tính cách cho trợ lý và giữ hành vi nhất quán trong suốt cuộc trò chuyện.
+Chatbot LLM hoạt động như một trợ lý thông minh, giúp bạn trò chuyện liên tục một cách tự nhiên. Khác với các bài viết trình hỏi-đáp đơn giản, hệ thống này cố gắng giữ cuộc trò chuyện vừa hữu ích vừa an toàn. Chúng phụ thuộc rất nhiều vào cách viết hướng dẫn(pompt): hướng dẫn(pompt) rõ ràng sẽ định hình cách mô hình phản hồi và giúp tránh những câu trả lời sai, mơ hồ hoặc không an toàn. Các công cụ chat hiện đại—như của OpenAI—hỗ trợ các loại prompt theo vai trò (hệ thống, người dùng, trợ lý), giúp bạn thiết lập tính cách cho trợ lý và giữ hành vi nhất quán trong suốt cuộc trò chuyện.
 
 Để câu trả lời chính xác hơn, chatbot thường lấy thông tin thực tế từ các nguồn kiến thức nội bộ như vector store. Điều này giúp chúng kết hợp khả năng trò chuyện tự nhiên với kiến thức chuyên môn cụ thể, khiến câu trả lời không chỉ mượt mà mà còn hữu ích và đáng tin cậy.
 
-Một điểm mạnh quan trọng của chatbot là khả năng nhớ cuộc trò chuyện. Bằng cách theo dõi các tin nhắn trước đó, chúng có thể giữ câu trả lời mạch lạc và cá nhân hóa. Bộ nhớ này bị giới hạn bởi context window của mô hình. Context window lớn hơn giúp ích nhiều, nhưng nhiều hệ thống vẫn phải tóm tắt hoặc nén lịch sử trò chuyện để không vượt quá giới hạn—và để tiết kiệm chi phí.
+Một điểm mạnh quan trọng của chatbot là khả năng nhớ cuộc trò chuyện. Bằng cách theo dõi các prompt trước đó, chúng có thể giữ câu trả lời mạch lạc và cá nhân hóa. Bộ nhớ này bị giới hạn bởi context window của mô hình. Context window lớn hơn giúp ích nhiều, nhưng nhiều hệ thống vẫn phải tóm tắt hoặc nén lịch sử trò chuyện để không vượt quá giới hạn—và để tiết kiệm chi phí.
 
 Chatbot LLM thường được thiết kế cho các nhiệm vụ cụ thể như tóm tắt, trả lời câu hỏi, hoặc dịch thuật. Chúng có thể trả lời trực tiếp câu hỏi của bạn hoặc kết hợp với kiến thức đã lưu trữ. Ví dụ, một chatbot tóm tắt (hình 1.3) được xây dựng dựa trên công cụ tóm tắt cơ bản, nhưng có thêm khả năng quản lý cuộc trò chuyện và hiểu ngữ cảnh.
 
 ![Chatbot tóm tắt tương tự như công cụ tóm tắt, nhưng mang lại trải nghiệm tương tác, nơi LLM và người dùng cùng hợp tác để cải thiện kết quả](/src/assets/blog/ai-agents/summarization-chatbot.png.png)
 *Hình 1.3: Chatbot tóm tắt tương tự như công cụ tóm tắt, nhưng mang lại trải nghiệm tương tác, nơi LLM và người dùng cùng hợp tác để cải thiện kết quả.*
 
-Sự khác biệt chính giữa công cụ tóm tắt và chatbot tóm tắt là tính tương tác. Chatbot cho phép bạn cải thiện câu trả lời ngay lập tức: nếu bạn muốn bản tóm tắt ngắn hơn hoặc dễ hiểu hơn, bạn chỉ cần yêu cầu, như minh họa trong sơ đồ trình tự ở hình 1.4.
+Sự khác biệt chính giữa công cụ tóm tắt và chatbot tóm tắt là tính tương tác. Chatbot cho phép bạn cải thiện câu trả lời ngay lập tức: nếu bạn muốn bản tóm tắt ngắn hơn hoặc dễ hiểu hơn, bạn chỉ cần yêu cầu.
 
-Sự tương tác qua lại này khiến quá trình giống như làm việc nhóm—tạo ra những câu trả lời phù hợp hơn và hiểu rõ ngữ cảnh hơn. Trong chương tiếp theo, chúng ta sẽ khám phá hướng dẫn vai trò, ví dụ few-shot, và cách viết prompt nâng cao để bạn kiểm soát tốt hơn hành vi và kết quả của chatbot.
+Sự tương tác qua lại này khiến quá trình giống như làm việc nhóm—tạo ra những câu trả lời phù hợp hơn và hiểu rõ ngữ cảnh hơn. Trong bài viết tiếp theo, chúng ta sẽ khám phá các loại promt phổ biến như ví dụ few-shot,... và cách viết prompt nâng cao để bạn kiểm soát tốt hơn hành vi và kết quả của chatbot.
 
 #### AI Agents
 
-AI agent là một hệ thống làm việc cùng LLM để hoàn thành các nhiệm vụ có nhiều bước—thường sử dụng nhiều nguồn dữ liệu khác nhau, logic phân nhánh, và ra quyết định thông minh. Khác với các chương trình đơn giản chạy theo các bước cố định, agent có thể làm việc với một mức độ độc lập: chúng tuân theo các quy tắc bạn đặt ra, nhưng tự quyết định bước tiếp theo.
+AI agent là một hệ thống làm việc cùng LLM để hoàn thành các nhiệm vụ có nhiều bước—thường sử dụng nhiều nguồn dữ liệu khác nhau, logic phân nhánh, và ra quyết định thông minh. Khác với các bài viết trình đơn giản chạy theo các bước cố định, agent có thể làm việc với một mức độ độc lập: chúng tuân theo các quy tắc bạn đặt ra, nhưng tự quyết định bước tiếp theo.
 
 Ở mỗi bước, agent hỏi LLM để quyết định nên dùng công cụ nào, chạy các công cụ đó, và xem xét kết quả trước khi tiếp tục. Vòng lặp này tiếp diễn cho đến khi agent hoàn thành nhiệm vụ hoàn toàn. Trong thực tế, điều này có nghĩa là lấy thông tin từ cả nguồn có cấu trúc (như database hoặc API) và nguồn phi cấu trúc (như tài liệu hoặc trang web), ghép các kết quả lại, và trình bày chúng dưới dạng rõ ràng.
 
@@ -213,12 +211,12 @@ Hãy xem ví dụ này: một công ty du lịch sử dụng AI agent để tạ
 1. Agent gửi một prompt tới LLM yêu cầu chọn các công cụ hữu ích nhất cho yêu cầu—ví dụ: đặt vé máy bay, tìm khách sạn, thuê xe, dự báo thời tiết, và database các gói ưu đãi của công ty.
 2. Sử dụng prompt do developer viết, liệt kê tất cả công cụ có sẵn và chức năng của chúng, LLM chọn công cụ phù hợp và tạo các truy vấn cần thiết—như tìm kiếm database cho gói ưu đãi hoặc gọi API tới các dịch vụ bên ngoài.
 3. Agent thực thi các truy vấn, thu thập kết quả, và gửi một prompt khác tới LLM với cả yêu cầu nghỉ dưỡng ban đầu và tất cả thông tin đã thu thập.
-4. LLM phản hồi với một kế hoạch nghỉ dưỡng hoàn chỉnh bao gồm tất cả đặt chỗ, và agent sau đó gửi lại cho website đặt phòng.
+4. LLM phản hồi với một kế hoạch nghỉ dưỡng hoàn chỉnh, và agent sau đó gửi lại cho website đặt phòng.
 
 ![Quy trình của một AI agent được giao nhiệm vụ lắp ráp các gói nghỉ dưỡng](/src/assets/blog/ai-agents/ai-agent-workflow.png)
 *Hình 1.5: Quy trình của một AI agent được giao nhiệm vụ lắp ráp các gói nghỉ dưỡng.*
 
-Quy trình có thể trải qua nhiều vòng giữa agent và LLM trước khi tạo ra kết quả cuối cùng, như một kế hoạch nghỉ dưỡng hoàn chỉnh. Ngoài ra, thiết kế được thể hiện trong hình 1.5 chỉ là một lựa chọn. Một thiết kế khác có thể sử dụng nhiều agent nhỏ hơn được quản lý bởi một Supervisor agent ở cấp cao nhất.
+Quy trình có thể trải qua nhiều vòng giữa agent và LLM trước khi tạo ra kết quả cuối cùng là một kế hoạch nghỉ dưỡng hoàn chỉnh. Ngoài ra, thiết kế được thể hiện trong hình 1.5 chỉ là một lựa chọn. Một thiết kế khác có thể sử dụng nhiều agent nhỏ hơn được quản lý bởi một Supervisor agent ở cấp cao nhất.
 
 Trong các lĩnh vực quan trọng như tài chính hoặc y tế, người ta thường thêm bước human-in-the-loop (có người tham gia vào quy trình). Điều này có nghĩa là một người có thể xem xét và phê duyệt các hành động quan trọng—như xác nhận chuyển tiền hoặc kiểm tra khuyến nghị y tế phức tạp—trước khi hoàn tất. Trong ví dụ lập kế hoạch nghỉ dưỡng, agent có thể tạm dừng và yêu cầu sự chấp thuận của con người đối với kế hoạch chuyến đi được đề xuất trước khi gửi cho khách hàng, tăng thêm sự an toàn và tin cậy.
 
@@ -226,15 +224,12 @@ Trong các lĩnh vực quan trọng như tài chính hoặc y tế, người ta 
 
 Trong series này, chúng ta sẽ tập trung vào LangGraph, framework agent chuyên dụng của LangChain. LangGraph cung cấp các class agent và coordinator có sẵn, cùng với các tích hợp công cụ bạn có thể sử dụng ngay, vì vậy bạn không phải xây dựng mọi thứ từ đầu. Bạn cũng sẽ có trải nghiệm thực hành xây dựng các agent nâng cao với LangGraph, học cách thiết kế, điều phối và cải thiện chúng trong thực tế.
 
-Về nhiều mặt, AI agent đại diện cho loại ứng dụng LLM tiên tiến nhất. Nó sử dụng toàn bộ khả năng của LLM—hiểu, tạo và suy luận về văn bản—để vận hành các quy trình tự động phức tạp. Agent có thể chọn và sử dụng nhiều công cụ một cách linh hoạt, được hướng dẫn bởi các prompt bạn thiết kế, khiến chúng có giá trị trong các lĩnh vực như tài chính, y tế và logistics, nơi cần tư duy nhiều bước và kết hợp dữ liệu.
+Về nhiều mặt, AI agent đại diện cho loại ứng dụng LLM tiên tiến nhất. Nó sử dụng toàn bộ khả năng của LLM—hiểu, tạo và suy luận về văn bản—để vận hành các quy trình tự động phức tạp. Agent có thể chọn và sử dụng nhiều công cụ một cách linh hoạt, dùng các prompt do chính bạn thiết kế, khiến chúng có giá trị trong các lĩnh vực như tài chính, y tế và logistics, nơi cần tư duy nhiều bước và kết hợp dữ liệu.
 
-Sự quan tâm đến agent càng tăng mạnh với việc giới thiệu Model Context Protocol (MCP) của Anthropic. MCP thiết lập một tiêu chuẩn cho các dịch vụ chia sẻ công cụ thông qua MCP server, mà agent có thể truy cập thông qua MCP client dễ dàng như các công cụ nội bộ. Điều này chuyển công việc tích hợp sang chính dịch vụ, cho phép developer tập trung vào xây dựng agent có năng lực thay vì duy trì các kết nối tùy chỉnh. Sau khi phát hành vào cuối năm 2024, MCP nhanh chóng trở thành tiêu chuẩn—được các nhà cung cấp LLM lớn như OpenAI và Google áp dụng—và hàng nghìn công cụ hiện có sẵn thông qua các cổng MCP công khai. Trong series này, bạn sẽ học cách giao thức hoạt động, xem hệ sinh thái trong thực tế, và xây dựng MCP server của riêng bạn hoạt động trực tiếp với ứng dụng agent.
+Sự quan tâm đến agent càng tăng mạnh với việc giới thiệu Model Context Protocol (MCP) của Anthropic. MCP thiết lập một tiêu chuẩn cho các dịch vụ chia sẻ công cụ thông qua MCP server, mà agent có thể truy cập thông qua MCP client dễ dàng như các công cụ nội bộ. Điều này chuyển công việc tích hợp sang dịch vụ, cho phép developer tập trung vào xây dựng agent đa năng hơn. Sau khi phát hành vào cuối năm 2024, MCP nhanh chóng trở thành tiêu chuẩn—được các nhà cung cấp LLM lớn như OpenAI và Google áp dụng—và hàng nghìn công cụ hiện có sẵn thông qua các cổng MCP công khai. Trong series này, bạn sẽ học cách giao thức hoạt động, xem hệ sinh thái trong thực tế, và xây dựng MCP server của riêng bạn hoạt động trực tiếp với ứng dụng agent.
 
 ---
 
 **Tiếp theo**: [Phần 1.2: Framework LangChain →](/blog/ai-agents/01-2-langchain-framework)
-
-*— Nguyễn Đài, AI Engineer @ PIXTA Vietnam*  
-*[GitHub](https://github.com/Nguyendai202) · [LinkedIn](https://www.linkedin.com/in/dai-nguyen-7b7825257/)*
 
 </LangVI>

@@ -21,6 +21,31 @@ AI applications interact with large language models (LLMs) mainly through **prom
 
 **Prompt engineering**—the practice of designing and refining prompts to guide an LLM's output—is a core skill in building LLM applications. You'll spend much of your time creating, testing, and iterating on prompts to make sure your system delivers reliable, high-quality results.
 
+### Download Code Examples
+
+All the prompt examples discussed in this article are available as a Jupyter Notebook. You can download it to experiment with the code yourself:
+
+<div style="text-align: center; margin: 2em 0;">
+  <a 
+    href="/download/02-prompt_examples" 
+    style="
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    "
+    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';"
+  >
+    📥 Download Notebook: 02-prompt_examples.ipynb
+  </a>
+</div>
+
 ---
 
 ## Prompt Types
@@ -268,7 +293,25 @@ LLMs are skilled not just at finding requested information in a text but also at
 
 ### Reasoning
 
-While reasoning is a powerful capability, it's an area where LLMs are still improving. Therefore, you might need more advanced prompt engineering techniques to get the results you want. Here's a simple example involving mathematical reasoning:
+Reasoning is a powerful capability of LLMs, but it's also an area where they're continually improving. For complex reasoning tasks, you often need to apply advanced prompt engineering techniques to achieve accurate results.
+
+When developing applications that require reasoning, it's important to understand the limitations of each prompting technique. **Zero-shot learning** (providing no examples) works well for many simple tasks, but for complex problems—like identifying palindrome numbers or applying new logical rules—LLMs typically need to be "taught" through examples and specific guidance.
+
+In the following sections, we'll explore how to improve LLM reasoning through in-context learning techniques, from simple to advanced.
+
+---
+
+## In-context Learning Techniques
+
+**In-context learning** is the method of teaching an LLM a new task by providing information within the prompt, rather than fine-tuning the model. This is a core skill in prompt engineering because it allows you to quickly adapt LLMs to new tasks without requiring large training datasets or expensive GPUs.
+
+We'll explore 5 in-context learning techniques in order from simple to complex, each suitable for different scenarios. You'll learn how to choose the right technique based on task complexity and the resources you have.
+
+### Zero-shot Learning
+
+**Zero-shot learning** is the approach of providing only instructions without any examples, expecting the LLM to understand and perform the task based entirely on its natural reasoning ability.
+
+Here's an example of a simple mathematical reasoning task:
 
 ```
 INSTRUCTION: Add the square numbers in this sequence: 19, 13, 1, 17, 4, 64, 900
@@ -284,13 +327,13 @@ To find their sum:
 So, the sum of the square numbers in this sequence is 969.
 ```
 
-ChatGPT identified the square numbers, picked them out, and then calculated their total. The next example is more challenging, involving **palindromes**—numbers that read the same forward and backward, such as 1661 or 27872:
+ChatGPT correctly identified the square numbers, selected them, and calculated the sum. However, with more complex problems—like **palindrome numbers** (numbers that read the same forwards and backwards, e.g., 1661, 27872)—zero-shot learning may not be sufficient:
 
 ```
 INSTRUCTION: Sum the palindromes in this sequence: 13, 1331, 121, 73, 99, 56, 232, 7
 ```
 
-**Early output (incorrect):**
+**Initial result (Incorrect):**
 ```
 The palindromes in the sequence 13, 1331, 121, 73, 99, 56, 232, and 7 are 1331, 121, 232, 
 and 7. To find their sum:
@@ -300,19 +343,13 @@ and 7. To find their sum:
 So, the sum of the palindromes in this sequence is 1691.
 ```
 
-This is **incorrect**! A palindrome is a number that reads the same forward and backward. Therefore, **99** should have been considered a palindrome, but it wasn't.
-
-This output is what was encountered in early stages. However, you should now see a different and, more importantly, **accurate output**. It's still valuable to understand how the mistake was corrected: because the earlier LLM version didn't fully grasp the concept of a palindrome, the model was "taught" to correctly identify all relevant cases, which we'll explore next.
-
----
-
-## Reasoning in Detail
-
-When developing LLM applications, particularly those requiring complex reasoning, it's important to understand the limitations of different prompt techniques. For instance, **zero-shot learning** is a method in which you provide no examples, expecting the LLM to grasp and perform the task based purely on the instructions given. While this approach can work well in some scenarios, it doesn't always yield accurate results for more intricate tasks, such as teaching an LLM to identify palindromes. In the following sections, we'll demonstrate how to go beyond zero-shot learning to refine LLM prompts for more reliable performance in reasoning tasks.
+**Wrong!** The number 99 is also a palindrome but was missed. This is when we need more advanced techniques.
 
 ### One-shot Learning
 
-When you provide just one example in the prompt, it's called **one-shot learning**. Here's how we can attempt to address the palindrome problem by giving a single example:
+When zero-shot isn't enough, the next step is **one-shot learning**—providing a single example to guide the LLM. An illustrative example helps the LLM better understand the pattern you want, especially useful when a task has multiple possible interpretations.
+
+Let's try solving the palindrome problem with one example:
 
 ```
 INSTRUCTION: Sum the palindromes in this sequence: 13, 1331, 121, 73, 99, 56, 232, 7
@@ -331,11 +368,15 @@ The palindromes in the sequence are 1331, 121, 232, and 7. To find their sum:
 So, the sum of the palindromes in this sequence is indeed 1691.
 ```
 
-Unfortunately, even after using one-shot learning, the issue persisted—**99 was still missed**. Even with two examples, the problem continued. The solution? **Breaking down the problem into steps**—similar to guiding a colleague through a procedure step-by-step.
+Unfortunately, even after using one-shot learning, the issue persisted—**99 was still missed**. Even with two examples, the problem continued.
+
+**Why is this?** Because the LLM is missing the process—it needs to be shown **how to approach** the problem, not just the final result. This is when the next technique is needed.
 
 ### Providing Steps
 
-This is the amended prompt with explicit steps:
+Instead of just showing the LLM the desired result, break down the problem into specific steps—similar to guiding a colleague through a procedure. This technique is especially effective when a task can be solved through a deterministic sequence.
+
+Here's the amended prompt with explicit steps:
 
 ```
 INSTRUCTION: Sum the palindromes in this sequence: 13, 1331, 121, 73, 99, 56, 232, 7
@@ -393,7 +434,15 @@ This example illustrates something you might experience while working with LLMs:
 
 ### Few-shot Learning
 
-In some cases, providing only two examples may not be enough to teach the LLM a new concept. In such instances, you need to provide several examples, known as **few-shot learning**. To demonstrate this, let's create a classification game where a number can be classified as **Abra**, **Kadabra**, or **Abra Kadabra**. Let's see what happens when no information about the classification rules is provided.
+So far, we've been working with tasks where the LLM has foundational knowledge (palindromes, square numbers). But **what happens when you need to teach the LLM a completely new rule** that it has never seen during training?
+
+**Few-shot learning** solves this by providing multiple examples so the LLM can learn patterns from them. This is the most powerful technique when you need the LLM to understand:
+- Your company's proprietary business logic rules
+- Custom data formats not in the training data
+- Specific writing styles or tone of voice
+- Classification or evaluation processes based on unique criteria
+
+To demonstrate, let's create a number classification game with custom rules: classify numbers as **Abra**, **Kadabra**, or **Abra Kadabra**.
 
 **Attempt 1: Zero-shot (no examples)**
 ```
@@ -511,6 +560,9 @@ This pattern is particularly useful when you need to:
 - Switch between different example sets for different use cases
 - A/B test different training examples
 - Store examples in a database or configuration file
+- Update examples without redeploying code
+
+> **💡 BEST PRACTICE:** In production, store examples in a database or config file. This allows you to update and improve prompts without changing code, enabling non-technical team members (like product managers) to fine-tune LLM behavior.
 
 ### Chain of Thought (CoT)
 
@@ -587,6 +639,18 @@ Here's a summary of the in-context learning techniques we've covered:
 | **Two-shot learning** | Two examples are provided in the prompt |
 | **Few-shot learning** | Multiple examples are provided in the prompt |
 | **Chain of Thought (CoT)** | Multiple examples with logical steps clearly explained for each |
+
+**When should you use each technique?**
+
+| Situation | Recommended Technique | Reason |
+|-----------|----------------------|--------|
+| Common tasks the LLM already knows | Zero-shot | Simple, fewer tokens, fast |
+| Task needs format or style clarification | One/Two-shot | Clarifies expectations without consuming many tokens |
+| Task has a defined process | Providing Steps | Ensures LLM follows the correct procedure |
+| Task with unique business logic rules | Few-shot | Teaches LLM new patterns through examples |
+| Complex reasoning tasks | Chain of Thought | Shows LLM how to think step-by-step |
+
+> **💡 PRINCIPLE:** Always start with the simplest technique (zero-shot) and only increase complexity when necessary. Each additional example in the prompt consumes tokens and API costs. In production, A/B test to find the best balance between result quality and cost efficiency.
 
 > **🚀 Advanced Techniques:** Beyond CoT, research has introduced **Tree of Thought (ToT)** for exploring multiple reasoning paths simultaneously ([Yao et al., 2023](https://arxiv.org/abs/2305.10601))—boosting GPT-4's Game of 24 success from 4% to 74%—and **Thread of Thought (ThoT)** ([Zhou et al., 2023](https://arxiv.org/abs/2311.08734)) for handling chaotic contexts by filtering noise. These advanced techniques are worth exploring for complex applications.
 
@@ -704,9 +768,34 @@ If you want to delve deeper into prompt engineering, here are highly recommended
 
 <LangVI>
 
-Các ứng dụng AI tương tác với các mô hình ngôn ngữ lớn (LLM) chủ yếu thông qua **prompts**—các đầu vào có cấu trúc hướng dẫn hành vi của mô hình. Điều này giống như việc chỉ dẫn cho một đồng nghiệp tài năng nhưng chưa có kinh nghiệm: bạn càng rõ ràng và cụ thể, kết quả càng tốt. Để có được đầu ra chính xác và phù hợp, prompts cần được thiết kế cẩn thận và điều chỉnh theo từng tác vụ. Trong thực tế, thiết kế prompt là một trong những yếu tố lớn nhất ảnh hưởng đến hiệu suất ứng dụng của bạn.
+Các ứng dụng AI tương tác với các mô hình ngôn ngữ lớn (LLM) chủ yếu thông qua **prompts**—các đầu vào có cấu trúc hướng dẫn hành vi của mô hình. Điều này giống như việc chỉ dẫn cho một đồng nghiệp tài năng nhưng chưa có kinh nghiệm và bạn càng rõ ràng, cụ thể thì kết quả càng tốt. Để có được đầu ra chính xác và phù hợp, prompts cần được thiết kế cẩn thận và điều chỉnh theo từng tác vụ. Trong thực tế, thiết kế prompt là một trong những yếu tố lớn nhất ảnh hưởng đến hiệu suất ứng dụng của bạn.
 
 **Prompt engineering**—thực hành thiết kế và tinh chỉnh prompts để hướng dẫn đầu ra của LLM—là kỹ năng cốt lõi trong việc xây dựng ứng dụng LLM. Bạn sẽ dành phần lớn thời gian để tạo, kiểm tra và lặp lại các prompts nhằm đảm bảo hệ thống của bạn cung cấp kết quả đáng tin cậy và chất lượng cao.
+
+### Tải Code Mẫu
+
+Tất cả các ví dụ prompt được thảo luận trong bài viết này đều có sẵn dưới dạng Jupyter Notebook. Bạn có thể tải xuống để tự thử nghiệm với code:
+
+<div style="text-align: center; margin: 2em 0;">
+  <a 
+    href="/download/02-prompt_examples" 
+    style="
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    "
+    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';"
+  >
+    📥 Tải Notebook: 02-prompt_examples.ipynb
+  </a>
+</div>
 
 ---
 
@@ -829,7 +918,7 @@ tượng trưng cho bình minh của kỷ nguyên số.
 
 ### Soạn thảo văn bản (Composing Text)
 
-LLMs là một phần của danh mục AI được gọi là **generative AI** (AI tạo sinh). Khi được nhắc nhở bằng văn bản, chúng có thể tạo nội dung mới, như một đoạn văn hoặc câu, dựa trên danh sách các sự kiện.
+LLMs là một phần của danh mục AI được gọi là **generative AI** (AI tạo sinh). Khi được cung cấp prompt dạng văn bản, chúng có thể tạo nội dung mới, như một đoạn văn hoặc câu, dựa trên danh sách các sự kiện.
 
 Bằng cách thêm nhiều chi tiết vào prompt (PERSONA, INSTRUCTION, Facts, TONE, OUTPUT), bài viết được tạo ra chính xác như bạn mong muốn.
 
@@ -837,23 +926,69 @@ Bằng cách thêm nhiều chi tiết vào prompt (PERSONA, INSTRUCTION, Facts, 
 
 ### Trả lời câu hỏi (Question Answering)
 
-Khả năng "hiểu" văn bản của LLM khiến chúng phù hợp không chỉ để tóm tắt mà còn để truy xuất thông tin cụ thể, được gọi là trường hợp sử dụng **question answering**.
+Khả năng "hiểu" văn bản của LLM khiến chúng phù hợp không chỉ để tóm tắt mà còn để truy xuất thông tin cụ thể—tức là tác vụ **hỏi đáp** (question answering).
 
-Trả lời câu hỏi là một trường hợp sử dụng phổ biến đến mức hầu hết các LLM hiểu **Q** và **A** là viết tắt của Question và Answer.
+Question answering là tác vụ phổ biến đến mức hầu hết các LLM nhận biết **Q:** và **A:** như ký hiệu chuẩn cho câu hỏi và câu trả lời.
 
 ### Suy luận (Reasoning)
 
-Trong khi suy luận là một khả năng mạnh mẽ, đây là một lĩnh vực mà LLM vẫn đang cải thiện. Do đó, bạn có thể cần các kỹ thuật prompt engineering nâng cao hơn để có được kết quả bạn muốn. Hãy khám phá các kỹ thuật này chi tiết hơn.
+Suy luận là một khả năng mạnh mẽ của LLM, nhưng cũng là lĩnh vực mà chúng vẫn đang được cải thiện liên tục. Với các tác vụ suy luận phức tạp, bạn thường cần áp dụng các kỹ thuật prompt engineering nâng cao để đạt được kết quả chính xác.
+
+Khi phát triển ứng dụng yêu cầu suy luận, điều quan trọng là phải hiểu giới hạn của từng kỹ thuật prompt. **Zero-shot learning** (không cung cấp ví dụ) hoạt động tốt cho nhiều tác vụ đơn giản, nhưng với các bài toán phức tạp—như nhận diện số palindrome hay áp dụng quy tắc logic mới—LLM thường cần được "dạy" thông qua ví dụ và hướng dẫn cụ thể.
+
+Trong các phần tiếp theo, chúng ta sẽ khám phá cách cải thiện khả năng suy luận của LLM thông qua các kỹ thuật in-context learning, từ đơn giản đến nâng cao.
 
 ---
 
-## Suy luận Chi tiết
+## Kỹ thuật In-context Learning
 
-Khi phát triển các ứng dụng LLM, đặc biệt là những ứng dụng yêu cầu suy luận phức tạp, điều quan trọng là phải hiểu các hạn chế của các kỹ thuật prompt khác nhau. Ví dụ, **zero-shot learning** (học không mẫu) là một phương pháp mà bạn không cung cấp ví dụ nào, mong đợi LLM hiểu và thực hiện nhiệm vụ chỉ dựa trên hướng dẫn. Mặc dù cách tiếp cận này có thể hoạt động tốt trong một số trường hợp, nó không luôn mang lại kết quả chính xác cho các nhiệm vụ phức tạp hơn, chẳng hạn như dạy LLM nhận diện số palindrome. Trong các phần sau, chúng ta sẽ tìm hiểu cách vượt qua zero-shot learning để cải thiện prompts cho hiệu suất đáng tin cậy hơn trong các tác vụ suy luận.
+**In-context learning** là cách dạy LLM một tác vụ mới bằng cách cung cấp thông tin trong prompt, thay vì phải fine-tune mô hình. Đây là kỹ năng cốt lõi trong prompt engineering vì nó cho phép bạn nhanh chóng thích ứng LLM với các nhiệm vụ mới mà không cần training data lớn hay GPU đắt tiền.
 
-### One-shot Learning (Học một mẫu)
+Chúng ta sẽ khám phá 5 kỹ thuật in-context learning theo thứ tự từ đơn giản đến phức tạp, mỗi kỹ thuật phù hợp với các tình huống khác nhau. Bạn sẽ học cách chọn kỹ thuật phù hợp dựa trên độ phức tạp của tác vụ và tài nguyên bạn có.
 
-Khi bạn chỉ cung cấp một ví dụ trong prompt, đó được gọi là **one-shot learning**. Đây là cách chúng ta có thể thử giải quyết vấn đề palindrome bằng cách đưa ra một ví dụ duy nhất:
+### Zero-shot Learning
+
+**Zero-shot learning** là phương pháp chỉ cung cấp hướng dẫn mà không có ví dụ minh họa, mong đợi LLM hiểu và thực hiện nhiệm vụ dựa hoàn toàn vào khả năng suy luận tự nhiên của nó.
+
+Ví dụ về bài toán suy luận toán học đơn giản:
+
+```
+INSTRUCTION: Add the square numbers in this sequence: 19, 13, 1, 17, 4, 64, 900
+```
+
+**Đầu ra:**
+```
+Các số chính phương trong dãy 19, 13, 1, 17, 4, 64, và 900 là 1, 4, 64, và 900. 
+Để tìm tổng của chúng:
+
+1 + 4 + 64 + 900 = 969
+
+Vậy tổng các số chính phương trong dãy này là 969.
+```
+
+ChatGPT đã xác định đúng các số chính phương, chọn chúng ra và tính tổng. Tuy nhiên, với bài toán phức tạp hơn—như số **palindrome** (số đọc xuôi ngược như nhau, ví dụ: 1661, 27872)—zero-shot learning có thể không đủ:
+
+```
+INSTRUCTION: Sum the palindromes in this sequence: 13, 1331, 121, 73, 99, 56, 232, 7
+```
+
+**Kết quả ban đầu (Sai):**
+```
+Các palindrome trong dãy 13, 1331, 121, 73, 99, 56, 232, và 7 là 1331, 121, 232, và 7. 
+Để tìm tổng của chúng:
+
+1331 + 121 + 232 + 7 = 1691
+
+Vậy tổng các palindrome trong dãy này là 1691.
+```
+
+**Sai rồi!** Số 99 cũng là palindrome nhưng đã bị bỏ sót. Đây chính là lúc chúng ta cần các kỹ thuật nâng cao hơn.
+
+### One-shot Learning
+
+Khi zero-shot không đủ, bước tiếp theo là **one-shot learning**—cung cấp một ví dụ duy nhất để hướng dẫn LLM. Ví dụ minh họa giúp LLM hiểu rõ hơn về pattern bạn muốn, đặc biệt hữu ích khi tác vụ có nhiều cách hiểu khác nhau.
+
+Hãy thử giải quyết vấn đề palindrome với một mẫu:
 
 ```
 INSTRUCTION: Sum the palindromes in this sequence: 13, 1331, 121, 73, 99, 56, 232, 7
@@ -872,9 +1007,13 @@ Các palindrome trong dãy là 1331, 121, 232, và 7. Để tìm tổng của ch
 Vậy tổng các palindrome trong dãy này là 1691.
 ```
 
-Thật không may, ngay cả sau khi sử dụng one-shot learning, vấn đề vẫn tiếp diễn—**99 vẫn bị bỏ sót**. Ngay cả với hai ví dụ, vấn đề vẫn tiếp tục. Giải pháp? **Chia nhỏ vấn đề thành các bước**—tương tự như hướng dẫn đồng nghiệp từng bước một.
+Thật không may, ngay cả sau khi sử dụng one-shot learning, vấn đề vẫn tiếp diễn—**99 vẫn bị bỏ sót**. Ngay cả với hai ví dụ, vấn đề vẫn không được giải quyết. 
 
-### Cung cấp Các Bước
+**Tại sao vậy?** Vì LLM đang thiếu process—nó cần được chỉ dẫn **cách tiếp cận** vấn đề, không chỉ kết quả cuối cùng. Đây là lúc cần đến kỹ thuật tiếp theo.
+
+### Hướng dẫn từng bước (Providing Steps)
+
+Thay vì chỉ cho LLM kết quả mong muốn, hãy chia nhỏ vấn đề thành các bước cụ thể—giống như khi hướng dẫn đồng nghiệp thực hiện một quy trình. Kỹ thuật này đặc biệt hiệu quả khi tác vụ có thể được giải quyết theo một trình tự xác định.
 
 Đây là prompt được sửa đổi với các bước rõ ràng:
 
@@ -932,9 +1071,17 @@ Có vẻ như ChatGPT bây giờ tự động giải quyết vấn đề theo t�
 
 Ví dụ này minh họa điều bạn có thể trải nghiệm khi làm việc với LLM: bạn có thể đầu tư thời gian để dạy LLM các nhiệm vụ nhất định bằng các kỹ thuật prompt engineering nâng cao, chỉ để phát hiện rằng phiên bản mô hình mới hơn có thể xử lý nhiệm vụ mà không cần đào tạo bổ sung. Các nhiệm vụ này trước đây yêu cầu các prompt phức tạp hơn như **kỹ thuật few-shot** mà chúng ta sẽ khám phá tiếp theo.
 
-### Few-shot Learning (Học nhiều mẫu)
+### Few-shot Learning
 
-Trong một số trường hợp, chỉ cung cấp hai ví dụ có thể không đủ để dạy LLM một khái niệm mới. Trong những trường hợp như vậy, bạn cần cung cấp nhiều ví dụ, được gọi là **few-shot learning**. Để minh họa điều này, hãy tạo một trò chơi phân loại trong đó một số có thể được phân loại là **Abra**, **Kadabra**, hoặc **Abra Kadabra**. Hãy xem điều gì xảy ra khi không cung cấp thông tin về quy tắc phân loại.
+Cho đến nay, chúng ta đã làm việc với các tác vụ mà LLM có kiến thức nền tảng (palindrome, số chính phương). Nhưng **điều gì xảy ra khi bạn cần dạy LLM một quy tắc hoàn toàn mới** mà nó chưa từng thấy trong quá trình training?
+
+**Few-shot learning** giải quyết vấn đề này bằng cách cung cấp nhiều ví dụ để LLM có thể học pattern từ chúng. Đây là kỹ thuật mạnh mẽ nhất khi bạn cần LLM hiểu:
+- Quy tắc business logic độc quyền của công ty bạn
+- Format dữ liệu tùy chỉnh chưa có trong training data
+- Phong cách viết hoặc tone of voice đặc biệt
+- Quy trình phân loại hoặc đánh giá theo tiêu chí riêng
+
+Để minh họa, hãy tạo một trò chơi phân loại số với quy tắc tùy chỉnh: phân loại số thành **Abra**, **Kadabra**, hoặc **Abra Kadabra**. 
 
 **Thử nghiệm 1: Zero-shot (không có ví dụ)**
 ```
@@ -950,7 +1097,9 @@ không thể phân loại các số bạn cung cấp thành "Abra," "Kadabra," h
 dựa trên bất kỳ tiêu chí toán học hoặc logic nào.
 ```
 
-ChatGPT không bị ảo giác nhưng đã chính xác chỉ ra rằng bạn chưa làm rõ quy tắc phân loại. Bây giờ hãy cung cấp một prompt mà thay vì giải thích trực tiếp các quy tắc, đưa ra một cách diễn giải dựa trên danh sách các ví dụ cụ thể:
+ChatGPT không bị hallucination mà đã chính xác chỉ ra rằng bạn chưa làm rõ quy tắc phân loại. Đây là phản hồi đúng đắn—LLM không nên tự bịa ra quy tắc khi không có thông tin.
+
+Bây giờ hãy cung cấp prompt với nhiều ví dụ, thay vì giải thích trực tiếp quy tắc, để LLM tự suy ra pattern:
 
 **Thử nghiệm 2: Few-shot learning**
 ```
@@ -1049,15 +1198,22 @@ print(response.choices[0].message.content)
 5. **Mở rộng**: Có thể tải các ví dụ từ cơ sở dữ liệu hoặc file thay vì hardcode
 
 Mẫu này đặc biệt hữu ích khi bạn cần:
-- Chuyển đổi giữa các bộ ví dụ khác nhau cho các trường hợp sử dụng khác nhau
-- A/B test các ví dụ đào tạo khác nhau
-- Lưu trữ các ví dụ trong cơ sở dữ liệu hoặc file cấu hình
+- Chuyển đổi giữa các bộ ví dụ khác nhau cho các use case khác nhau
+- A/B test các ví dụ training khác nhau
+- Lưu trữ ví dụ trong database hoặc file cấu hình
+- Cập nhật ví dụ mà không cần deploy lại code
+
+> **💡 THỰC TIỄN:** Trong production, nên lưu examples trong database hoặc config file. Điều này cho phép cập nhật và cải thiện prompt mà không cần thay đổi code, giúp team non-technical (như product manager) cũng có thể tinh chỉnh behavior của LLM.
 
 ### Chain of Thought (CoT)
 
-Cuối cùng, hãy khám phá kỹ thuật **Chain of Thought (CoT)**, kết hợp việc cung cấp các bước logic với few-shot learning. Ở đây, chúng ta sẽ tạo một định nghĩa toán học mới: một dãy số được gọi là **"strange" (kỳ lạ)** nếu nó chứa ít nhất hai số lẻ VÀ tổng của tất cả các số lẻ chia hết cho 3.
+**Chain of Thought (CoT)** là kỹ thuật mạnh mẽ nhất trong in-context learning, kết hợp few-shot learning với việc giải thích rõ ràng quy trình suy luận cho mỗi ví dụ. Thay vì chỉ cho LLM kết quả, bạn còn cho nó thấy **cách** đến được kết quả đó.
 
-Đầu tiên, hãy kiểm tra xem LLM có hiểu quy tắc của các dãy "strange" mà không có giải thích nào không:
+Để minh họa, chúng ta sẽ tạo một định nghĩa toán học hoàn toàn mới: một dãy số được gọi là **"strange"** (kỳ lạ) nếu thỏa mãn ĐỒNG THỜI hai điều kiện:
+1. Chứa ít nhất hai số lẻ
+2. Tổng của tất cả các số lẻ chia hết cho 3
+
+Đầu tiên, kiểm tra xem LLM có hiểu quy tắc này mà không cần giải thích không:
 
 ```
 Is the following sequence "strange"?
@@ -1128,6 +1284,18 @@ Trong phần này, bạn đã khám phá cách giới thiệu cho LLM một nhi�
 | **Two-shot learning** | Cung cấp hai ví dụ trong prompt |
 | **Few-shot learning** | Cung cấp nhiều ví dụ trong prompt |
 | **Chain of Thought (CoT)** | Nhiều ví dụ với các bước logic được giải thích rõ ràng cho mỗi ví dụ |
+
+**Khi nào nên sử dụng kỹ thuật nào?**
+
+| Tình huống | Kỹ thuật đề xuất | Lý do |
+|-----------|------------------|-------|
+| Tác vụ phổ biến mà LLM đã biết | Zero-shot | Đơn giản, ít token, nhanh |
+| Tác vụ cần clarify format hoặc style | One/Two-shot | Làm rõ kỳ vọng mà không tốn nhiều token |
+| Tác vụ có quy trình xác định | Providing Steps | Đảm bảo LLM tuân theo đúng process |
+| Tác vụ với quy tắc business logic riêng | Few-shot | Dạy LLM pattern mới qua ví dụ |
+| Tác vụ suy luận phức tạp | Chain of Thought | Cho LLM thấy cách tư duy từng bước |
+
+> **💡 NGUYÊN TẮC:** Luôn bắt đầu với kỹ thuật đơn giản nhất (zero-shot) và chỉ tăng độ phức tạp khi cần thiết. Mỗi ví dụ thêm vào prompt đều tốn token và chi phí API. Trong production, hãy A/B test để tìm balance tốt nhất giữa chất lượng kết quả và cost efficiency.
 
 > **🚀 Kỹ thuật Nâng cao:** Ngoài CoT, nghiên cứu đã giới thiệu **Tree of Thought (ToT)** để khám phá nhiều con đường suy luận đồng thời ([Yao et al., 2023](https://arxiv.org/abs/2305.10601))—nâng tỷ lệ thành công của GPT-4 trong Game of 24 từ 4% lên 74%—và **Thread of Thought (ThoT)** ([Zhou et al., 2023](https://arxiv.org/abs/2311.08734)) để xử lý ngữ cảnh hỗn loạn bằng cách lọc nhiễu. Các kỹ thuật nâng cao này đáng khám phá cho các ứng dụng phức tạp.
 
