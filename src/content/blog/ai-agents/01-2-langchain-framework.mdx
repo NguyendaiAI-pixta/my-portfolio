@@ -60,7 +60,7 @@ LangChain's documentation is detailed, but the best way to understand how it wor
 
 Most LLM frameworks follow a similar overall pattern, but each one has its own components. In LangChain, the workflow looks roughly like what you see in figure 1.6. You start by pulling in text from different sources—files, databases, or websites—and wrapping it into Document objects. Those documents are often split into smaller chunks so they're easier to handle. Next, each chunk goes through an embedding model, which turns the text into vectors that capture its meaning. Both the raw chunks and their embeddings are stored in a vector store, which lets you quickly find the most relevant pieces of text based on similarity search.
 
-![LangChain architecture showing the flow from document loading through retrieval to LLM response](/src/assets/blog/ai-agents/langchain-architecture.png)
+![LangChain architecture showing the flow from document loading through retrieval to LLM response](/assets/blog/ai-agents/langchain-architecture.png)
 *Figure 1.6: LangChain architecture. The document loader imports data, which the text splitter divides into chunks. These are vectorized by an embedding model, stored in a vector store, and retrieved through a retriever for the LLM. The LLM cache checks for prior requests to return cached responses, while the output parser formats the LLM's final response.*
 
 When an LLM app runs a task—like summarization or semantic search—it builds a prompt that combines the user's question with extra context. That context usually comes from document chunks pulled from a vector store. Sometimes, you'll also want to bring in information from a graph database. Vector stores are still the backbone of most RAG workflows, but graph databases are becoming more common in apps that need to show and reason about relationships between things. This is especially useful for agents: unlike engines (that typically do one retrieval step and return output), agents may need to keep memory for longer, track things and their relationships over time, and use those relationships to plan next actions (for example, deciding which tool to call or which information to get next). LangChain already works with popular options like Neo4j, and it lets you use graph-based memory or planning components—features that are showing up more in advanced agent designs.
@@ -96,7 +96,7 @@ With a good understanding of LangChain's high-level architecture, we can now loo
 
 The object model is organized into class families, starting with base classes that other classes build on. Figure 1.7 shows a visual overview of the main class families used across various tasks, all centered around the Document entity. It shows how loaders create Document objects, how splitters divide them into smaller pieces, and how these are then passed into vector stores and retrievers for later steps.
 
-![Object model of classes associated with the Document core entity](/src/assets/blog/ai-agents/langchain-object-model-document.png)
+![Object model of classes associated with the Document core entity](/assets/blog/ai-agents/langchain-object-model-document.png)
 *Figure 1.7: Object model of classes associated with the Document core entity, including Document loaders (create Document objects), splitters (create a list of Document objects), vector stores (store Document objects in vector stores), and retrievers (retrieve Document objects from vector stores and other sources).*
 
 As covered in the LangChain architecture section, the primary classes include:
@@ -113,7 +113,7 @@ A key feature shared by many of these components—from loaders to LLMs—is the
 
 In figure 1.8, you can see the object model related to LLMs, including PromptTemplate and PromptValue. This figure shows how these classes connect to the LLM interface, showing a somewhat more complex structure than the classes presented earlier.
 
-![Object model of classes associated with LLMs](/src/assets/blog/ai-agents/langchain-object-model-llm.png)
+![Object model of classes associated with LLMs](/assets/blog/ai-agents/langchain-object-model-llm.png)
 *Figure 1.8: Object model of classes associated with LLMs, including PromptTemplates and PromptValues.*
 
 Now that you've explored LangChain's purpose, architecture, and the core types of applications it supports, I encourage you to experiment with LangChain using a Jupyter Notebook. It's a quick and practical way to get a feel for the framework before we dive deeper.
@@ -217,7 +217,7 @@ Tài liệu của LangChain rất chi tiết, nhưng cách tốt nhất để hi
 
 Hầu hết các framework LLM đều theo một pattern chung tương tự, nhưng mỗi framework lại định nghĩa các component riêng. Trong LangChain, workflow trông giống như bạn thấy trong hình 1.6. Bạn bắt đầu bằng việc lấy văn bản từ các nguồn khác nhau—file, database hoặc website—và bao gói chúng vào các Document object. Những tài liệu này thường được chia thành các chunk nhỏ hơn để dễ xử lý hơn. Tiếp theo, mỗi chunk đi qua một embedding model, chuyển văn bản thành các vector nắm bắt ý nghĩa của nó. Cả chunk gốc và embedding của chúng đều được lưu trong vector store, giúp bạn nhanh chóng tìm thấy những đoạn văn bản liên quan nhất dựa trên tìm kiếm tương đồng.
 
-![Kiến trúc LangChain thể hiện quy trình từ load tài liệu qua retrieval đến phản hồi của LLM](/src/assets/blog/ai-agents/langchain-architecture.png)
+![Kiến trúc LangChain thể hiện quy trình từ load tài liệu qua retrieval đến phản hồi của LLM](/assets/blog/ai-agents/langchain-architecture.png)
 *Hình 1.6: Kiến trúc LangChain. Document loader nhập dữ liệu, text splitter chia thành các chunk. Chúng được vector hóa bởi embedding model, lưu trong vector store, và được truy xuất thông qua retriever cho LLM. LLM cache kiểm tra các yêu cầu trước đó để trả về phản hồi đã lưu, trong khi output parser định dạng phản hồi cuối cùng của LLM.*
 
 Khi một ứng dụng LLM chạy một tác vụ—như tóm tắt hoặc tìm kiếm ngữ nghĩa—nó xây dựng một prompt kết hợp câu hỏi của người dùng với ngữ cảnh bổ sung. Ngữ cảnh đó thường đến từ các chunk tài liệu được lấy từ vector store. Đôi khi, bạn cũng muốn sử dụng thông tin từ graph database. Vector store vẫn là xương sống của hầu hết các RAG workflow, nhưng graph database đang trở nên phổ biến hơn trong các ứng dụng cần mô hình hóa và suy luận về mối quan hệ giữa các đối tượng. Điều này đặc biệt hữu ích cho agent: khác với engine (thường làm một bước retrieval và trả về kết quả), agent có thể cần giữ bộ nhớ lâu hơn, theo dõi các đối tượng và mối quan hệ của chúng theo thời gian, và dùng những mối quan hệ đó để lập kế hoạch hành động tiếp theo (ví dụ, quyết định gọi công cụ nào hoặc lấy thông tin nào tiếp theo). LangChain đã tích hợp với các lựa chọn phổ biến như Neo4j, và cho phép bạn dùng các component memory hoặc planning dựa trên graph—những tính năng xuất hiện nhiều hơn trong các thiết kế agent tiên tiến.
@@ -253,7 +253,7 @@ Với sự hiểu biết tốt về kiến trúc cấp cao của LangChain, gi�
 
 Mô hình object được tổ chức thành các nhóm class, bắt đầu với các base class mà các class khác xây dựng dựa trên đó. Hình 1.7 hiển thị cái nhìn tổng quan trực quan về các nhóm class chính được sử dụng trong nhiều tác vụ khác nhau, tất cả đều xoay quanh entity Document. Nó cho thấy loader tạo các Document object như thế nào, splitter chia chúng thành các phần nhỏ hơn ra sao, và chúng được truyền vào vector store và retriever cho các bước sau như thế nào.
 
-![Mô hình object của các class liên quan đến entity Document cốt lõi](/src/assets/blog/ai-agents/langchain-object-model-document.png)
+![Mô hình object của các class liên quan đến entity Document cốt lõi](/assets/blog/ai-agents/langchain-object-model-document.png)
 *Hình 1.7: Mô hình object của các class liên quan đến entity Document cốt lõi, bao gồm Document loader (tạo Document object), splitter (tạo danh sách Document object), vector store (lưu Document object trong vector store), và retriever (truy xuất Document object từ vector store và các nguồn khác).*
 
 Như đã đề cập trong phần kiến trúc LangChain, các class chính bao gồm:
@@ -270,7 +270,7 @@ Một tính năng chính được chia sẻ bởi nhiều component này—từ 
 
 Trong hình 1.8, bạn có thể thấy mô hình object liên quan đến LLM, bao gồm PromptTemplate và PromptValue. Hình này cho thấy các class này kết nối với LLM interface như thế nào, thể hiện cấu trúc phức tạp hơn một chút so với các class được trình bày trước đó.
 
-![Mô hình object của các class liên quan đến LLM](/src/assets/blog/ai-agents/langchain-object-model-llm.png)
+![Mô hình object của các class liên quan đến LLM](/assets/blog/ai-agents/langchain-object-model-llm.png)
 *Hình 1.8: Mô hình object của các class liên quan đến LLM, bao gồm PromptTemplate và PromptValue.*
 
 Giờ bạn đã khám phá mục đích, kiến trúc và các loại ứng dụng cốt lõi mà LangChain hỗ trợ, tôi khuyến khích bạn thử nghiệm với LangChain bằng Jupyter Notebook. Đây là cách nhanh và thực tế để làm quen với framework trước khi chúng ta đi sâu hơn.

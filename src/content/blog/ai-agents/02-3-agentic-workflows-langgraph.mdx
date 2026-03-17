@@ -36,7 +36,7 @@ LLM-powered agent-based systems typically follow one of two core design patterns
 
 - **Agent**—Uses language models for more than just task execution: they reason, make decisions, and dynamically determine the next steps based on available tools and evolving context. Here, a tool typically refers to a function that returns or processes data.
 
-![Workflows and agents comparison](/src/assets/blog/ai-agents/workflows-vs-agents.png)
+![Workflows and agents comparison](/assets/blog/ai-agents/workflows-vs-agents.png)
 *Figure 2.4: Workflows and agents. Workflows use the LLM to choose the next step from a fixed set of options, such as routing a request to a SQL database or a REST API, and synthesizing the answer with the related results. Agents, however, dynamically select and combine tools to achieve their objectives.*
 
 While both patterns rely on the LLM to drive application behavior, **workflows maintain a structured and predictable path**, whereas **agents can adapt in real time** based on new information and shifting goals. Let's discuss workflows in more detail next.
@@ -47,7 +47,7 @@ While both patterns rely on the LLM to drive application behavior, **workflows m
 
 Workflows use the LLM to select the next step from a limited set of predefined choices. They typically implement patterns such as **Controller-Worker** or **Router**, as illustrated in Figure 2.5.
 
-![Common workflow patterns](/src/assets/blog/ai-agents/workflow-patterns.png)
+![Common workflow patterns](/assets/blog/ai-agents/workflow-patterns.png)
 *Figure 2.5: Common workflow patterns. The Controller-Worker pattern uses the LLM in the controller to orchestrate the flow by assigning various tasks to workers in a specific sequence. In the Router pattern, the LLM simply directs the task to the appropriate worker based on the context.*
 
 **Controller-Worker Pattern**: The controller orchestrates the workflow by spawning tasks for workers in a predefined sequence. The LLM acts as the "brain" that decides which worker to activate next, but the overall flow remains structured and predictable.
@@ -165,7 +165,7 @@ As your applications become more complex, the benefits of using LangGraph's agen
 
 LangGraph provides a robust framework for building stateful, multi-step AI applications. Figure 2.6 illustrates the core components that form the foundation of a LangGraph application.
 
-![LangGraph core components](/src/assets/blog/ai-agents/langgraph-components.png)
+![LangGraph core components](/assets/blog/ai-agents/langgraph-components.png)
 *Figure 2.6: LangGraph core components. A strongly typed state (in this example, modeled with ResearchState) flows through the workflow. Nodes, usually Python functions (e.g., `def select_assistant`), perform tasks, and edges create directed data flows between nodes—in some cases, with conditional paths.*
 
 At the heart of every LangGraph application is a **state object**—in our example, `ResearchState`—which defines a clear, strongly typed state for the entire workflow. This state is typically defined as a Python `TypedDict`, ensuring that data passed between components is well-structured and type-checked.
@@ -302,7 +302,7 @@ Các hệ thống dựa trên LLM thường tuân theo một trong hai mẫu thi
 
 - **Agent**—Sử dụng mô hình ngôn ngữ cho nhiều hơn là chỉ thực thi tác vụ: chúng suy luận, đưa ra quyết định và xác định động các bước tiếp theo dựa trên các công cụ có sẵn và ngữ cảnh đang phát triển. Ở đây, một tool (công cụ) thường đề cập đến một hàm trả về hoặc xử lý dữ liệu.
 
-![So sánh workflows và agents](/src/assets/blog/ai-agents/workflows-vs-agents.png)
+![So sánh workflows và agents](/assets/blog/ai-agents/workflows-vs-agents.png)
 *Hình 2.4: Workflows và agents. Workflows sử dụng LLM để chọn bước tiếp theo từ một tập hợp các tùy chọn cố định, chẳng hạn như định tuyến yêu cầu đến SQL database hoặc REST API, và tổng hợp câu trả lời với các kết quả liên quan. Ngược lại, agents tự quyết định chọn và kết hợp các công cụ trong quá trình thực thi để đạt được mục tiêu—không theo kế hoạch định trước mà dựa trên tình huống thực tế.*
 
 Mặc dù cả hai mẫu đều dựa vào LLM để điều khiển hành vi của ứng dụng, **workflows duy trì một đường đi có cấu trúc và dự đoán được**, trong khi **agents có thể thích ứng linh hoạt theo thời gian thực** dựa trên thông tin mới và mục tiêu thay đổi. Hãy thảo luận chi tiết hơn về workflows tiếp theo.
@@ -313,7 +313,7 @@ Mặc dù cả hai mẫu đều dựa vào LLM để điều khiển hành vi c�
 
 Workflows sử dụng LLM để chọn bước tiếp theo từ một tập hợp các lựa chọn được định nghĩa trước giới hạn. Chúng thường triển khai các mẫu như **Controller-Worker** hoặc **Router**, như được minh họa trong Hình 2.5.
 
-![Các mẫu workflow phổ biến](/src/assets/blog/ai-agents/workflow-patterns.png)
+![Các mẫu workflow phổ biến](/assets/blog/ai-agents/workflow-patterns.png)
 *Hình 2.5: Các mẫu workflow phổ biến. Mẫu Controller-Worker sử dụng LLM trong controller để điều phối luồng bằng cách gán các tác vụ khác nhau cho workers theo một trình tự cụ thể. Trong mẫu Router, LLM chỉ đơn giản là định hướng tác vụ đến worker phù hợp dựa trên ngữ cảnh.*
 
 **Mẫu Controller-Worker**: Controller điều phối workflow bằng cách tạo các tác vụ cho workers theo một trình tự được định nghĩa trước. LLM đóng vai trò là "bộ não" quyết định worker nào sẽ được kích hoạt tiếp theo, nhưng luồng tổng thể vẫn có cấu trúc và dự đoán được.
@@ -431,7 +431,7 @@ Khi ứng dụng của bạn trở nên phức tạp hơn, lợi ích của vi�
 
 LangGraph cung cấp một framework mạnh mẽ để xây dựng các ứng dụng AI có trạng thái, đa bước. Hình 2.6 minh họa các thành phần cốt lõi tạo nên nền tảng của một ứng dụng LangGraph.
 
-![Các thành phần cốt lõi của LangGraph](/src/assets/blog/ai-agents/langgraph-components.png)
+![Các thành phần cốt lõi của LangGraph](/assets/blog/ai-agents/langgraph-components.png)
 *Hình 2.6: Các thành phần cốt lõi của LangGraph. Một state có kiểu dữ liệu rõ ràng (trong ví dụ này, được mô hình hóa bằng ResearchState) chảy qua workflow. Các nodes, thường là các hàm Python (ví dụ: `def select_assistant`), thực hiện các tác vụ, và các edges tạo luồng dữ liệu có hướng giữa các nodes—trong một số trường hợp, với các đường đi có điều kiện.*
 
 Ở trung tâm của mọi ứng dụng LangGraph là một **state object** (đối tượng trạng thái)—trong ví dụ của chúng ta là `ResearchState`—định nghĩa một trạng thái rõ ràng, có kiểu dữ liệu cụ thể cho toàn bộ workflow. State này thường được định nghĩa dưới dạng `TypedDict` của Python, đảm bảo rằng dữ liệu được truyền giữa các thành phần có cấu trúc tốt và được đảm bảo đúng kiểu dữ liệu.

@@ -75,7 +75,7 @@ Before we start building, we'll look at different summarization techniques, each
 
 As mentioned in Part 1, each LLM has a maximum prompt size, also referred to as the context window. As the context window for popular LLMs continues to grow, you may still encounter situations where a document exceeds the token limit of your chosen model. In these cases, you can use a MapReduce approach, as illustrated in figure 2.1.
 
-![Summarizing a document bigger than the LLM's context window](/src/assets/blog/ai-agents/summarization-mapreduce.png)
+![Summarizing a document bigger than the LLM's context window](/assets/blog/ai-agents/summarization-mapreduce.png)
 *Figure 2.1: Summarizing a document bigger than the LLM's context window involves splitting the document into smaller chunks, summarizing each chunk, and then summarizing the combined chunk summaries.*
 
 **DEFINITION:** The LLM context window refers to the maximum amount of text—comprising both instructions and context—that can be provided to a language model in a single prompt. Different LLMs support different token limits for this context window, where one token roughly corresponds to one word. For example, GPT-3.5 could process up to 16,000 tokens, GPT-4 and Claude 3 supported up to 100,000 tokens, and newer models such as GPT-5 and Gemini can handle more than 1 million tokens.
@@ -309,7 +309,7 @@ Trước khi bắt đầu xây dựng, chúng ta sẽ xem xét các kỹ thuật
 
 Như đã đề cập trong Phần 1, mỗi LLM có kích thước prompt tối đa, còn được gọi là context window. Khi context window cho các LLM phổ biến tiếp tục tăng lên, bạn vẫn có thể gặp phải tình huống mà tài liệu vượt quá giới hạn token của model bạn chọn. Trong những trường hợp này, bạn có thể sử dụng phương pháp MapReduce, như được minh họa trong hình 2.1.
 
-![Tóm tắt tài liệu lớn hơn context window của LLM](/src/assets/blog/ai-agents/summarization-mapreduce.png)
+![Tóm tắt tài liệu lớn hơn context window của LLM](/assets/blog/ai-agents/summarization-mapreduce.png)
 *Hình 2.1: Tóm tắt tài liệu lớn hơn context window của LLM bao gồm việc chia tài liệu thành các chunk nhỏ hơn, tóm tắt từng chunk, sau đó tóm tắt các bản tóm tắt chunk đã kết hợp.*
 
 **ĐỊNH NGHĨA:** Context window của LLM đề cập đến lượng văn bản tối đa—bao gồm cả hướng dẫn và ngữ cảnh—có thể được cung cấp cho một language model trong một prompt duy nhất. Các LLM khác nhau hỗ trợ giới hạn token khác nhau cho context window này, trong đó một token xấp xỉ tương ứng với một từ. Ví dụ, GPT-3.5 có thể xử lý tới 16,000 tokens, GPT-4 và Claude 3 hỗ trợ tới 100,000 tokens, và các model mới hơn như GPT-5 và Gemini có thể xử lý hơn 1 triệu tokens.

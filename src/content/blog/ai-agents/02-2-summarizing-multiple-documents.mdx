@@ -21,7 +21,7 @@ In the previous part, we learned how to handle documents that exceed an LLM's co
 
 This process, as shown in Figure 2.2, builds on the MapReduce technique we covered earlier. But here's the twist: instead of splitting one large document, we're working with multiple complete documents from different sources.
 
-![Summarizing across documents using MapReduce](/src/assets/blog/ai-agents/summarization-across-documents-mapreduce.png)
+![Summarizing across documents using MapReduce](/assets/blog/ai-agents/summarization-across-documents-mapreduce.png)
 *Figure 2.2: Summarizing across documents using the MapReduce technique. Each document undergoes a map operation to generate a summary. These individual summaries are then condensed into a single final summary through the reduce operation.*
 
 In this approach, content from each raw text source is loaded into a corresponding Document instance. During the map operation, these Document objects are converted into individual summaries, which are then combined into a single summary during the reduce operation.
@@ -34,7 +34,7 @@ In this approach, content from each raw text source is loaded into a correspondi
 
 Next, I'll introduce you to an alternative technique called **refine**, as illustrated in Figure 2.3. With this approach, we build the final summary incrementally by iteratively summarizing the combination of the current final summary and one of the document chunks. This process continues until all document chunks have been processed.
 
-![Summarizing across documents using the refine technique](/src/assets/blog/ai-agents/summarization-across-documents-refine.png)
+![Summarizing across documents using the refine technique](/assets/blog/ai-agents/summarization-across-documents-refine.png)
 *Figure 2.3: Summarizing across documents using the refine technique. The final summary is built progressively by refining it with each document.*
 
 Here's how it works: at each iteration, the LLM receives **two inputs**: (1) a new document to process and (2) the summary being built from previous documents. The LLM then refines the current summary by incorporating information from the new document. This process repeats until all documents have been processed, producing the complete final summary.
@@ -217,7 +217,7 @@ This function processes each document one by one, refining the summary at each s
 
 To wrap up this part, I've included a flowchart to help you choose the most appropriate summarization technique for your specific needs, as shown in Figure 2.4.
 
-![Summarization technique decision flowchart](/src/assets/blog/ai-agents/summarization-flowchart.png)
+![Summarization technique decision flowchart](/assets/blog/ai-agents/summarization-flowchart.png)
 *Figure 2.4: Decision flowchart for choosing the appropriate summarization technique based on document count and size.*
 
 Here, the first key decision is whether we're summarizing one or multiple documents:
@@ -268,7 +268,7 @@ Trong phần trước, chúng ta đã học cách xử lý các tài liệu vư�
 
 Quá trình này, như được hiển thị trong Hình 2.2, xây dựng dựa trên kỹ thuật MapReduce mà chúng ta đã đề cập trước đó. Nhưng điểm khác biệt là: thay vì chia một tài liệu lớn, chúng ta đang làm việc với nhiều tài liệu hoàn chỉnh từ các nguồn khác nhau.
 
-![Tóm tắt trên nhiều tài liệu sử dụng MapReduce](/src/assets/blog/ai-agents/summarization-across-documents-mapreduce.png)
+![Tóm tắt trên nhiều tài liệu sử dụng MapReduce](/assets/blog/ai-agents/summarization-across-documents-mapreduce.png)
 *Hình 2.2: Tóm tắt trên nhiều tài liệu sử dụng kỹ thuật MapReduce. Mỗi tài liệu trải qua map operation để tạo bản tóm tắt. Các bản tóm tắt riêng lẻ này sau đó được kết hợp thành một bản tóm tắt cuối cùng thông qua reduce operation.*
 
 Trong phương pháp này, nội dung từ mỗi nguồn văn bản được load vào một Document instance tương ứng. Trong map operation, các Document objects này được chuyển đổi thành các bản tóm tắt riêng lẻ, sau đó được kết hợp thành một bản tóm tắt duy nhất trong reduce operation.
@@ -281,7 +281,7 @@ Trong phương pháp này, nội dung từ mỗi nguồn văn bản được loa
 
 Tiếp theo, tôi sẽ giới thiệu cho bạn một kỹ thuật thay thế gọi là **refine**, như được minh họa trong Hình 2.3. Với phương pháp này, chúng ta xây dựng bản tóm tắt cuối cùng theo cách tăng dần bằng cách lặp đi lặp lại việc tóm tắt sự kết hợp của bản tóm tắt cuối cùng hiện tại và một trong các document chunks. Quá trình này tiếp tục cho đến khi tất cả các document chunks được xử lý.
 
-![Tóm tắt trên nhiều tài liệu sử dụng kỹ thuật refine](/src/assets/blog/ai-agents/summarization-across-documents-refine.png)
+![Tóm tắt trên nhiều tài liệu sử dụng kỹ thuật refine](/assets/blog/ai-agents/summarization-across-documents-refine.png)
 *Hình 2.3: Tóm tắt trên nhiều tài liệu sử dụng kỹ thuật refine. Bản tóm tắt cuối cùng được xây dựng dần dần bằng cách tinh chỉnh nó với mỗi tài liệu.*
 
 Đây là cách nó hoạt động: ở mỗi bước lặp, LLM nhận **hai đầu vào**: (1) một tài liệu mới cần xử lý và (2) bản tóm tắt đang được xây dựng từ các tài liệu trước đó. LLM sau đó tinh chỉnh bản tóm tắt hiện tại bằng cách bổ sung thông tin từ tài liệu mới. Quá trình này lặp lại cho đến khi tất cả các tài liệu được xử lý, tạo ra bản tóm tắt cuối cùng hoàn chỉnh.
@@ -464,7 +464,7 @@ Function này xử lý từng document một, tinh chỉnh bản tóm tắt ở 
 
 Để kết thúc phần này, tôi đã đưa vào một flowchart để giúp bạn chọn kỹ thuật tóm tắt phù hợp nhất cho nhu cầu cụ thể của mình, như được hiển thị trong Hình 2.4.
 
-![Flowchart quyết định kỹ thuật tóm tắt](/src/assets/blog/ai-agents/summarization-flowchart.png)
+![Flowchart quyết định kỹ thuật tóm tắt](/assets/blog/ai-agents/summarization-flowchart.png)
 *Hình 2.4: Flowchart quyết định để chọn kỹ thuật tóm tắt phù hợp dựa trên số lượng và kích thước tài liệu.*
 
 Ở đây, quyết định chính đầu tiên là liệu chúng ta đang tóm tắt một hay nhiều tài liệu:

@@ -92,7 +92,7 @@ To solve this, your chatbot must be able to:
 
 As illustrated in Figure 3.2, the ideal enterprise Q&A chatbot enables users to ask questions naturally without manually supplying background context each time.
 
-![Enterprise Q&A chatbot design](/src/assets/blog/ai-agents/complex-qa-architecture.png)
+![Enterprise Q&A chatbot design](/assets/blog/ai-agents/complex-qa-architecture.png)
 *Figure 3.2: Hypothetical design for an enterprise Q&A chatbot. The knowledge of the chatbot is expanded with various data sources: the enterprise's intranet, knowledge bases, and documents. Users can ask questions naturally, and the system automatically retrieves relevant information, synthesizes answers, and provides source citations.*
 
 ### Can You Just Connect ChatGPT to Your Data?
@@ -217,7 +217,7 @@ Now that you understand the RAG architecture at a high level, let's dive into ea
 
 Before users can query the Q&A chatbot, you need to store relevant content—such as enterprise documents from various sources and formats—into a **vector store**, a specialized database optimized for quick search and retrieval. This preparation stage is critical to the success of your RAG system.
 
-![RAG content ingestion stage](/src/assets/blog/ai-agents/rag-ingestion-stage.png)
+![RAG content ingestion stage](/assets/blog/ai-agents/rag-ingestion-stage.png)
 *Figure 3.3: RAG content ingestion stage. Documents are extracted from sources, split into chunks, and converted into embeddings while being stored in a vector database, which stores a copy of the original chunks and their embeddings (vector form).*
 
 ### The Ingestion Process
@@ -295,7 +295,7 @@ With your content properly indexed in the vector store, you're ready for the sec
 
 Once the information has been split into small chunks, transformed into embeddings, and stored in a vector store, users can query your Q&A chatbot. This is where the magic happens—turning indexed knowledge into real-time answers.
 
-![RAG Q&A stage: Retrieval and generation](/src/assets/blog/ai-agents/rag-qa-stage.png)
+![RAG Q&A stage: Retrieval and generation](/assets/blog/ai-agents/rag-qa-stage.png)
 *Figure 3.4: RAG Q&A stage showing the complete retrieval and generation workflow. The chatbot uses a retriever to transform questions into embeddings, performs similarity search, retrieves relevant chunks, and sends them to the LLM for answer synthesis.*
 
 ### The Q&A Stage Workflow
@@ -494,7 +494,7 @@ Cung cấp cho mô hình **ít ngữ cảnh hơn, nhưng tập trung và liên q
 
 Như được minh họa trong Hình 3.2, chatbot Q&A doanh nghiệp lý tưởng cho phép người dùng đặt câu hỏi tự nhiên mà không cần cung cấp ngữ cảnh nền thủ công mỗi lần.
 
-![Thiết kế chatbot Q&A doanh nghiệp](/src/assets/blog/ai-agents/complex-qa-architecture.png)
+![Thiết kế chatbot Q&A doanh nghiệp](/assets/blog/ai-agents/complex-qa-architecture.png)
 *Hình 3.2: Thiết kế giả định cho một chatbot Q&A doanh nghiệp. Kiến thức của chatbot được mở rộng với nhiều nguồn dữ liệu: intranet doanh nghiệp, knowledge bases và tài liệu. Người dùng có thể đặt câu hỏi tự nhiên, và hệ thống tự động truy xuất thông tin liên quan, tổng hợp câu trả lời và cung cấp trích dẫn nguồn.*
 
 ### Bạn Có Thể Kết Nối ChatGPT Với Dữ Liệu Của Mình Không?
@@ -619,7 +619,7 @@ Bây giờ bạn đã hiểu kiến trúc RAG ở mức cao, hãy đi sâu vào 
 
 Trước khi người dùng có thể truy vấn chatbot Q&A, bạn cần lưu trữ nội dung liên quan—chẳng hạn như tài liệu doanh nghiệp từ nhiều nguồn và định dạng khác nhau—vào một **vector store**, cơ sở dữ liệu chuyên biệt được tối ưu hóa cho tìm kiếm và truy xuất nhanh. Giai đoạn chuẩn bị này rất quan trọng cho sự thành công của hệ thống RAG của bạn.
 
-![Giai đoạn nhập nội dung RAG](/src/assets/blog/ai-agents/rag-ingestion-stage.png)
+![Giai đoạn nhập nội dung RAG](/assets/blog/ai-agents/rag-ingestion-stage.png)
 *Hình 3.3: Giai đoạn nhập nội dung RAG. Tài liệu được trích xuất từ các nguồn, chia thành các chunks, và chuyển đổi thành embeddings trong khi được lưu trữ trong vector database, lưu trữ bản sao của các chunks gốc và embeddings của chúng (dạng vector).*
 
 ### Quy Trình Ingestion
@@ -697,7 +697,7 @@ Với nội dung của bạn được lập chỉ mục đúng cách trong vecto
 
 Sau khi thông tin đã được chia thành các chunks nhỏ, chuyển đổi thành embeddings và lưu trữ trong vector store, người dùng có thể truy vấn chatbot Q&A của bạn. Đây là nơi phép màu xảy ra—biến kiến thức đã được lập chỉ mục thành câu trả lời thời gian thực.
 
-![Giai đoạn Q&A của RAG: Retrieval và generation](/src/assets/blog/ai-agents/rag-qa-stage.png)
+![Giai đoạn Q&A của RAG: Retrieval và generation](/assets/blog/ai-agents/rag-qa-stage.png)
 *Hình 3.4: Giai đoạn Q&A của RAG hiển thị quy trình retrieval và generation hoàn chỉnh. Chatbot sử dụng retriever để chuyển đổi câu hỏi thành embeddings, thực hiện similarity search, truy xuất các chunks liên quan và gửi chúng đến LLM để tổng hợp câu trả lời.*
 
 ### Quy Trình Giai Đoạn Q&A
