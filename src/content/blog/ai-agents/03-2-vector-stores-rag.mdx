@@ -5,7 +5,6 @@ pubDate: 'Mar 18 2026'
 category: 'AI Agents & Applications'
 tags: ['vector-store', 'embeddings', 'rag', 'chromadb', 'semantic-search']
 ---
-
 import LangToggle from '../../../components/LangToggle.astro';
 import LangEN from '../../../components/LangEN.astro';
 import LangVI from '../../../components/LangVI.astro';
@@ -23,6 +22,14 @@ Understanding how vector stores work is essential for building effective RAG sys
 
 - What vector stores are and why they're different from traditional databases
 - How vector stores enable semantic similarity search
+- The evolution of vector stores from image recognition to text-based RAG
+- Popular vector store options and how to choose the right one
+- Setting up your first vector store with ChromaDB
+
+By the end of this part, you'll have a solid foundation for selecting, configuring, and using vector stores in your RAG implementations.
+
+Let's start by understanding what vector stores are and why they're so important for semantic search.
+
 - The evolution of vector stores from image recognition to text-based RAG
 - Popular vector store options and how to choose the right one
 - Setting up your first vector store with ChromaDB
@@ -327,8 +334,67 @@ For the RAG implementations in this series, we'll use **ChromaDB** because it of
 
 Once you understand RAG with ChromaDB, switching to another vector store (like Pinecone for production or PgVector for PostgreSQL-based stacks) is straightforward—the concepts are the same, only the API differs.
 
+
 ---
 
+### Practical Example: Querying Paestum Tourism Data with ChromaDB
+
+Below is a short, runnable example that shows how to create an in-memory ChromaDB collection, insert three text chunks about Paestum (from Britannica), and run semantic queries against the collection.
+
+1. Import the `chromadb` module and create an in-memory client. Note the in-memory client loses data when the session ends:
+
+```python
+import chromadb
+chroma_client = chromadb.Client()
+```
+
+2. Create a collection (a "bucket" for documents + embeddings) and insert the Paestum chunks. We include simple `metadatas` and stable `ids` so results are traceable:
+
+```python
+tourism_collection = chroma_client.create_collection(name="tourism_collection")
+tourism_collection.add(
+  documents=[
+    "Paestum, Greek Poseidonia, ancient city in southern Italy near the west coast, 22 miles (35 km) southeast of modern Salerno and 5 miles (8 km) south of the Sele (ancient Silarus) River. Paestum is noted for its splendidly preserved Greek temples.",
+    "Poseidonia was probably founded about 600 BC by Greek colonists from Sybaris, along the Gulf of Taranto, and it had become a flourishing town by 540, judging from its temples. After many years’ resistance the city came under the domination of the Lucanians (an indigenous Italic people) sometime before 400 BC, after which its name was changed to Paestum. Alexander, the king of Epirus, defeated the Lucanians at Paestum about 332 BC, but the city remained Lucanian until 273, when it came under Roman rule and a Latin colony was founded there. The city supported Rome during the Second Punic War. The locality was still prosperous during the early years of the Roman Empire, but the gradual silting up of the mouth of the Silarus River eventually created a malarial swamp, and Paestum was finally deserted after being sacked by Muslim raiders in AD 871. The abandoned site’s remains were rediscovered in the 18th century.",
+    "The ancient Greek part of Paestum consists of two sacred areas containing three Doric temples in a remarkable state of preservation. During the ensuing Roman period a typical forum and town layout grew up between the two ancient Greek sanctuaries. Of the three temples, the Temple of Athena (the so-called Temple of Ceres) and the Temple of Hera I (the so-called Basilica) date from the 6th century BC, while the Temple of Hera II (the so-called Temple of Neptune) was probably built about 460 BC and is the best preserved of the three. The Temple of Peace in the forum is a Corinthian-Doric building begun perhaps in the 2nd century BC. Traces of a Roman amphitheatre and other buildings, as well as intersecting main streets, have also been found. The circuit of the town walls, which are built of travertine blocks and are 15–20 feet (5–6 m) thick, is about 3 miles (5 km) in circumference. In July 1969 a farmer uncovered an ancient Lucanian tomb that contained Greek frescoes painted in the early classical style. Paestum’s archaeological museum contains these and other treasures from the site."
+  ],
+  metadatas=[
+    {"source": "https://www.britannica.com/place/Paestum"},
+    {"source": "https://www.britannica.com/place/Paestum"},
+    {"source": "https://www.britannica.com/place/Paestum"}
+  ],
+  ids=["paestum-br-01", "paestum-br-02", "paestum-br-03"]
+)
+```
+
+3. Perform semantic queries. First request the single best match, then ask for the top 3 to inspect relative distances:
+
+```python
+results = tourism_collection.query(
+  query_texts=["How many Doric temples are in Paestum"],
+  n_results=1
+)
+print(results)
+
+results = tourism_collection.query(
+  query_texts=["How many Doric temples are in Paestum"],
+  n_results=3
+)
+print(results)
+```
+
+Explanation of the results:
+
+- `ids`: the collection `id`(s) of the matching chunk(s). In the example the top match is `paestum-br-03` (the chunk describing the three Doric temples).
+- `documents`: the actual text chunk(s) returned by ChromaDB.
+- `metadatas`: the metadata you stored with each chunk (useful to show source URLs or provenance).
+- `distances`: the embedding distance between the query and each returned chunk (smaller = more similar under the chosen metric).
+
+Important notes:
+
+- ChromaDB does not generate natural-language answers; it returns the most semantically similar passages. To produce a final answer (e.g., "Paestum has three Doric temples"), feed the retrieved passages plus the original question into an LLM for synthesis.
+- Use stable `ids` and `metadatas` so you can trace which source a snippet came from when building explanations or citations.
+- For production, consider using a persistent ChromaDB instance (client-server mode) or a managed vector DB (Pinecone, Qdrant, etc.) and an explicit embedding model rather than the default.
 </LangEN>
 
 <LangVI>
@@ -645,4 +711,125 @@ Sau khi bạn hiểu RAG với ChromaDB, việc chuyển sang vector store khác
 
 ---
 
+### Ví dụ thực hành: Truy vấn dữ liệu Paestum với ChromaDB
+
+Dưới đây là ví dụ ngắn bằng Python minh họa cách khởi tạo ChromaDB (in-memory), thêm ba đoạn văn về Paestum và thực hiện truy vấn semantic.
+
+1. Khởi tạo client ChromaDB (in-memory):
+
+```python
+import chromadb
+chroma_client = chromadb.Client()
+```
+
+2. Tạo collection và chèn nội dung (documents, metadatas, ids):
+
+```python
+tourism_collection = chroma_client.create_collection(name="tourism_collection")
+tourism_collection.add(
+  documents=[
+    "Paestum, Greek Poseidonia, ancient city in southern Italy near the west coast, 22 miles (35 km) southeast of modern Salerno and 5 miles (8 km) south of the Sele (ancient Silarus) River. Paestum is noted for its splendidly preserved Greek temples.",
+    "Poseidonia was probably founded about 600 BC by Greek colonists from Sybaris, along the Gulf of Taranto, and it had become a flourishing town by 540, judging from its temples. After many years’ resistance the city came under the domination of the Lucanians (an indigenous Italic people) sometime before 400 BC, after which its name was changed to Paestum. Alexander, the king of Epirus, defeated the Lucanians at Paestum about 332 BC, but the city remained Lucanian until 273, when it came under Roman rule and a Latin colony was founded there. The city supported Rome during the Second Punic War. The locality was still prosperous during the early years of the Roman Empire, but the gradual silting up of the mouth of the Silarus River eventually created a malarial swamp, and Paestum was finally deserted after being sacked by Muslim raiders in AD 871. The abandoned site’s remains were rediscovered in the 18th century.",
+    "The ancient Greek part of Paestum consists of two sacred areas containing three Doric temples in a remarkable state of preservation. During the ensuing Roman period a typical forum and town layout grew up between the two ancient Greek sanctuaries. Of the three temples, the Temple of Athena (the so-called Temple of Ceres) and the Temple of Hera I (the so-called Basilica) date from the 6th century BC, while the Temple of Hera II (the so-called Temple of Neptune) was probably built about 460 BC and is the best preserved of the three. The Temple of Peace in the forum is a Corinthian-Doric building begun perhaps in the 2nd century BC. Traces of a Roman amphitheatre and other buildings, as well as intersecting main streets, have also been found. The circuit of the town walls, which are built of travertine blocks and are 15–20 feet (5–6 m) thick, is about 3 miles (5 km) in circumference. In July 1969 a farmer uncovered an ancient Lucanian tomb that contained Greek frescoes painted in the early classical style. Paestum’s archaeological museum contains these and other treasures from the site."
+  ],
+  metadatas=[
+    {"source": "https://www.britannica.com/place/Paestum"},
+    {"source": "https://www.britannica.com/place/Paestum"},
+    {"source": "https://www.britannica.com/place/Paestum"}
+  ],
+  ids=["paestum-br-01", "paestum-br-02", "paestum-br-03"]
+)
+```
+
+3. Thực hiện truy vấn semantic (yêu cầu 1 kết quả, sau đó 3 kết quả để so sánh khoảng cách):
+
+```python
+results = tourism_collection.query(
+  query_texts=["How many Doric temples are in Paestum"],
+  n_results=1
+)
+print(results)
+
+results = tourism_collection.query(
+  query_texts=["How many Doric temples are in Paestum"],
+  n_results=3
+)
+print(results)
+```
+
+Giải thích ngắn:
+
+- `ids`: ID của đoạn phù hợp nhất (ví dụ `paestum-br-03`).
+- `documents`: đoạn văn được trả về.
+- `metadatas`: nguồn bạn đã lưu.
+- `distances`: khoảng cách embedding (nhỏ hơn = gần nghĩa hơn).
+
+Ghi chú:
+
+- ChromaDB trả về các đoạn gần nghĩa; để có câu trả lời hoàn chỉnh, kết hợp kết quả với một LLM để tổng hợp.
+- Sử dụng `ids` và `metadatas` ổn định để bạn có thể truy vết nguồn khi xây dựng giải thích hoặc trích dẫn.
+- Ở môi trường production, dùng chế độ client-server hoặc một dịch vụ vector DB có persistence.
+
+---
+
+</LangVI>
+
+{/* Note: moved here */}
+
+<LangEN>
+> **Note — Instantiating ChromaDB in different ways**
+>
+> You can instantiate ChromaDB in three common modes depending on your needs:
+>
+> - In-memory (the default) — quick for experiments and notebooks.
+> - Persistent (on-disk) — use `chromadb.PersistentClient` when you need data to survive restarts.
+> - HTTP (client-server) — run a ChromaDB server and connect with `chromadb.HttpClient` for separation, scaling, and persistence.
+>
+> Examples (code blocks are kept standalone for easy copy/paste):
+
+```python
+# Persistent (on-disk) client
+client = chromadb.PersistentClient(path="./chroma_db")
+collection = client.create_collection("my_persistent_collection")
+
+# HTTP client (after running `chroma run --port 8010`)
+client = chromadb.HttpClient(host="http://localhost", port=8010)
+collection = client.get_collection("my_persistent_collection")
+```
+
+The collection API (`add`, `query`, `update`, `delete`) is the same across modes.
+
+</LangEN>
+
+<LangVI>
+> **Ghi chú — Khởi tạo ChromaDB theo nhiều cách**
+>
+> Bạn có thể khởi tạo ChromaDB theo ba chế độ phổ biến tuỳ nhu cầu:
+>
+> - In-memory (mặc định) — nhanh, phù hợp cho thử nghiệm và notebook.
+> - Persistent (trên đĩa) — dùng `chromadb.PersistentClient` khi cần dữ liệu tồn tại qua khởi động lại.
+> - HTTP (client-server) — chạy server ChromaDB và kết nối bằng `chromadb.HttpClient` để tách dịch vụ, mở rộng và đảm bảo persistence.
+>
+> Ví dụ (khối code giữ nguyên để dễ sao chép):
+
+```python
+# Persistent (trên đĩa)
+client = chromadb.PersistentClient(path="./chroma_db")
+collection = client.create_collection("my_persistent_collection")
+
+# HTTP client (sau khi chạy `chroma run --port 8010`)
+client = chromadb.HttpClient(host="http://localhost", port=8010)
+collection = client.get_collection("my_persistent_collection")
+```
+
+API của collection (`add`, `query`, `update`, `delete`) là giống nhau giữa các chế độ.
+
+</LangVI>
+
+<LangEN>
+Let’s implement RAG by building a chatbot that uses the GPT-5-nano model and a vector database [ Part 3.3 Implementing-rag-from-scratch](/blog/ai-agents/03-3-implementing-rag-from-scratch)
+</LangEN>
+
+<LangVI>
+Hãy triển khai RAG bằng cách xây một chatbot sử dụng mô hình GPT-5-nano và một vector database [Part 3.3 Implementing-rag-from-scratch](/blog/ai-agents/03-3-implementing-rag-from-scratch)
 </LangVI>
